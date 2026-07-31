@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/styles.css">
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
 </head>
 <body data-page="job">
 
@@ -37,6 +38,11 @@
     <div>
       <p class="kicker">PAPER TRAIL</p>
       <div class="timeline" id="timeline"></div>
+      <div id="fund-zone" style="display:none; margin-top:16px;">
+        <p class="mono" style="font-size:12.5px; margin-bottom:10px;">This order is quoted but not funded yet — the agent starts the moment escrow is locked.</p>
+        <button class="btn btn-primary" id="btn-fund" type="button">Fund escrow</button>
+        <div class="wallet-pick" id="wallet-pick" style="display:none; margin-top:10px;" role="listbox" aria-label="Choose a wallet"></div>
+      </div>
       <p id="refund-note" style="display:none; margin-top:16px;" class="mono">
         This order was rejected by the judge — the escrow returned to the client automatically.</p>
       <p class="mono" id="carbon" style="font-size:12px; color:var(--ink-soft); margin-top:16px;"></p>
