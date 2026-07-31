@@ -11,16 +11,15 @@
 const { parseUnits } = require("ethers");
 const { provider, loadWallet } = require("../chain/config");
 const jobsLib = require("../chain/jobs");
-
-const PRICES = { "research-brief": "1", "site-audit": "1" };
+const CATALOG = require("./catalog");
 
 async function main() {
   const [agent, arg] = process.argv.slice(2);
-  if (!PRICES[agent] || !arg) {
-    console.log('usage: node worker/post-test-job.js <research-brief|site-audit> "<topic or url>"');
+  if (!CATALOG[agent] || !arg) {
+    console.log(`usage: node worker/post-test-job.js <${Object.keys(CATALOG).join("|")}> "<input>"`);
     process.exit(1);
   }
-  const input = agent === "site-audit" ? { url: arg } : { topic: arg };
+  const input = { [CATALOG[agent].input.field]: arg };
 
   const prov = provider();
   const client = loadWallet("client", prov);
@@ -29,7 +28,7 @@ async function main() {
 
   const { usdc } = await jobsLib.contracts(prov);
   const decimals = await jobsLib.withRetry(() => usdc.decimals());
-  const budget = parseUnits(PRICES[agent], decimals);
+  const budget = parseUnits(CATALOG[agent].priceUsdc, decimals);
 
   const jobId = await jobsLib.createJob(client, {
     providerAddr: providerW.address,

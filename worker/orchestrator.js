@@ -22,7 +22,8 @@ const jobsLib = require("../chain/jobs");
 const CATALOG = require("./catalog");
 
 const AGENTS = Object.fromEntries(
-  ["research-brief", "site-audit"].map((k) => { const a = require(`./agents/${k}`); return [a.key, a]; })
+  ["research-brief", "site-audit", "contract-check", "copy-pack", "thread-writer", "data-extract"]
+    .map((k) => { const a = require(`./agents/${k}`); return [a.key, a]; })
 );
 
 const STATE_FILE = path.join(__dirname, "state.json");
