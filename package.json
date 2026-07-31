@@ -6,7 +6,9 @@
   "scripts": {
     "wallets": "node chain/make-wallets.js",
     "e2e:dry": "node chain/e2e.js --dry",
-    "e2e": "node chain/e2e.js"
+    "e2e": "node chain/e2e.js",
+    "work": "node worker/orchestrator.js --once",
+    "watch": "node worker/orchestrator.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
