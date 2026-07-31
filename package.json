@@ -1,0 +1,15 @@
+{
+  "name": "agent-market",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent-hire marketplace on Arc testnet — USDC escrow via Circle's ERC-8183",
+  "scripts": {
+    "wallets": "node chain/make-wallets.js",
+    "e2e:dry": "node chain/e2e.js --dry",
+    "e2e": "node chain/e2e.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.0"
+  }
+}
