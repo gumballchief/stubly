@@ -90,8 +90,14 @@ async function processJob(jobId, ctx) {
     try {
       deliverable = await agent.run(spec.input || {});
     } catch (e) {
-      console.log(`  agent failed: ${e.message} — leaving job for refund path`);
-      st.phase = "agent-failed"; st.error = e.message;
+      st.attempts = (st.attempts || 0) + 1;
+      st.error = e.message;
+      if (st.attempts >= 3) {
+        console.log(`  agent failed ${st.attempts}x: ${e.message} — giving up, job will expire to refund`);
+        st.phase = "agent-failed";
+      } else {
+        console.log(`  agent failed (attempt ${st.attempts}/3): ${e.message} — will retry next pass`);
+      }
       return;
     }
 
