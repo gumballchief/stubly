@@ -38,6 +38,19 @@ verified ABI (chain/abi.js fetches + caches it from Blockscout).
   S3 marketplace site, S4 Circle embedded wallets, S5 ERC-8004 registry + open supply,
   S6 naming (vet BEFORE showing candidates) + launch + grant application.
 
+## Circle SDK bundle (Stage 4)
+
+`site/assets/circle-sdk.js` is a vendored browser build of `@circle-fin/w3s-pw-web-sdk`
+(CJS + Node deps, so it must be bundled; esbuild native binary is blocked by this
+machine's npm script policy — use esbuild-wasm). Rebuild with:
+
+```
+npx --yes esbuild-wasm node_modules/@circle-fin/w3s-pw-web-sdk/dist/src/index.js --bundle --format=iife --global-name=CircleW3S --outfile=site/assets/circle-sdk.js --minify --platform=browser --alias:buffer=buffer --alias:crypto=crypto-browserify --alias:stream=stream-browserify --alias:util=util --alias:events=events --alias:string_decoder=string_decoder --alias:vm=./shims/empty.js --inject:./shims/node-globals.js --define:global=window --define:process.env.NODE_ENV='"production"'
+```
+
+Circle env: CIRCLE_APP_ID (public, set) + CIRCLE_API_KEY (secret, user pastes into .env
+from console.circle.com → API & Client Keys → Standard/Testnet).
+
 ## Commands
 
 - `npm run wallets` — generate client/provider/evaluator testnet keystores (prints addresses to faucet-fund)

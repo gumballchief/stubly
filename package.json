@@ -11,7 +11,15 @@
     "watch": "node worker/orchestrator.js"
   },
   "dependencies": {
+    "@circle-fin/w3s-pw-web-sdk": "^1.1.11",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
     "dotenv": "^16.4.5",
-    "ethers": "^6.13.0"
+    "ethers": "^6.13.0",
+    "events": "^3.3.0",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "string_decoder": "^1.3.0",
+    "util": "^0.12.5"
   }
 }
