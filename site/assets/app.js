@@ -58,22 +58,52 @@ function mdToHtml(md) {
   return html;
 }
 
-/* ————— wallet plumbing ————— */
+/* ————— wallet plumbing (EIP-6963: every installed wallet announces itself) ————— */
+const WALLETS = [];
+window.addEventListener("eip6963:announceProvider", (e) => {
+  if (!WALLETS.some((w) => w.info.uuid === e.detail.info.uuid)) WALLETS.push(e.detail);
+});
+window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+function showWalletPicker() {
+  return new Promise((resolve, reject) => {
+    const host = $("#wallet-pick");
+    host.style.display = "grid";
+    host.innerHTML = WALLETS.map((w, i) =>
+      `<button type="button" class="wallet-opt" data-i="${i}">
+         <img src="${w.info.icon}" alt="" width="20" height="20"> ${w.info.name}</button>`).join("");
+    host.querySelectorAll(".wallet-opt").forEach((b) =>
+      b.addEventListener("click", () => { host.style.display = "none"; resolve(WALLETS[Number(b.dataset.i)]); }));
+    setTimeout(() => { if (host.style.display !== "none") { host.style.display = "none"; reject(new Error("no wallet chosen")); } }, 60_000);
+  });
+}
+
+async function pickWallet() {
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+  await new Promise((r) => setTimeout(r, 150));
+  if (WALLETS.length > 1) return showWalletPicker();
+  if (WALLETS.length === 1) return WALLETS[0];
+  if (window.ethereum) return { provider: window.ethereum, info: { name: "Browser wallet" } };
+  throw new Error("No browser wallet found. Install MetaMask (or any EVM wallet extension) and reload.");
+}
+
 async function connectWallet(log) {
-  if (!window.ethereum) throw new Error("No browser wallet found. Install MetaMask (or any EVM wallet extension) and reload.");
-  const [addr] = await window.ethereum.request({ method: "eth_requestAccounts" });
-  const current = await window.ethereum.request({ method: "eth_chainId" });
+  const chosen = await pickWallet();
+  const eth = chosen.provider;
+  log(`using ${chosen.info.name}…`);
+  const [addr] = await eth.request({ method: "eth_requestAccounts" });
+  const current = await eth.request({ method: "eth_chainId" });
   if (current.toLowerCase() !== ARC.chainIdHex) {
-    log(`switching wallet to ${ARC.chainName}…`);
+    log(`switching ${chosen.info.name} to ${ARC.chainName}…`);
     try {
-      await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: ARC.chainIdHex }] });
+      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: ARC.chainIdHex }] });
     } catch (e) {
       if (e.code === 4902) {
-        await window.ethereum.request({ method: "wallet_addEthereumChain", params: [ARC] });
+        await eth.request({ method: "wallet_addEthereumChain", params: [ARC] });
       } else throw e;
     }
   }
-  return addr;
+  return { addr, eth, name: chosen.info.name };
 }
 
 /* ————— page: hire ————— */
@@ -87,6 +117,7 @@ async function initHire() {
   const tIn = { agent: $("#t-agent"), input: $("#t-input"), price: $("#t-price"), client: $("#t-client") };
   let selected = Object.keys(agents)[0];
   let account = null;
+  let walletEth = null; // the provider the user actually chose in the picker
 
   const logEl = $("#carbon");
   const log = (msg, cls) => { logEl.innerHTML += (cls ? `<span class="${cls}">` : "") + msg + (cls ? "</span>" : "") + "\n"; logEl.scrollTop = logEl.scrollHeight; };
@@ -111,9 +142,10 @@ async function initHire() {
 
   $("#btn-connect").addEventListener("click", async () => {
     try {
-      account = await connectWallet(log);
+      const w = await connectWallet(log);
+      account = w.addr; walletEth = w.eth;
       tIn.client.textContent = fmt(account);
-      log(`wallet connected: ${account}`, "ok");
+      log(`connected via ${w.name}: ${account}`, "ok");
       $("#btn-connect").textContent = fmt(account);
       $("#btn-create").disabled = false;
     } catch (e) { log(`✗ ${e.message}`, "bad"); }
@@ -126,7 +158,7 @@ async function initHire() {
       if (!val) return log("✗ fill in the job field first", "bad");
       $("#btn-create").disabled = true;
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(walletEth);
       const signer = await provider.getSigner();
       const jobs = new ethers.Contract(cat.contract, IFACE_JOBS, signer);
       const usdc = new ethers.Contract(cat.usdc, IFACE_USDC, signer);

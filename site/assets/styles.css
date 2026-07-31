@@ -219,6 +219,17 @@ h1 .money { color: var(--usdc); }
 .choice label:has(input:checked) { background: var(--ink); color: var(--paper); }
 .choice .pr { font-family: "IBM Plex Mono", monospace; font-size: 13px; }
 
+/* wallet picker (EIP-6963 discovered wallets) */
+.wallet-pick { display: grid; gap: 8px; margin-bottom: 16px; }
+.wallet-opt {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  border: 1.5px solid var(--ink); border-radius: 4px; background: var(--paper);
+  padding: 12px 15px; font: 600 15px "Public Sans", sans-serif; color: var(--ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.wallet-opt:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.wallet-opt img { border-radius: 4px; }
+
 /* the carbon-copy log (hire progress) */
 .carbon {
   background: var(--ink); color: #cfd8e6; border-radius: 6px; padding: 18px 20px;
