@@ -20,12 +20,57 @@ async function contracts(signerOrProvider) {
   };
 }
 
-async function send(contract, method, args, label) {
-  await contract[method].staticCall(...args); // dry-run: throws with the real revert reason
-  const tx = await contract[method](...args);
-  const rc = await tx.wait(1);
-  console.log(`  ${label}: ${CFG.EXPLORER}/tx/${rc.hash}`);
-  return rc;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * The free public RPC intermittently returns malformed responses ("could not
+ * coalesce error") under rapid sequential calls — reads and writes alike. Every
+ * RPC touch goes through withRetry: real reverts fail identically three times,
+ * blips succeed on the next attempt.
+ */
+async function withRetry(fn, attempt = 1) {
+  try {
+    return await fn();
+  } catch (e) {
+    if (attempt < 3) {
+      await sleep(2500 * attempt);
+      return withRetry(fn, attempt + 1);
+    }
+    throw e;
+  }
+}
+
+/**
+ * Fetch fee values explicitly so ethers never has to guess mid-send — the public
+ * RPC's answers to fee queries are the least reliable part of the stack, and a
+ * malformed one surfaces as "could not coalesce error". Falls back to legacy
+ * gasPrice when EIP-1559 fields are absent.
+ */
+async function feeOverrides(prov) {
+  const fd = await withRetry(() => prov.getFeeData());
+  if (fd.maxFeePerGas != null) {
+    return { maxFeePerGas: fd.maxFeePerGas * 2n, maxPriorityFeePerGas: fd.maxPriorityFeePerGas ?? 0n };
+  }
+  return { gasPrice: fd.gasPrice, type: 0 };
+}
+
+async function send(contract, method, args, label, attempt = 1) {
+  await sleep(1200); // pacing: give the RPC a beat after the previous confirmation
+  try {
+    await contract[method].staticCall(...args); // dry-run: throws with the real revert reason
+    const overrides = await feeOverrides(contract.runner.provider);
+    const tx = await contract[method](...args, overrides);
+    const rc = await tx.wait(1);
+    console.log(`  ${label}: ${CFG.EXPLORER}/tx/${rc.hash}`);
+    return rc;
+  } catch (e) {
+    if (attempt < 4) {
+      contract.runner?.reset?.(); // NonceManager: drop local nonce state before retrying
+      await sleep(3000 * attempt);
+      return send(contract, method, args, label, attempt + 1);
+    }
+    throw e;
+  }
 }
 
 /** Hash any deliverable/reason content into the bytes32 the contract expects. */
@@ -55,7 +100,7 @@ async function setBudget(providerSigner, jobId, amount) {
 async function fund(clientSigner, jobId, amount) {
   const { jobs, usdc } = await contracts(clientSigner);
   const owner = await clientSigner.getAddress();
-  const allowance = await usdc.allowance(owner, CFG.ERC8183);
+  const allowance = await withRetry(() => usdc.allowance(owner, CFG.ERC8183));
   if (allowance < amount) await send(usdc, "approve", [CFG.ERC8183, amount], "approve");
   await send(jobs, "fund", [jobId, NO_PARAMS], "fund");
 }
@@ -75,4 +120,4 @@ async function reject(evaluatorSigner, jobId, reasonText) {
   await send(jobs, "reject", [jobId, contentHash(reasonText), NO_PARAMS], "reject");
 }
 
-module.exports = { contracts, contentHash, createJob, setBudget, fund, submit, complete, reject, JOB_STATUS };
+module.exports = { contracts, contentHash, createJob, setBudget, fund, submit, complete, reject, withRetry, JOB_STATUS };

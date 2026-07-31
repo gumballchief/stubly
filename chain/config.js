@@ -7,7 +7,7 @@
  */
 
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
-const { JsonRpcProvider, Wallet } = require("ethers");
+const { JsonRpcProvider, Wallet, NonceManager } = require("ethers");
 const fs = require("fs");
 const path = require("path");
 
@@ -46,14 +46,22 @@ function provider() {
   return new JsonRpcProvider(CFG.RPC_URL, CFG.CHAIN_ID, { staticNetwork: true });
 }
 
-/** Load an encrypted keystore created by make-wallets.js. Testnet convenience only. */
+/**
+ * Load an encrypted keystore created by make-wallets.js. Testnet convenience only.
+ * The signer is wrapped in a NonceManager: the load-balanced public RPC can serve
+ * a stale nonce right after a confirmation, which surfaces as malformed
+ * "could not coalesce" errors — local nonce tracking sidesteps that entirely.
+ */
 function loadWallet(name, prov) {
   const file = path.join(__dirname, `${name}.keystore.json`);
   if (!fs.existsSync(file)) throw new Error(`missing ${file} — run: npm run wallets`);
   const pw = process.env.KEYSTORE_PASSWORD;
   if (!pw) throw new Error("KEYSTORE_PASSWORD not set in .env");
   const w = Wallet.fromEncryptedJsonSync(fs.readFileSync(file, "utf8"), pw);
-  return prov ? w.connect(prov) : w;
+  if (!prov) return w;
+  const managed = new NonceManager(w.connect(prov));
+  managed.address = w.address; // convenience for balance checks and job params
+  return managed;
 }
 
 module.exports = { CFG, ERC8183_ABI_MIN, ERC20_ABI, JOB_STATUS, provider, loadWallet };

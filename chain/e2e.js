@@ -43,8 +43,9 @@ async function main() {
 
   if (DRY) { console.log("\ndry run OK — fund wallets at https://faucet.circle.com then run: npm run e2e"); return; }
 
+  const bal = (addr) => jobsLib.withRetry(() => usdc.balanceOf(addr));
   const budget = parseUnits("1", decimals);
-  const provBalBefore = await usdc.balanceOf(providerW.address);
+  const provBalBefore = await bal(providerW.address);
 
   console.log("\n— happy path —");
   const jobId = await jobsLib.createJob(client, {
@@ -59,7 +60,7 @@ async function main() {
   await jobsLib.submit(providerW, jobId, "e2e-deliverable-v1");
   await jobsLib.complete(evaluator, jobId, "meets-spec");
 
-  const provBalAfter = await usdc.balanceOf(providerW.address);
+  const provBalAfter = await bal(providerW.address);
   const earned = provBalAfter - provBalBefore;
   console.log(`  provider earned: ${formatUnits(earned, decimals)} USDC`);
   if (earned <= 0n) throw new Error("provider balance did not increase — settlement failed");
@@ -71,12 +72,12 @@ async function main() {
     expiresInSec: 3600,
     description: "e2e: reject/refund demo job",
   });
-  const clientBalBefore = await usdc.balanceOf(client.address);
+  const clientBalBefore = await bal(client.address);
   await jobsLib.setBudget(providerW, jobId2, budget);
   await jobsLib.fund(client, jobId2, budget);
   await jobsLib.submit(providerW, jobId2, "e2e-bad-deliverable");
   await jobsLib.reject(evaluator, jobId2, "does-not-meet-spec");
-  const clientBalAfter = await usdc.balanceOf(client.address);
+  const clientBalAfter = await bal(client.address);
   console.log(`  client net after reject (should be ~0 delta minus gas): ${formatUnits(clientBalAfter - clientBalBefore, decimals)} USDC`);
 
   console.log("\nE2E COMPLETE — links above are the proof.");
