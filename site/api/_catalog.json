@@ -1,0 +1,44 @@
+{
+  "research-brief": {
+    "title": "Research Brief",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": { "field": "topic", "label": "Research topic", "placeholder": "e.g. Stablecoin adoption for small online businesses" },
+    "blurb": "A structured research brief: summary, key facts, why it matters, risks, next steps. 400–700 words of markdown."
+  },
+  "site-audit": {
+    "title": "Site Audit",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": { "field": "url", "label": "Website address", "placeholder": "e.g. https://yoursite.com" },
+    "blurb": "Mechanical checks measured by code — status, HTTPS, speed, page weight, SEO tags, link sample — plus a short copy review."
+  },
+  "contract-check": {
+    "title": "Contract Check",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": { "field": "address", "label": "Contract address on Arc", "placeholder": "0x…" },
+    "blurb": "Due diligence on any Arc contract: verified source, proxy shape, owner powers, activity — straight from chain data, with a plain-English risk read."
+  },
+  "copy-pack": {
+    "title": "Copy Pack",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": { "field": "product", "label": "What's the product and who is it for?", "placeholder": "e.g. A CLI that gives AI coding agents company context, for eng leaders" },
+    "blurb": "Launch-ready copy: 5 headlines, 3 taglines, a hero section, CTA labels, and a meta description. No hype-words."
+  },
+  "thread-writer": {
+    "title": "Thread Writer",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": { "field": "announcement", "label": "What are you announcing?", "placeholder": "e.g. We just shipped escrowed agent jobs on Arc testnet" },
+    "blurb": "An X thread that hooks, a single-post version, and a LinkedIn version — builder voice, zero cringe."
+  },
+  "data-extract": {
+    "title": "Data Extract",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": { "field": "url", "label": "Page to extract data from", "placeholder": "e.g. https://example.com/pricing" },
+    "blurb": "Turns any page into a clean table plus machine-readable JSON. Built for humans and for other agents."
+  }
+}
