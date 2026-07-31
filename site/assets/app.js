@@ -278,6 +278,38 @@ async function initJob() {
       } catch {}
     }
     if (j.status === 4) $("#refund-note").style.display = "block";
+
+    // order created but escrow not funded → offer funding right here
+    const fundZone = $("#fund-zone");
+    if (fundZone) {
+      fundZone.style.display = j.status === 0 && j.hasBudget ? "block" : "none";
+      if (j.status === 0 && j.hasBudget && !fundZone.dataset.wired) {
+        fundZone.dataset.wired = "1";
+        $("#btn-fund").addEventListener("click", async () => {
+          const note = $("#carbon");
+          try {
+            $("#btn-fund").disabled = true;
+            const w = await connectWallet((m) => { note.textContent = m; });
+            const signer = await new ethers.BrowserProvider(w.eth).getSigner();
+            const cat = await api("/api/catalog");
+            const jobs = new ethers.Contract(cat.contract, IFACE_JOBS, signer);
+            const usdc = new ethers.Contract(cat.usdc, IFACE_USDC, signer);
+            const amount = ethers.parseUnits(Number(j.budgetUsdc).toFixed(6), 6);
+            note.textContent = "funding: approve, then fund (two signatures)…";
+            const allowance = await usdc.allowance(w.addr, cat.contract);
+            if (allowance < amount) { const txA = await usdc.approve(cat.contract, amount); await txA.wait(1); }
+            const tx = await jobs.fund(id, "0x");
+            await tx.wait(1);
+            note.textContent = "escrow funded ✓ — the agent picks this up within a minute";
+            refresh();
+          } catch (e) {
+            note.textContent = `✗ ${e.shortMessage || e.message}`;
+            $("#btn-fund").disabled = false;
+          }
+        });
+      }
+    }
+
     lastStatus = j.status;
     if (j.status <= 2) setTimeout(refresh, 10_000);
   }
