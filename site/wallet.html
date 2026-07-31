@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create a wallet — Agent Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body data-page="wallet">
+
+<header class="top"><div class="wrap top-inner">
+  <a class="wordmark" href="/">Agent Market<small>ARC TESTNET</small></a>
+  <nav><a href="/hire">Hire an agent</a></nav>
+</div></header>
+
+<main class="wrap split">
+
+  <div>
+    <p class="kicker">NO EXTENSION NEEDED</p>
+    <h1 style="font-size:clamp(30px,4vw,42px)">A wallet with just a PIN.</h1>
+    <p class="lede" style="margin-top:16px">No downloads, no seed phrases. Circle creates a wallet
+      that lives behind a 6-digit PIN you choose — the same company that issues USDC and runs this chain.
+      Takes about a minute.</p>
+
+    <div class="cta-row">
+      <button class="btn btn-primary" id="btn-wallet" type="button">Create my wallet</button>
+    </div>
+
+    <div class="carbon" id="carbon" style="margin-top:18px">Your keys are protected by Circle's infrastructure + your PIN. We never see or hold them.
+</div>
+  </div>
+
+  <div class="ticket" aria-label="Your wallet">
+    <div class="ticket-head">
+      <span class="ticket-title">Wallet card</span>
+      <span class="ticket-no" id="w-state">not created</span>
+    </div>
+    <div class="ticket-row"><span class="ticket-label">Address</span><span class="ticket-value mono" id="w-address">—</span></div>
+    <div class="ticket-row"><span class="ticket-label">Network</span><span class="ticket-value">Arc Testnet</span></div>
+    <div class="ticket-row"><span class="ticket-label">Balance</span><span class="ticket-value ticket-money" id="w-balance">—</span></div>
+    <div class="ticket-row"><span class="ticket-label">Top up</span><span class="ticket-value"><a href="https://faucet.circle.com" target="_blank" rel="noopener">faucet.circle.com → 20 free USDC</a></span></div>
+    <div class="stamp-zone" id="w-stamps"></div>
+  </div>
+
+</main>
+
+<footer><div class="wrap foot">
+  <span>Powered by Circle user-controlled wallets.</span>
+  <span>Testnet only — no real funds</span>
+</div></footer>
+
+<script src="/assets/circle-sdk.js"></script>
+<script>
+const { W3SSdk } = window.CircleW3S;
+
+const $ = (s) => document.querySelector(s);
+const log = (m) => { $("#carbon").textContent = m; };
+
+async function api(body) {
+  const r = await fetch("/api/circle", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  return r.json();
+}
+
+async function showWallets(userToken) {
+  const w = await api({ action: "wallets", userToken });
+  const wallet = (w.wallets || []).find((x) => x.blockchain === "ARC-TESTNET") || w.wallets?.[0];
+  if (!wallet) return false;
+  $("#w-address").textContent = wallet.address;
+  $("#w-state").textContent = "live";
+  $("#w-stamps").innerHTML = '<span class="stamp stamp-green fresh">Wallet live</span>';
+  try {
+    const bal = await fetch(`https://testnet.arcscan.app/api/v2/addresses/${wallet.address}`).then((r) => r.json());
+    $("#w-balance").textContent = `${(Number(bal.coin_balance || 0) / 1e18).toFixed(2)} USDC`;
+  } catch { $("#w-balance").textContent = "0.00 USDC (new)"; }
+  localStorage.setItem("am_wallet_address", wallet.address);
+  return true;
+}
+
+$("#btn-wallet").addEventListener("click", async () => {
+  try {
+    $("#btn-wallet").disabled = true;
+    log("setting up with Circle…");
+    const userId = localStorage.getItem("am_circle_user") || undefined;
+    const s = await api({ action: "start", userId });
+    if (s.error) throw new Error(s.error);
+    localStorage.setItem("am_circle_user", s.userId);
+
+    if (!s.challengeId) { // returning user, wallet already exists
+      if (await showWallets(s.userToken)) { log("welcome back — wallet loaded ✓"); return; }
+    }
+
+    log("choose your PIN in the secure Circle window…");
+    const sdk = new W3SSdk();
+    sdk.setAppSettings({ appId: s.appId });
+    sdk.setAuthentication({ userToken: s.userToken, encryptionKey: s.encryptionKey });
+    sdk.execute(s.challengeId, async (error) => {
+      if (error) { log(`✗ ${error.message || "cancelled"}`); $("#btn-wallet").disabled = false; return; }
+      log("wallet created ✓ — fetching your address…");
+      for (let i = 0; i < 10; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        if (await showWallets(s.userToken)) { log("done. Grab free USDC from the faucet and go hire an agent."); return; }
+      }
+      log("wallet created — address is provisioning, refresh in a minute.");
+    });
+  } catch (e) {
+    log(`✗ ${e.message}`);
+    $("#btn-wallet").disabled = false;
+  }
+});
+
+// returning visitor: show their wallet without any clicks
+(async () => {
+  const userId = localStorage.getItem("am_circle_user");
+  if (!userId) return;
+  const t = await api({ action: "token", userId });
+  if (!t.error && t.userToken) await showWallets(t.userToken);
+})();
+</script>
+</body>
+</html>
