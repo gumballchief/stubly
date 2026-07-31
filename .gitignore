@@ -1,0 +1,12 @@
+# secrets & state — never commit
+.env
+.env.*
+!.env.example
+*.keystore.json
+state.json
+deliverables/
+
+# deps & tooling
+node_modules/
+.vercel/
+chain/erc8183.abi.json
