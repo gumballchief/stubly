@@ -4,8 +4,10 @@
    client transactions (createJob, then approve+fund) via the visitor's own
    browser wallet. All addresses here are public constants. */
 
+/* EXACTLY the keys wallet_addEthereumChain accepts — extra keys make MetaMask
+   reject the whole request ("unsupported keys"), so never decorate this object. */
 const ARC = {
-  chainIdHex: "0x4cef52", // 5042002
+  chainId: "0x4cef52", // 5042002
   chainName: "Arc Testnet",
   rpcUrls: ["https://rpc.testnet.arc.io"],
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
@@ -93,17 +95,22 @@ async function connectWallet(log) {
   log(`using ${chosen.info.name}…`);
   const [addr] = await eth.request({ method: "eth_requestAccounts" });
   const current = await eth.request({ method: "eth_chainId" });
-  if (current.toLowerCase() !== ARC.chainIdHex) {
+  if (current.toLowerCase() !== ARC.chainId) {
     log(`switching ${chosen.info.name} to ${ARC.chainName}…`);
     try {
-      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: ARC.chainIdHex }] });
+      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: ARC.chainId }] });
     } catch (e) {
-      if (e.code === 4902) {
-        await eth.request({ method: "wallet_addEthereumChain", params: [ARC] });
-      } else throw e;
+      // 4902 = unknown chain; some wallets bury it in e.data — try adding either way
+      await eth.request({ method: "wallet_addEthereumChain", params: [ARC] });
+      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: ARC.chainId }] });
     }
   }
   return { addr, eth, name: chosen.info.name };
+}
+
+async function disconnectWallet(eth) {
+  try { await eth.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] }); }
+  catch { /* older wallets have no revoke — clearing our own state is enough */ }
 }
 
 /* ————— page: hire ————— */
@@ -148,7 +155,18 @@ async function initHire() {
       log(`connected via ${w.name}: ${account}`, "ok");
       $("#btn-connect").textContent = fmt(account);
       $("#btn-create").disabled = false;
+      $("#btn-disconnect").style.display = "inline-block";
     } catch (e) { log(`✗ ${e.message}`, "bad"); }
+  });
+
+  $("#btn-disconnect").addEventListener("click", async () => {
+    if (walletEth) await disconnectWallet(walletEth);
+    account = null; walletEth = null;
+    tIn.client.textContent = "connect wallet";
+    $("#btn-connect").textContent = "Connect wallet";
+    $("#btn-create").disabled = true;
+    $("#btn-disconnect").style.display = "none";
+    log("disconnected — pick any wallet to reconnect", "ok");
   });
 
   $("#btn-create").addEventListener("click", async () => {
