@@ -16,8 +16,10 @@
 
 const fs = require("fs");
 const path = require("path");
+const { parseUnits } = require("ethers");
 const { CFG, provider, loadWallet, JOB_STATUS } = require("../chain/config");
 const jobsLib = require("../chain/jobs");
+const CATALOG = require("./catalog");
 
 const AGENTS = Object.fromEntries(
   ["research-brief", "site-audit"].map((k) => { const a = require(`./agents/${k}`); return [a.key, a]; })
@@ -78,7 +80,22 @@ async function processJob(jobId, ctx) {
   const st = state.jobs[jobId];
 
   if (!spec) { st.phase = "ignored-not-ours"; return; }
-  if (status === "Open") return; // waiting for budget+funding
+
+  if (status === "Open") {
+    // Jobs created from the site arrive without a budget — quoting is our move.
+    const hasBudget = await jobsLib.withRetry(() => jobs.jobHasBudget(jobId));
+    if (!hasBudget && st.phase !== "quoted") {
+      const price = CATALOG[spec.agent]?.priceUsdc;
+      if (!price) { st.phase = "ignored-unknown-agent"; return; }
+      console.log(`[quote] job ${jobId} → setBudget ${price} USDC`);
+      if (DRY) return;
+      const { usdc } = await jobsLib.contracts(providerSigner);
+      const decimals = await jobsLib.withRetry(() => usdc.decimals());
+      await jobsLib.setBudget(providerSigner, jobId, parseUnits(price, decimals));
+      st.phase = "quoted"; saveState(state);
+    }
+    return; // now waiting for the client to fund
+  }
   if (["Completed", "Rejected", "Expired"].includes(status)) { st.phase = `chain-${status.toLowerCase()}`; return; }
 
   if (status === "Funded" && st.phase !== "submitted") {

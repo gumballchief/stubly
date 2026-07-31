@@ -1,0 +1,8 @@
+{
+  "name": "agent-market-site",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "ethers": "^6.13.0"
+  }
+}

@@ -1,0 +1,269 @@
+/* ————————————————————————————————————————————————
+   Work-order aesthetic: manila job tickets on a ledger-gray desk.
+   Ink navy text, USDC blue for money, rubber stamps for contract states.
+   Type: Archivo Black (display) · Public Sans (body) · IBM Plex Mono (ledger).
+   ———————————————————————————————————————————————— */
+
+:root {
+  --desk: #e8ebef;
+  --desk-deep: #dde2e8;
+  --ink: #16233b;
+  --ink-soft: #4d5a70;
+  --manila: #f6eedc;
+  --manila-edge: #ddcda4;
+  --usdc: #2775ca;
+  --usdc-deep: #1d5da6;
+  --stamp-blue: #26518f;
+  --stamp-green: #1e7a4a;
+  --stamp-red: #b23a2f;
+  --paper: #fcfcfa;
+  --hairline: rgba(22, 35, 59, 0.18);
+  --dash: rgba(22, 35, 59, 0.28);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+body {
+  background: var(--desk);
+  color: var(--ink);
+  font-family: "Public Sans", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+a { color: var(--usdc-deep); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--usdc); }
+:focus-visible { outline: 3px solid var(--usdc); outline-offset: 2px; border-radius: 2px; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+/* ————— header: a file-folder tab strip ————— */
+.top {
+  border-bottom: 2px solid var(--ink);
+  background: var(--desk);
+}
+.top-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0;
+}
+.wordmark {
+  font-family: "Archivo Black", sans-serif;
+  font-size: 17px; letter-spacing: 0.02em; color: var(--ink);
+  text-decoration: none; text-transform: uppercase;
+}
+.wordmark small {
+  font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 400;
+  letter-spacing: 0.18em; color: var(--paper);
+  background: var(--usdc); border-radius: 3px; padding: 3px 7px;
+  vertical-align: 3px; margin-left: 10px;
+}
+.top nav { display: flex; gap: 10px; }
+.top nav a {
+  font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none;
+  padding: 12px 10px; transition: color 0.15s ease;
+}
+.top nav a:hover { color: var(--usdc-deep); text-decoration: underline; }
+
+/* ————— hero ————— */
+.hero { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; padding: 72px 0 64px; }
+.kicker {
+  font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--ink-soft); margin-bottom: 18px;
+}
+h1 {
+  font-family: "Archivo Black", sans-serif;
+  font-size: clamp(38px, 5.2vw, 58px);
+  line-height: 1.02; letter-spacing: -0.01em; text-transform: uppercase;
+}
+h1 .money { color: var(--usdc); }
+.lede { margin-top: 22px; font-size: 18px; color: var(--ink-soft); max-width: 46ch; }
+.lede strong { color: var(--ink); }
+.cta-row { margin-top: 32px; display: flex; gap: 14px; flex-wrap: wrap; }
+
+.btn {
+  display: inline-block; font-weight: 700; font-size: 15px; text-decoration: none;
+  padding: 13px 22px; border: 2px solid var(--ink); border-radius: 4px;
+  color: var(--ink); background: transparent; cursor: pointer;
+  font-family: "Public Sans", sans-serif; touch-action: manipulation;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn:active { transform: scale(0.98); }
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.btn:active { transform: translate(0, 0); box-shadow: none; }
+.btn-primary { background: var(--usdc); border-color: var(--usdc-deep); color: #fff; }
+.btn-primary:hover { box-shadow: 3px 3px 0 var(--usdc-deep); color: #fff; }
+.btn[disabled] { opacity: 0.45; pointer-events: none; }
+
+/* ————— the ticket (signature element) ————— */
+.ticket {
+  position: relative;
+  background: var(--manila);
+  border: 1px solid var(--manila-edge);
+  border-radius: 6px;
+  box-shadow: 0 1px 0 rgba(22,35,59,.06), 0 10px 24px -14px rgba(22,35,59,.35);
+  padding: 26px 28px 24px 44px;
+}
+.ticket::before { /* perforation strip */
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 26px;
+  border-right: 1px dashed var(--dash);
+  background-image: radial-gradient(circle 4px, var(--desk) 98%, transparent 100%);
+  background-size: 26px 26px; background-position: 4px 12px; background-repeat: repeat-y;
+}
+.ticket::after { /* punch notches where the stub tears off */
+  content: ""; position: absolute; left: 19px; top: -8px; bottom: -8px; width: 15px;
+  background:
+    radial-gradient(circle 7px at 7px 8px, var(--desk) 99%, transparent 100%) top left / 15px 16px no-repeat,
+    radial-gradient(circle 7px at 7px 8px, var(--desk) 99%, transparent 100%) bottom left / 15px 16px no-repeat;
+  pointer-events: none;
+}
+
+/* machine strip — stripe widths derive from the real job number */
+.barcode {
+  display: flex; align-items: stretch; gap: 2px; height: 34px; margin-top: 16px;
+  padding-top: 12px; border-top: 1px dashed var(--dash);
+}
+.barcode i { background: var(--ink); opacity: 0.85; }
+.barcode-label {
+  font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: 0.3em;
+  color: var(--ink-soft); margin-top: 5px; text-transform: uppercase;
+}
+.ticket-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 14px;
+}
+.ticket-title { font-family: "Archivo Black", sans-serif; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+.ticket-no { font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink-soft); }
+.ticket-row {
+  display: flex; justify-content: space-between; gap: 18px;
+  padding: 9px 0; border-bottom: 1px dashed var(--dash);
+  font-size: 14px;
+}
+.ticket-row:last-of-type { border-bottom: 0; }
+.ticket-label {
+  font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-soft); padding-top: 3px; white-space: nowrap;
+}
+.ticket-value { text-align: right; word-break: break-word; font-weight: 600; }
+.ticket-value.mono { font-weight: 400; font-size: 13px; }
+.ticket-money { font-family: "IBM Plex Mono", monospace; font-weight: 600; color: var(--usdc-deep); }
+
+/* stamps */
+.stamp-zone { position: relative; min-height: 74px; margin-top: 12px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.stamp {
+  font-family: "Archivo Black", sans-serif; text-transform: uppercase;
+  font-size: 17px; letter-spacing: 0.12em; line-height: 1;
+  padding: 9px 14px; border: 3px solid currentColor; border-radius: 6px;
+  transform: rotate(-5deg); opacity: 0.86; user-select: none;
+  mix-blend-mode: multiply;
+}
+.stamp + .stamp { transform: rotate(3deg); }
+.stamp-blue { color: var(--stamp-blue); }
+.stamp-green { color: var(--stamp-green); }
+.stamp-red { color: var(--stamp-red); }
+@keyframes thunk { 0% { transform: scale(1.6) rotate(-5deg); opacity: 0; } 60% { transform: scale(0.94) rotate(-5deg); opacity: 0.9; } 100% { transform: scale(1) rotate(-5deg); opacity: 0.86; } }
+.stamp.fresh { animation: thunk 0.28s ease-out; }
+
+/* ————— sections ————— */
+.section { padding: 54px 0; border-top: 1px solid var(--hairline); }
+.section-title {
+  font-family: "Archivo Black", sans-serif; font-size: 24px; text-transform: uppercase;
+  letter-spacing: 0.01em; margin-bottom: 26px;
+}
+.section-title .mono-tag { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--ink-soft); display: block; margin-bottom: 8px; font-weight: 400; }
+
+/* agent spec cards */
+.agent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.agent-card {
+  background: var(--paper); border: 1.5px solid var(--ink); border-radius: 6px;
+  padding: 24px; display: flex; flex-direction: column; gap: 12px;
+}
+.agent-card h3 { font-family: "Archivo Black", sans-serif; font-size: 19px; text-transform: uppercase; }
+.agent-card p { color: var(--ink-soft); font-size: 14.5px; flex: 1; }
+.agent-meta { display: flex; justify-content: space-between; font-family: "IBM Plex Mono", monospace; font-size: 13px; border-top: 1px dashed var(--dash); padding-top: 12px; }
+.agent-meta b { color: var(--usdc-deep); }
+
+/* escrow line — the contract's real states */
+.escrow-line { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border: 1.5px solid var(--ink); border-radius: 6px; overflow: hidden; background: var(--paper); }
+.escrow-step { padding: 18px 16px 20px; border-right: 1px dashed var(--dash); }
+.escrow-step:last-child { border-right: 0; }
+.escrow-step .st { font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--ink-soft); }
+.escrow-step h4 { font-family: "Archivo Black", sans-serif; font-size: 14px; text-transform: uppercase; margin: 6px 0 6px; }
+.escrow-step p { font-size: 13px; color: var(--ink-soft); }
+.escrow-step.final-good h4 { color: var(--stamp-green); }
+.escrow-step.final-bad h4 { color: var(--stamp-red); }
+
+/* forms */
+.field { margin-bottom: 18px; }
+.field label { display: block; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 7px; }
+.field input[type="text"] {
+  width: 100%; padding: 12px 14px; font-size: 16px; font-family: "Public Sans", sans-serif;
+  border: 1.5px solid var(--ink); border-radius: 4px; background: var(--paper); color: var(--ink);
+}
+.field input[type="text"]:focus { outline: 3px solid rgba(39, 117, 202, 0.35); }
+.choice { display: grid; gap: 10px; }
+.choice label {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  border: 1.5px solid var(--ink); border-radius: 4px; background: var(--paper);
+  padding: 13px 15px; cursor: pointer; font-weight: 600; font-size: 15px;
+}
+.choice input { accent-color: var(--usdc); width: 16px; height: 16px; }
+.choice label:has(input:checked) { background: var(--ink); color: var(--paper); }
+.choice .pr { font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+
+/* the carbon-copy log (hire progress) */
+.carbon {
+  background: var(--ink); color: #cfd8e6; border-radius: 6px; padding: 18px 20px;
+  font-family: "IBM Plex Mono", monospace; font-size: 12.5px; line-height: 1.8;
+  min-height: 72px; white-space: pre-wrap; word-break: break-word;
+}
+.carbon a { color: #8db8e8; }
+.carbon .ok { color: #79c99a; }
+.carbon .bad { color: #e08a80; }
+
+/* two-column utility */
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; padding: 48px 0 64px; }
+
+/* deliverable paper */
+.paper-doc {
+  background: var(--paper); border: 1px solid var(--hairline); border-radius: 6px;
+  padding: 34px 38px; box-shadow: 0 10px 24px -18px rgba(22,35,59,.4);
+}
+.paper-doc h1, .paper-doc h2, .paper-doc h3 { font-family: "Public Sans", sans-serif; font-weight: 700; margin: 20px 0 8px; font-size: 18px; text-transform: none; letter-spacing: 0; }
+.paper-doc h1 { font-size: 22px; margin-top: 0; }
+.paper-doc ul { margin: 8px 0 8px 20px; }
+.paper-doc li { margin: 4px 0; }
+.paper-doc p { margin: 8px 0; }
+.paper-doc code { font-family: "IBM Plex Mono", monospace; font-size: 13px; background: var(--desk); padding: 1px 5px; border-radius: 3px; }
+
+/* status timeline on job page */
+.timeline { display: flex; flex-direction: column; gap: 0; margin-top: 18px; }
+.tl-step { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px dashed var(--dash); font-size: 14px; align-items: baseline; }
+.tl-step:last-child { border-bottom: 0; }
+.tl-mark { font-family: "IBM Plex Mono", monospace; font-size: 12px; width: 22px; color: var(--ink-soft); }
+.tl-step.done .tl-mark { color: var(--stamp-green); }
+.tl-step.done { color: var(--ink); font-weight: 600; }
+.tl-step.pending { color: var(--ink-soft); }
+
+/* footer */
+footer { border-top: 2px solid var(--ink); margin-top: 30px; padding: 26px 0 40px; }
+.foot { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-soft); }
+.foot a { color: var(--ink-soft); }
+
+/* responsive */
+@media (max-width: 880px) {
+  .hero { grid-template-columns: 1fr; gap: 40px; padding: 48px 0 42px; }
+  .agent-grid, .split { grid-template-columns: 1fr; }
+  .escrow-line { grid-template-columns: 1fr; }
+  .escrow-step { border-right: 0; border-bottom: 1px dashed var(--dash); }
+  .escrow-step:last-child { border-bottom: 0; }
+  .top nav { gap: 14px; }
+}
