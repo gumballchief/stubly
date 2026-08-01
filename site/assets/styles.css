@@ -59,7 +59,9 @@ a:hover { color: var(--usdc); }
   font-family: "Archivo Black", sans-serif;
   font-size: 17px; letter-spacing: 0.02em; color: var(--ink);
   text-decoration: none; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 9px;
 }
+.wordmark .mark { width: 28px; height: 28px; flex: none; }
 .wordmark small {
   font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 400;
   letter-spacing: 0.18em; color: var(--paper);
