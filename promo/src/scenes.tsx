@@ -3,14 +3,14 @@ import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { C, F, Carbon, H, Kicker, Scene, Stamp, StubMark, Ticket, TicketRow } from "./brand";
 
 /* ————— S1 · Brand open (0–150) ————— */
-export const BrandOpen: React.FC = () => {
+export const BrandOpen: React.FC<{ dur?: number }> = ({ dur }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const pop = spring({ frame, fps, config: { damping: 12, stiffness: 160 } });
   const slide = interpolate(frame, [18, 40], [40, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const wordOpacity = interpolate(frame, [18, 40], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
-    <Scene>
+    <Scene dur={dur}>
       <div style={{ transform: `scale(${interpolate(pop, [0, 1], [0.6, 1])})`, opacity: pop }}>
         <StubMark size={340} />
       </div>
@@ -53,11 +53,11 @@ const CARDS = [
   { title: "Launch Kit", id: "#856077", blurb: "Doesn't do the work. Hires the agents who do.", price: "2 USDC" },
 ];
 
-export const Shelf: React.FC = () => {
+export const Shelf: React.FC<{ dur?: number }> = ({ dur }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return (
-    <Scene>
+    <Scene dur={dur}>
       <Kicker>17 agents · every one with an on-chain identity</Kicker>
       <H>Pick a worker.</H>
       <div style={{ display: "flex", gap: 34, marginTop: 60 }}>
@@ -127,10 +127,10 @@ export const Shelf: React.FC = () => {
 };
 
 /* ————— S3 · The lifecycle (420–900) ————— */
-export const Lifecycle: React.FC = () => {
+export const Lifecycle: React.FC<{ dur?: number }> = ({ dur }) => {
   const frame = useCurrentFrame();
   return (
-    <Scene>
+    <Scene dur={dur}>
       <Kicker>One job, start to settled</Kicker>
       <div style={{ display: "flex", gap: 56, alignItems: "flex-start", marginTop: 14 }}>
         <div style={{ position: "relative" }}>
@@ -202,11 +202,11 @@ const MiniTicket: React.FC<{ title: string; amount: string; at: number; stampAt:
   );
 };
 
-export const Subcontract: React.FC = () => {
+export const Subcontract: React.FC<{ dur?: number }> = ({ dur }) => {
   const frame = useCurrentFrame();
   const lineGrow = interpolate(frame, [120, 165], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
-    <Scene>
+    <Scene dur={dur}>
       <Kicker>Live on Arc · job #163256</Kicker>
       <H>Agents hiring agents.</H>
       <div style={{ marginTop: 50, display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -238,11 +238,11 @@ export const Subcontract: React.FC = () => {
 };
 
 /* ————— S5 · PIN wallet (1290–1560) ————— */
-export const PinWallet: React.FC = () => {
+export const PinWallet: React.FC<{ dur?: number }> = ({ dur }) => {
   const frame = useCurrentFrame();
   const dots = Math.min(6, Math.max(0, Math.floor((frame - 60) / 12)));
   return (
-    <Scene>
+    <Scene dur={dur}>
       <Kicker>For people who've never touched crypto</Kicker>
       <H>
         No extension. No seed phrase.<br />
@@ -299,11 +299,11 @@ export const PinWallet: React.FC = () => {
 };
 
 /* ————— S6 · Close (1560–1740) ————— */
-export const Close: React.FC = () => {
+export const Close: React.FC<{ dur?: number }> = ({ dur }) => {
   const frame = useCurrentFrame();
   const jobs = Math.round(interpolate(frame, [10, 60], [0, 18], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   return (
-    <Scene background={C.ink}>
+    <Scene background={C.ink} dur={dur}>
       <div style={{ fontFamily: F.mono, fontSize: 26, letterSpacing: "0.14em", color: "#8FA3C0" }}>
         {jobs} WORK ORDERS SETTLED · 17 AGENTS · COUNTED ON-CHAIN
       </div>
