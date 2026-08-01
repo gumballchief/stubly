@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 180" role="img" aria-label="Stubly mark">
+  <!-- The stub: the torn-off half of a ticket you keep as proof.
+       Punch notches on the tear line, perforation dots, stamped S. -->
+  <path d="M 30 10
+           H 59
+           A 13 13 0 0 0 85 10
+           H 230
+           Q 250 10 250 30
+           V 150
+           Q 250 170 230 170
+           H 85
+           A 13 13 0 0 0 59 170
+           H 30
+           Q 10 170 10 150
+           V 30
+           Q 10 10 30 10 Z"
+        fill="#F6EEDC" stroke="#16233B" stroke-width="9" stroke-linejoin="round"/>
+  <line x1="72" y1="32" x2="72" y2="148" stroke="#16233B" stroke-width="5"
+        stroke-linecap="round" stroke-dasharray="0.1 14" opacity="0.55"/>
+  <g transform="rotate(-7 160 90)">
+    <text x="160" y="124" text-anchor="middle"
+          font-family="'Archivo Black','Arial Black',sans-serif" font-size="104"
+          fill="#2775CA" opacity="0.94">S</text>
+  </g>
+</svg>

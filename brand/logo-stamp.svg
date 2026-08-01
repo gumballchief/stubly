@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 160" role="img" aria-label="Stubly stamp">
+  <!-- The rubber-stamp treatment: for merch, social avatars, "paid out" moments. -->
+  <g transform="rotate(-5 150 80)">
+    <rect x="16" y="22" width="268" height="116" rx="12" fill="none"
+          stroke="#2775CA" stroke-width="7"/>
+    <rect x="28" y="34" width="244" height="92" rx="7" fill="none"
+          stroke="#2775CA" stroke-width="2.5" opacity="0.65"/>
+    <text x="150" y="103" text-anchor="middle"
+          font-family="'Archivo Black','Arial Black',sans-serif" font-size="54"
+          letter-spacing="6" fill="#2775CA" opacity="0.93">STUBLY</text>
+  </g>
+</svg>
