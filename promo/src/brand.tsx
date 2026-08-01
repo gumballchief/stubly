@@ -177,14 +177,50 @@ export const TicketRow: React.FC<{ label: string; value: React.ReactNode; money?
   );
 };
 
+/** Screen-demo cursor: glides between waypoints, dips + ripples on click. */
+export const Cursor: React.FC<{ path: Array<[number, number, number]>; clicks?: number[] }> = ({ path, clicks = [] }) => {
+  const frame = useCurrentFrame();
+  const xs = path.map((p) => p[0]);
+  if (frame < xs[0]) return null;
+  const x = interpolate(frame, xs, path.map((p) => p[1]), { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: (t) => 1 - Math.pow(1 - t, 3) });
+  const y = interpolate(frame, xs, path.map((p) => p[2]), { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: (t) => 1 - Math.pow(1 - t, 3) });
+  const clickNow = clicks.find((c) => frame >= c && frame < c + 10);
+  const dip = clickNow !== undefined ? interpolate(frame - clickNow, [0, 3, 8], [1, 0.8, 1], { extrapolateRight: "clamp" }) : 1;
+  return (
+    <div style={{ position: "absolute", left: x, top: y, zIndex: 50, pointerEvents: "none" }}>
+      {clicks.map((c) =>
+        frame >= c && frame < c + 16 ? (
+          <div
+            key={c}
+            style={{
+              position: "absolute",
+              left: -interpolate(frame - c, [0, 16], [4, 34]),
+              top: -interpolate(frame - c, [0, 16], [4, 34]),
+              width: interpolate(frame - c, [0, 16], [8, 68]),
+              height: interpolate(frame - c, [0, 16], [8, 68]),
+              borderRadius: "50%",
+              border: `3px solid ${C.usdc}`,
+              opacity: interpolate(frame - c, [0, 16], [0.8, 0]),
+            }}
+          />
+        ) : null
+      )}
+      <svg width={34} height={40} viewBox="0 0 34 40" style={{ transform: `scale(${dip})`, filter: "drop-shadow(0 3px 6px rgba(22,35,59,.4))" }}>
+        <path d="M4 2 L4 32 L11.5 25 L16 37 L21.5 34.5 L17 23 L27 22 Z" fill="#16233B" stroke="#FCFCFA" strokeWidth={2.4} strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+};
+
 /** Dark console log with typewriter lines. lines[i] = [text, frameWhenItStartsTyping, color?] */
-export const Carbon: React.FC<{ lines: Array<[string, number, string?]>; width?: number; fontSize?: number }> = ({
+export const Carbon: React.FC<{ lines: Array<[string, number, string?]>; width?: number; fontSize?: number; speed?: number }> = ({
   lines,
   width = 640,
   fontSize = 19,
+  speed = 2.6,
 }) => {
   const frame = useCurrentFrame();
-  const CHARS_PER_FRAME = 1.6;
+  const CHARS_PER_FRAME = speed;
   return (
     <div
       style={{

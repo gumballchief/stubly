@@ -1,68 +1,58 @@
 import React from "react";
 import { Audio, Composition, Sequence, staticFile } from "remotion";
-import { BrandOpen, Close, Lifecycle, PinWallet, Shelf, Subcontract } from "./scenes";
+import { BrandOpen, CLICK_AT, Close, Lifecycle, PIN_KEY_FRAMES, PinWallet, Shelf, Subcontract } from "./scenes";
 
-/* Scene layout: [start, duration] */
-const S1 = [0, 150] as const;
-const S2 = [150, 270] as const;
-const S3 = [420, 480] as const;
-const S4 = [900, 390] as const;
-const S5 = [1290, 270] as const;
-const S6 = [1560, 180] as const;
+/* Scene layout: [start, duration] — 912 frames ≈ 30s total */
+const S1 = [0, 84] as const;
+const S2 = [84, 132] as const;
+const S3 = [216, 264] as const;
+const S4 = [480, 180] as const;
+const S5 = [660, 132] as const;
+const S6 = [792, 120] as const;
 
-/* One flat audio timeline in GLOBAL frames: [file, frame, volume] */
+const KEYS = ["key1.wav", "key2.wav", "key3.wav"];
+
+/** Keyboard ticks that follow a typewriter line: one key every 3 frames while it types. */
+function typing(globalStart: number, textLength: number, speed: number, volume = 0.14): Array<[string, number, number]> {
+  const frames = Math.ceil(textLength / speed);
+  const out: Array<[string, number, number]> = [];
+  for (let f = 0; f < frames; f += 3) {
+    out.push([KEYS[(globalStart + f) % 3], globalStart + f, volume * (0.8 + ((globalStart + f) % 5) * 0.08)]);
+  }
+  return out;
+}
+
 const SFX: Array<[string, number, number]> = [
-  // scene transitions — paper whoosh just before each boundary
-  ...[S2, S3, S4, S5, S6].map(([start]) => ["whoosh.wav", start - 10, 0.4] as [string, number, number]),
+  // scene changes — barely-there air
+  ...[S2, S3, S4, S5, S6].map(([start]) => ["swish.wav", start - 8, 0.3] as [string, number, number]),
 
-  // S1 — brand open
-  ["pop.wav", 6, 0.55],
-  ["click.wav", 22, 0.35],
-  ["stamp.wav", 92, 0.85],
+  // S1 — stamp lands
+  ["stamp.wav", 46, 0.6],
 
-  // S2 — shelf: three cards land, footer line clicks in
-  ["pop.wav", 176, 0.5],
-  ["pop.wav", 192, 0.5],
-  ["pop.wav", 208, 0.5],
-  ["click.wav", 262, 0.3],
+  // S2 — the cursor actually clicks the card
+  ["mouseclick.wav", S2[0] + CLICK_AT, 0.6],
 
-  // S3 — lifecycle: ticket rows tick in, stamps thunk, settlement dings
-  ["click.wav", 440, 0.35],
-  ["click.wav", 454, 0.35],
-  ["click.wav", 468, 0.35],
-  ["click.wav", 480, 0.35],
-  ["stamp.wav", 570, 0.85],
-  ["stamp.wav", 688, 0.85],
-  ["stamp.wav", 800, 0.9],
-  ["ding.wav", 806, 0.45],
+  // S3 — the console types (real keyboard), stamps land as lines confirm
+  ...typing(S3[0] + 34, 26, 3.1),
+  ...typing(S3[0] + 70, 36, 3.1),
+  ...typing(S3[0] + 108, 34, 3.1),
+  ...typing(S3[0] + 148, 29, 3.1),
+  ...typing(S3[0] + 212, 35, 3.1),
+  ["stamp.wav", S3[0] + 70, 0.55],
+  ["stamp.wav", S3[0] + 148, 0.55],
+  ["stamp.wav", S3[0] + 212, 0.65],
 
-  // S4 — subcontract: tickets land, three settled stamps
-  ["pop.wav", 930, 0.55],
-  ["pop.wav", 1070, 0.5],
-  ["pop.wav", 1090, 0.5],
-  ["stamp.wav", 1110, 0.75],
-  ["stamp.wav", 1140, 0.75],
-  ["stamp.wav", 1230, 0.85],
-  ["ding.wav", 1236, 0.4],
+  // S4 — three settled stamps
+  ["stamp.wav", S4[0] + 92, 0.5],
+  ["stamp.wav", S4[0] + 102, 0.5],
+  ["stamp.wav", S4[0] + 128, 0.6],
 
-  // S5 — PIN pad: six key clicks (first dot appears at scene frame 72), wallet-live stamp
-  ["click.wav", 1362, 0.45],
-  ["click.wav", 1374, 0.45],
-  ["click.wav", 1386, 0.45],
-  ["click.wav", 1398, 0.45],
-  ["click.wav", 1410, 0.45],
-  ["click.wav", 1422, 0.45],
-  ["stamp.wav", 1440, 0.85],
-  ["ding.wav", 1446, 0.4],
+  // S5 — six real key presses, then the wallet-live stamp
+  ...PIN_KEY_FRAMES.map((f, i) => [KEYS[i % 3], S5[0] + f, 0.4] as [string, number, number]),
+  ["stamp.wav", S5[0] + 84, 0.6],
 
-  // S6 — close: counter ticks, lockup lands, URL ding
-  ["click.wav", 1572, 0.28],
-  ["click.wav", 1582, 0.28],
-  ["click.wav", 1592, 0.28],
-  ["click.wav", 1602, 0.28],
-  ["click.wav", 1612, 0.28],
-  ["pop.wav", 1630, 0.55],
-  ["ding.wav", 1644, 0.5],
+  // S6 — one click as the URL lands
+  ["mouseclick.wav", S6[0] + 40, 0.45],
 ];
 
 const Demo: React.FC = () => (
@@ -87,7 +77,7 @@ const Demo: React.FC = () => (
     </Sequence>
 
     {SFX.map(([file, frame, volume], i) => (
-      <Sequence key={i} from={Math.max(0, frame)} durationInFrames={30}>
+      <Sequence key={i} from={Math.max(0, Math.round(frame))} durationInFrames={20}>
         <Audio src={staticFile(file)} volume={volume} />
       </Sequence>
     ))}
@@ -95,5 +85,5 @@ const Demo: React.FC = () => (
 );
 
 export const Root: React.FC = () => (
-  <Composition id="StublyDemo" component={Demo} durationInFrames={1740} fps={30} width={1920} height={1080} />
+  <Composition id="StublyDemo" component={Demo} durationInFrames={912} fps={30} width={1920} height={1080} />
 );
