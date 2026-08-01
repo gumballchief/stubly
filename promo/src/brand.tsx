@@ -214,24 +214,47 @@ export const Carbon: React.FC<{ lines: Array<[string, number, string?]>; width?:
   );
 };
 
-/** Full-frame scene wrapper: desk background + gentle fade/slide in. */
-export const Scene: React.FC<{ children: React.ReactNode; background?: string }> = ({ children, background = C.desk }) => {
+/**
+ * Full-frame scene wrapper with filing-cabinet transitions: the scene slides up
+ * onto the desk over the first 14 frames and slides away over the last 14.
+ * Pass `dur` (the sequence's duration) so the exit knows when to start.
+ */
+export const Scene: React.FC<{ children: React.ReactNode; background?: string; dur?: number }> = ({
+  children,
+  background = C.desk,
+  dur,
+}) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: "clamp" });
+  const { fps } = useVideoConfig();
+  const T = 14;
+
+  const enter = spring({ frame, fps, config: { damping: 16, stiffness: 120 } });
+  let y = interpolate(enter, [0, 1], [90, 0]);
+  let opacity = interpolate(frame, [0, T * 0.7], [0, 1], { extrapolateRight: "clamp" });
+
+  if (dur && frame > dur - T) {
+    const out = interpolate(frame, [dur - T, dur], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    y = -interpolate(out, [0, 1], [0, 110]);
+    opacity = 1 - out;
+  }
+
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        background,
-        opacity,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {children}
+    <div style={{ position: "absolute", inset: 0, background: C.desk }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background,
+          opacity,
+          transform: `translateY(${y}px)`,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 };
