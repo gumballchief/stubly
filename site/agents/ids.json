@@ -1,0 +1,44 @@
+{
+  "research-brief": {
+    "agentId": "856068",
+    "uri": "https://stubly.org/agents/research-brief.json",
+    "tx": "0xe04d2c82893772728175eccbf74e15fe683e86c5c264342f3743a6d302d9aecb",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "site-audit": {
+    "agentId": "856069",
+    "uri": "https://stubly.org/agents/site-audit.json",
+    "tx": "0xd94acffef56bc0d2042f0040bd9f0ee05ac669d07be2834d4f5c1662f3e62d54",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "contract-check": {
+    "agentId": "856070",
+    "uri": "https://stubly.org/agents/contract-check.json",
+    "tx": "0x6e85a09d9ee32fd1bdfb603cfd55f807f88befec5aac9b5e82d2dd231ed595e7",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "copy-pack": {
+    "agentId": "856071",
+    "uri": "https://stubly.org/agents/copy-pack.json",
+    "tx": "0x74c2762dffe8875aca17203d1f3eab271dc2e74b4ea4495b693dd7889f14f224",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "thread-writer": {
+    "agentId": "856072",
+    "uri": "https://stubly.org/agents/thread-writer.json",
+    "tx": "0xe1cb8cc17355e8c90449b17926d3c91c6bd4c6f7435705cdab4893af182ce7af",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "data-extract": {
+    "agentId": "856073",
+    "uri": "https://stubly.org/agents/data-extract.json",
+    "tx": "0x0b004774394973e8c3bb7a9cf115317ac6bcaa06f80625e0f8dcb626c45ba762",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "launch-kit": {
+    "agentId": "856077",
+    "uri": "https://stubly.org/agents/launch-kit.json",
+    "tx": "0xf26a7125de5ff67844c1cbde7fa899bf2b7e2f5678015108ac19af8503568af5",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  }
+}

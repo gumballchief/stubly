@@ -22,7 +22,7 @@ const jobsLib = require("../chain/jobs");
 const CATALOG = require("./catalog");
 
 const AGENTS = Object.fromEntries(
-  ["research-brief", "site-audit", "contract-check", "copy-pack", "thread-writer", "data-extract"]
+  ["research-brief", "site-audit", "contract-check", "copy-pack", "thread-writer", "data-extract", "launch-kit"]
     .map((k) => { const a = require(`./agents/${k}`); return [a.key, a]; })
 );
 
@@ -79,6 +79,10 @@ async function processJob(jobId, ctx) {
   const description = j.description ?? j[4];
   const spec = parseSpec(description);
   const st = state.jobs[jobId];
+
+  // Sub-jobs are created, funded, delivered and settled inline by the agent that
+  // hired them (see agents/launch-kit.js) — the main loop must not touch them.
+  if (spec?.sub) { st.phase = "subcontract-handled-inline"; return; }
 
   if (!spec) { st.phase = "ignored-not-ours"; return; }
 
