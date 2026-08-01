@@ -339,10 +339,17 @@ async function initJob() {
   const bc = $("#barcode"); if (bc) { renderBarcode(bc, id); $("#barcode-label").textContent = `ARC·5042002·JOB·${id}`; }
   let lastStatus = -1;
 
+  let catalogCache = null;
+  const agentTitle = async (key) => {
+    if (!key) return "external job";
+    if (!catalogCache) { try { catalogCache = (await api("/api/catalog")).agents; } catch { catalogCache = {}; } }
+    return catalogCache[key]?.title || key;
+  };
+
   async function refresh() {
     const j = await api(`/api/job?id=${id}`);
     if (!j.live) { $("#carbon").textContent = `chain read failed: ${j.error} — retrying…`; return; }
-    $("#t-agent").textContent = j.agent ? (j.agent === "site-audit" ? "Site Audit" : "Research Brief") : "external job";
+    $("#t-agent").textContent = await agentTitle(j.agent);
     $("#t-input").textContent = j.input ? Object.values(j.input)[0] : "—";
     $("#t-price").textContent = j.hasBudget ? `${Number(j.budgetUsdc).toFixed(2)} USDC` : "quote pending";
     $("#t-client").textContent = fmt(j.client);

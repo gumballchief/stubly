@@ -3,36 +3,32 @@
 /**
  * Publish a deliverable so the live site can serve it.
  *
- * The orchestrator runs on a machine with the keys; the site runs on Vercel.
- * With BLOB_READ_WRITE_TOKEN set, deliverables are uploaded to Vercel Blob at a
- * predictable path and the site serves the hosted copy. Without a token this is
- * a no-op and the local file remains the only copy (fine for local runs).
+ * The worker never holds Blob credentials — Vercel injects those into the site
+ * at runtime only. Instead the worker POSTs finished work to the site's
+ * /api/publish with a shared secret, and the site stores it.
  *
- * Uses the Blob REST API directly — no SDK, no build step.
+ * Without SITE_URL + PUBLISH_SECRET this is a no-op and the local file stays
+ * the only copy, which is correct for purely local runs.
  */
 
-const BLOB_API = "https://blob.vercel-storage.com";
-
 async function publishDeliverable(jobId, content) {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return { published: false, reason: "no BLOB_READ_WRITE_TOKEN — local copy only" };
+  const base = process.env.SITE_URL;
+  const secret = process.env.PUBLISH_SECRET;
+  if (!base || !secret) return { published: false, reason: "SITE_URL/PUBLISH_SECRET not set — local copy only" };
 
-  const res = await fetch(`${BLOB_API}/deliverables/${jobId}.md`, {
-    method: "PUT",
-    headers: {
-      authorization: `Bearer ${token}`,
-      "x-api-version": "7",
-      "x-content-type": "text/markdown; charset=utf-8",
-      "x-add-random-suffix": "0",          // stable, guessable URL per job
-      "x-cache-control-max-age": "31536000",
-    },
-    body: content,
-    signal: AbortSignal.timeout(30_000),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) return { published: false, reason: `blob ${res.status}: ${data?.error?.message || "upload failed"}` };
-  return { published: true, url: data.url };
+  try {
+    const r = await fetch(`${base.replace(/\/$/, "")}/api/publish`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jobId: String(jobId), content, secret }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.published) return { published: false, reason: data.error || `site returned ${r.status}` };
+    return { published: true, url: data.url };
+  } catch (e) {
+    return { published: false, reason: e.message };
+  }
 }
 
 module.exports = { publishDeliverable };
