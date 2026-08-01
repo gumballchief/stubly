@@ -9,6 +9,9 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+// Local only: load the project .env so api/ functions see CIRCLE_API_KEY etc.
+// (On Vercel these come from the dashboard's environment settings instead.)
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
 const PORT = 8791;
 const ROOT = __dirname;
