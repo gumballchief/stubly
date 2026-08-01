@@ -31,6 +31,21 @@ async function api(path) {
   const r = await fetch(path);
   return r.ok || r.headers.get("content-type")?.includes("json") ? r.json() : Promise.reject(new Error(`${r.status}`));
 }
+async function postApi(body) {
+  const r = await fetch("/api/circle", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  return r.json();
+}
+
+/* Run one Circle challenge: opens the secure widget, resolves when the user
+   approves with their PIN, rejects on error/cancel. */
+function runChallenge(ctx, challengeId) {
+  return new Promise((resolve, reject) => {
+    const sdk = new window.CircleW3S.W3SSdk();
+    sdk.setAppSettings({ appId: ctx.appId });
+    sdk.setAuthentication({ userToken: ctx.userToken, encryptionKey: ctx.encryptionKey });
+    sdk.execute(challengeId, (error, result) => error ? reject(new Error(error.message || "cancelled")) : resolve(result));
+  });
+}
 
 /* tiny markdown renderer — headings, bold, lists, links; enough for reports */
 function mdToHtml(md) {
@@ -124,7 +139,9 @@ async function initHire() {
   const tIn = { agent: $("#t-agent"), input: $("#t-input"), price: $("#t-price"), client: $("#t-client") };
   let selected = Object.keys(agents)[0];
   let account = null;
-  let walletEth = null; // the provider the user actually chose in the picker
+  let walletEth = null;  // extension path: the provider chosen in the picker
+  let mode = null;       // "extension" | "circle"
+  let circleCtx = null;  // circle path: { userToken, encryptionKey, walletId, appId }
 
   const logEl = $("#carbon");
   const log = (msg, cls) => { logEl.innerHTML += (cls ? `<span class="${cls}">` : "") + msg + (cls ? "</span>" : "") + "\n"; logEl.scrollTop = logEl.scrollHeight; };
@@ -150,12 +167,32 @@ async function initHire() {
   $("#btn-connect").addEventListener("click", async () => {
     try {
       const w = await connectWallet(log);
-      account = w.addr; walletEth = w.eth;
+      account = w.addr; walletEth = w.eth; mode = "extension";
       tIn.client.textContent = fmt(account);
       log(`connected via ${w.name}: ${account}`, "ok");
       $("#btn-connect").textContent = fmt(account);
       $("#btn-create").disabled = false;
       $("#btn-disconnect").style.display = "inline-block";
+    } catch (e) { log(`✗ ${e.message}`, "bad"); }
+  });
+
+  $("#btn-pin").addEventListener("click", async () => {
+    try {
+      const userId = localStorage.getItem("am_circle_user");
+      if (!userId) { log("no PIN wallet on this browser yet — create one first at /wallet", "bad"); return; }
+      log("loading your PIN wallet…");
+      const t = await postApi({ action: "token", userId });
+      if (t.error) throw new Error(t.error);
+      const w = await postApi({ action: "wallets", userToken: t.userToken });
+      const wallet = (w.wallets || []).find((x) => x.blockchain === "ARC-TESTNET");
+      if (!wallet) throw new Error("no Arc wallet found for this account — create one at /wallet");
+      account = wallet.address; mode = "circle";
+      circleCtx = { userToken: t.userToken, encryptionKey: t.encryptionKey, walletId: wallet.id, appId: t.appId };
+      tIn.client.textContent = fmt(account);
+      $("#btn-pin").textContent = `PIN · ${fmt(account)}`;
+      $("#btn-create").disabled = false;
+      log(`PIN wallet ready: ${account}`, "ok");
+      log("each payment step will ask for your PIN in Circle's secure window");
     } catch (e) { log(`✗ ${e.message}`, "bad"); }
   });
 
@@ -169,12 +206,68 @@ async function initHire() {
     log("disconnected — pick any wallet to reconnect", "ok");
   });
 
+  async function circleHireFlow(a, val) {
+    const description = JSON.stringify({ v: 1, agent: selected, input: { [a.input.field]: val } });
+    const expiredAt = String(Math.floor(Date.now() / 1000) + 24 * 3600);
+    const amount = String(Math.round(Number(a.priceUsdc) * 1e6)); // USDC has 6 decimals
+
+    const before = await postApi({ action: "findjob", client: account });
+
+    log("step 1/3 — create the work order (confirm with your PIN)…");
+    let ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
+      contractAddress: cat.contract, abiFunctionSignature: "createJob(address,address,uint256,string,address)",
+      abiParameters: [cat.providerWallet, cat.evaluatorWallet, expiredAt, description, "0x0000000000000000000000000000000000000000"] });
+    if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
+    await runChallenge(circleCtx, ch.challengeId);
+
+    log("   waiting for the order to land on-chain…");
+    let jobId = null;
+    for (let i = 0; i < 30 && !jobId; i++) {
+      await new Promise((r) => setTimeout(r, 4000));
+      const f = await postApi({ action: "findjob", client: account });
+      if (f.jobId && f.jobId !== before.jobId) jobId = f.jobId;
+    }
+    if (!jobId) throw new Error("order not found on-chain yet — check /job in a minute, your money has not moved");
+    log(`   order #${jobId} created ✓`, "ok");
+
+    log("   waiting for the agent to quote…");
+    let quoted = false;
+    for (let i = 0; i < 30 && !quoted; i++) {
+      await new Promise((r) => setTimeout(r, 4000));
+      const j = await api(`/api/job?id=${jobId}`);
+      quoted = j.hasBudget;
+    }
+    if (!quoted) throw new Error(`quote pending — finish later from /job?id=${jobId}; your money has NOT moved`);
+
+    log("step 2/3 — approve the USDC (PIN again)…");
+    ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
+      contractAddress: cat.usdc, abiFunctionSignature: "approve(address,uint256)",
+      abiParameters: [cat.contract, amount] });
+    if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
+    await runChallenge(circleCtx, ch.challengeId);
+
+    log("step 3/3 — fund the escrow (last PIN)…");
+    ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
+      contractAddress: cat.contract, abiFunctionSignature: "fund(uint256,bytes)",
+      abiParameters: [jobId, "0x"] });
+    if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
+    await runChallenge(circleCtx, ch.challengeId);
+
+    log("escrow funded ✓ — opening your work order…", "ok");
+    setTimeout(() => { location.href = `/job?id=${jobId}`; }, 1200);
+  }
+
   $("#btn-create").addEventListener("click", async () => {
     try {
       const a = agents[selected];
       const val = inputField.value.trim();
       if (!val) return log("✗ fill in the job field first", "bad");
       $("#btn-create").disabled = true;
+
+      if (mode === "circle") {
+        try { await circleHireFlow(a, val); } catch (e) { log(`✗ ${e.message}`, "bad"); $("#btn-create").disabled = false; }
+        return;
+      }
 
       const provider = new ethers.BrowserProvider(walletEth);
       const signer = await provider.getSigner();

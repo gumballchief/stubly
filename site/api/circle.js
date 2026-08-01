@@ -77,6 +77,58 @@ module.exports = async (req, res) => {
       return sendJson(res, 200, { userToken: tok.userToken, encryptionKey: tok.encryptionKey, appId: process.env.CIRCLE_APP_ID || "" });
     }
 
+    if (body.action === "execute") {
+      // Create a contract-execution challenge: the user's Circle wallet will run
+      // this call once they approve it with their PIN in the SDK widget.
+      const { userToken, walletId, contractAddress, abiFunctionSignature, abiParameters } = body;
+      if (!userToken || !walletId || !contractAddress || !abiFunctionSignature) {
+        return sendJson(res, 400, { error: "userToken, walletId, contractAddress, abiFunctionSignature required" });
+      }
+      const r = await fetch(`${BASE}/user/transactions/contractExecution`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${process.env.CIRCLE_API_KEY}`,
+          "X-User-Token": userToken,
+        },
+        body: JSON.stringify({
+          idempotencyKey: crypto.randomUUID(),
+          walletId,
+          contractAddress,
+          abiFunctionSignature,
+          abiParameters: abiParameters || [],
+          feeLevel: "MEDIUM",
+        }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) return sendJson(res, 200, { error: data?.message || `circle ${r.status}` });
+      return sendJson(res, 200, { challengeId: data?.data?.challengeId || null });
+    }
+
+    if (body.action === "findjob") {
+      // Latest JobCreated for a given client with our provider — via the explorer's
+      // indexed log search (Arc mints ~4 blocks/sec, so raw range scans can't keep up).
+      const { Interface, zeroPadValue } = require("ethers");
+      const client = String(body.client || "");
+      if (!/^0x[a-fA-F0-9]{40}$/.test(client)) return sendJson(res, 400, { error: "client address required" });
+      const iface = new Interface(["event JobCreated(uint256 indexed jobId, address indexed client, address indexed provider, address evaluator, uint256 expiredAt, address hook)"]);
+      const topic0 = iface.getEvent("JobCreated").topicHash;
+      // ~4 blocks/sec on Arc: 200k blocks ≈ the last ~14 hours, plenty for a hire session
+      const { provider } = require("./_shared");
+      const latest = await provider().getBlockNumber();
+      const url = `https://testnet.arcscan.app/api?module=logs&action=getLogs&fromBlock=${Math.max(0, latest - 200_000)}&toBlock=latest` +
+        `&address=${CFG.ERC8183}&topic0=${topic0}&topic2=${zeroPadValue(client, 32)}&topic0_2_opr=and`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+      const data = await r.json().catch(() => ({}));
+      const providerTopic = zeroPadValue(CFG.PROVIDER_WALLET, 32).toLowerCase();
+      const ours = (Array.isArray(data.result) ? data.result : [])
+        .filter((l) => (l.topics?.[3] || "").toLowerCase() === providerTopic);
+      if (!ours.length) return sendJson(res, 200, { jobId: null });
+      const last = ours[ours.length - 1];
+      return sendJson(res, 200, { jobId: BigInt(last.topics[1]).toString(), tx: last.transactionHash });
+    }
+
     if (body.action === "wallets") {
       if (!body.userToken) return sendJson(res, 400, { error: "userToken required" });
       const r = await fetch(`${BASE}/wallets`, {
