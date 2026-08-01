@@ -20,6 +20,7 @@ const { parseUnits } = require("ethers");
 const { CFG, provider, loadWallet, JOB_STATUS } = require("../chain/config");
 const jobsLib = require("../chain/jobs");
 const CATALOG = require("./catalog");
+const { publishDeliverable } = require("./publish");
 
 // Every agent in the catalog must have a matching module in ./agents — deriving
 // the roster from the catalog means the two can never drift apart.
@@ -128,6 +129,12 @@ async function processJob(jobId, ctx) {
     const file = path.join(DELIVER_DIR, `${jobId}.md`);
     fs.writeFileSync(file, deliverable.content);
     st.phase = "delivered-locally"; st.file = file; saveState(state);
+
+    // Push a hosted copy so the deployed site can serve it to the buyer.
+    const pub = await publishDeliverable(jobId, deliverable.content);
+    if (pub.published) { st.url = pub.url; console.log(`  published: ${pub.url}`); }
+    else console.log(`  (not published: ${pub.reason})`);
+    saveState(state);
 
     await jobsLib.submit(providerSigner, jobId, deliverable.content);
     st.phase = "submitted"; st.hash = jobsLib.contentHash(deliverable.content); saveState(state);
