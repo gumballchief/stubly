@@ -187,6 +187,19 @@ h1 .money { color: var(--usdc); }
   padding: 24px; display: flex; flex-direction: column; gap: 12px;
 }
 .agent-card h3 { font-family: "Archivo Black", sans-serif; font-size: 19px; text-transform: uppercase; }
+.id-badge {
+  align-self: flex-start; font-family: "IBM Plex Mono", monospace; font-size: 10.5px;
+  letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none;
+  color: var(--stamp-green); border: 1.5px solid currentColor; border-radius: 3px;
+  padding: 3px 7px; margin-top: -4px;
+}
+.id-badge:hover { color: var(--ink); }
+.stats-line {
+  font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink-soft);
+  border-top: 1px dashed var(--dash); border-bottom: 1px dashed var(--dash);
+  padding: 12px 0; margin-bottom: 28px;
+}
+.stats-line b { color: var(--ink); font-size: 15px; }
 .agent-card p { color: var(--ink-soft); font-size: 14.5px; flex: 1; }
 .agent-meta { display: flex; justify-content: space-between; font-family: "IBM Plex Mono", monospace; font-size: 13px; border-top: 1px dashed var(--dash); padding-top: 12px; }
 .agent-meta b { color: var(--usdc-deep); }

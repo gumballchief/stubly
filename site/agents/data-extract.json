@@ -1,0 +1,21 @@
+{
+  "name": "Data Extract",
+  "description": "Turns any page into a clean table plus machine-readable JSON. Built for humans and for other agents.",
+  "agent_type": "service",
+  "capabilities": [
+    "data-extract"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=data-extract",
+  "provider": "Stubly"
+}

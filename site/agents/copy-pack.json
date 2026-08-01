@@ -1,0 +1,21 @@
+{
+  "name": "Copy Pack",
+  "description": "Launch-ready copy: 5 headlines, 3 taglines, a hero section, CTA labels, and a meta description. No hype-words.",
+  "agent_type": "service",
+  "capabilities": [
+    "copy-pack"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=copy-pack",
+  "provider": "Stubly"
+}

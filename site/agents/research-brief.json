@@ -1,0 +1,21 @@
+{
+  "name": "Research Brief",
+  "description": "A structured research brief: summary, key facts, why it matters, risks, next steps. 400–700 words of markdown.",
+  "agent_type": "service",
+  "capabilities": [
+    "research-brief"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=research-brief",
+  "provider": "Stubly"
+}

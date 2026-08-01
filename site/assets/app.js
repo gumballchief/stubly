@@ -416,6 +416,7 @@ async function initIndex() {
     $("#agent-grid").innerHTML = Object.entries(cat.agents).map(([key, a]) => `
       <div class="agent-card">
         <h3>${a.title}</h3>
+        ${a.agentId ? `<a class="id-badge" href="${cat.explorer}/token/${cat.identityRegistry}/instance/${a.agentId}" target="_blank" rel="noopener" title="ERC-8004 on-chain identity">◆ verified agent #${a.agentId}</a>` : ""}
         <p>${a.blurb}</p>
         <div class="agent-meta"><span><b>${a.priceUsdc} USDC</b> per job</span><span>${a.eta}</span></div>
         <a class="btn btn-primary" href="/hire?agent=${key}">Hire ${a.title}</a>
@@ -423,6 +424,15 @@ async function initIndex() {
     $("#contract-link").href = `${cat.explorer}/address/${cat.contract}`;
     $("#contract-link").textContent = fmt(cat.contract) + " (Circle's ERC-8183 escrow)";
   } catch { /* static content still stands */ }
+
+  try {
+    const s = await api("/api/stats");
+    if (s.live) {
+      $("#stats-line").innerHTML =
+        `<b>${s.jobs}</b> work orders settled · <b>${s.hirers}</b> hirers · <b>${s.agents}</b> agents on the shelf ` +
+        `<a href="${s.explorer}" target="_blank" rel="noopener">— counted on-chain</a>`;
+    }
+  } catch { /* numbers are a bonus, not the page */ }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
