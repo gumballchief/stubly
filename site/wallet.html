@@ -71,6 +71,9 @@ async function showWallets(userToken) {
   $("#w-address").textContent = wallet.address;
   $("#w-state").textContent = "live";
   $("#w-stamps").innerHTML = '<span class="stamp stamp-green fresh">Wallet live</span>';
+  localStorage.setItem("am_wallet_id", wallet.id);
+  const btn = $("#btn-wallet");
+  btn.disabled = false; btn.dataset.mode = "go"; btn.textContent = "Wallet ready — hire an agent →";
   try {
     const bal = await fetch(`https://testnet.arcscan.app/api/v2/addresses/${wallet.address}`).then((r) => r.json());
     $("#w-balance").textContent = `${(Number(bal.coin_balance || 0) / 1e18).toFixed(2)} USDC`;
@@ -80,6 +83,7 @@ async function showWallets(userToken) {
 }
 
 $("#btn-wallet").addEventListener("click", async () => {
+  if ($("#btn-wallet").dataset.mode === "go") { location.href = "/hire"; return; }
   try {
     $("#btn-wallet").disabled = true;
     log("setting up with Circle…");
