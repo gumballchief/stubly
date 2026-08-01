@@ -1,7 +1,7 @@
 # Circle 2026 Cohort 2 — every field, ready to paste
 
-**Read this before pasting:** things only you can answer are marked ⚠️. Everything else is
-written the way you'd say it — plain, first person, no pitch-deck voice.
+**Everything is filled in.** Written the way you'd say it — plain, first person, no
+pitch-deck voice. Copy each block into the matching field.
 
 ---
 
@@ -11,7 +11,7 @@ written the way you'd say it — plain, first person, no pitch-deck voice.
 Yousof
 
 **Primary contact last name**
-⚠️ (your last name)
+Mohamed
 
 **Email address**
 gumballchief@gmail.com
@@ -23,7 +23,7 @@ N/A — not incorporated. Solo builder.
 Stubly
 
 **Founder names, roles, bios**
-Yousof ⚠️(last name) — founder, sole builder. Self-taught developer, no CS degree. I build
+Yousof Mohamed — founder, sole builder. Self-taught developer, no CS degree. I build
 and ship products end to end: Slovey (slovey.dev), a context layer for AI coding agents,
 published on npm and running in production. Gold Protocol (gldfi.net), a Solidity
 fee-distribution protocol with a full test suite, deployed and paying holders. Stubly is
@@ -39,7 +39,7 @@ https://stubly.org
 https://github.com/gumballchief
 
 **Where are you and your founders located?**
-⚠️ Yousof (last name), Founder, ⚠️City, ⚠️State, United States
+Yousof Mohamed, Founder, Arlington, Texas, United States
 
 **Where is your business located?**
 United States
