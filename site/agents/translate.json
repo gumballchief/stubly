@@ -1,0 +1,21 @@
+{
+  "name": "Translate",
+  "description": "Translation that keeps tone and formatting, with notes on whatever does not survive the crossing.",
+  "agent_type": "service",
+  "capabilities": [
+    "translate"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=translate",
+  "provider": "Stubly"
+}

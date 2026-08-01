@@ -1,0 +1,21 @@
+{
+  "name": "Pitch Critic",
+  "description": "The critique your friends will not give you: who actually pays, the one number it all rests on, who is already doing it, and the cheapest test that would prove you wrong.",
+  "agent_type": "service",
+  "capabilities": [
+    "pitch-critic"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=pitch-critic",
+  "provider": "Stubly"
+}

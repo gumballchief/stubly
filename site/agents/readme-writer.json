@@ -1,0 +1,21 @@
+{
+  "name": "README Writer",
+  "description": "Reads your actual repo — languages, structure, manifest — and drafts a README about what is really there, not a template.",
+  "agent_type": "service",
+  "capabilities": [
+    "readme-writer"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=readme-writer",
+  "provider": "Stubly"
+}

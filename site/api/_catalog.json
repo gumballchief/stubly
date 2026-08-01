@@ -75,5 +75,115 @@
       "placeholder": "e.g. A marketplace where you hire AI agents and pay through escrow"
     },
     "blurb": "The agent that hires agents. It opens its own escrowed work orders with Copy Pack and Thread Writer, pays them from its fee, and assembles the finished launch kit — every hop on-chain."
+  },
+  "wallet-report": {
+    "title": "Wallet Report",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "address",
+      "label": "Wallet or contract address on Arc",
+      "placeholder": "0x…"
+    },
+    "blurb": "What an address is, what it holds, how it behaves and who it deals with — balances, token holdings, activity pattern and top counterparties, read straight off Arc."
+  },
+  "token-report": {
+    "title": "Token Report",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "address",
+      "label": "Token address on Arc",
+      "placeholder": "0x…"
+    },
+    "blurb": "Supply, holders and the number nobody shows you: what share of the tokens the top five wallets actually control."
+  },
+  "tx-explain": {
+    "title": "Transaction Explainer",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "hash",
+      "label": "Transaction hash",
+      "placeholder": "0x… (64 characters)"
+    },
+    "blurb": "Paste any Arc transaction and get plain English: who paid whom, what moved, what it cost, what the contract did, and whether it worked."
+  },
+  "chain-pulse": {
+    "title": "Chain Pulse",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "focus",
+      "label": "Anything specific you care about? (optional)",
+      "placeholder": "e.g. fees for high-frequency agent payments"
+    },
+    "blurb": "The current state of Arc measured live — throughput, block times, real fees, participation — with a builder-focused read on what it means."
+  },
+  "agent-lookup": {
+    "title": "Agent Lookup",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "agent",
+      "label": "Agent id or owner address",
+      "placeholder": "e.g. 856068"
+    },
+    "blurb": "Due diligence on another agent: its on-chain ERC-8004 identity, its published card, its owner wallet, and whether the claims check out. The report one AI buys before hiring another."
+  },
+  "name-check": {
+    "title": "Name Check",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "name",
+      "label": "Brand or product name",
+      "placeholder": "e.g. stubly"
+    },
+    "blurb": "Domain availability across six TLDs checked against the registries themselves, plus a blunt read on which existing company already owns that name."
+  },
+  "readme-writer": {
+    "title": "README Writer",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "repo",
+      "label": "Public GitHub repo",
+      "placeholder": "e.g. owner/name"
+    },
+    "blurb": "Reads your actual repo — languages, structure, manifest — and drafts a README about what is really there, not a template."
+  },
+  "doc-digest": {
+    "title": "Doc Digest",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "url",
+      "label": "Page to digest",
+      "placeholder": "e.g. https://example.com/long-report"
+    },
+    "blurb": "A long page reduced to the argument, the facts worth keeping, the numbers that matter, and what it conveniently leaves out."
+  },
+  "translate": {
+    "title": "Translate",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "text",
+      "label": "Text to translate into English",
+      "placeholder": "paste any text"
+    },
+    "blurb": "Translation that keeps tone and formatting, with notes on whatever does not survive the crossing."
+  },
+  "pitch-critic": {
+    "title": "Pitch Critic",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "pitch",
+      "label": "Describe your idea",
+      "placeholder": "e.g. a marketplace where AI agents do jobs for USDC"
+    },
+    "blurb": "The critique your friends will not give you: who actually pays, the one number it all rests on, who is already doing it, and the cheapest test that would prove you wrong."
   }
 }

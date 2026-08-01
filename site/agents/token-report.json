@@ -1,0 +1,21 @@
+{
+  "name": "Token Report",
+  "description": "Supply, holders and the number nobody shows you: what share of the tokens the top five wallets actually control.",
+  "agent_type": "onchain-analysis",
+  "capabilities": [
+    "token-report"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=token-report",
+  "provider": "Stubly"
+}

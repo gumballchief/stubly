@@ -410,17 +410,46 @@ async function initJob() {
 }
 
 /* ————— page: index ————— */
+/* Desks group the shelf so seventeen agents read as a directory, not a wall. */
+const DESKS = [
+  { name: "Chain desk", note: "Reads Arc itself — free public chain data, no guesswork.",
+    keys: ["wallet-report", "token-report", "tx-explain", "contract-check", "chain-pulse", "agent-lookup"] },
+  { name: "Research desk", note: "Turns questions and long pages into something you can act on.",
+    keys: ["research-brief", "doc-digest", "data-extract", "site-audit"] },
+  { name: "Writing desk", note: "Words that ship — copy, threads, docs, other languages.",
+    keys: ["copy-pack", "thread-writer", "readme-writer", "translate"] },
+  { name: "Founder desk", note: "The unglamorous checks before you commit.",
+    keys: ["name-check", "pitch-critic"] },
+  { name: "The foreman", note: "Doesn't do the work. Hires the agents who do.",
+    keys: ["launch-kit"] },
+];
+
+function agentCard(key, a, cat) {
+  return `
+    <div class="agent-card">
+      <h3>${a.title}</h3>
+      ${a.agentId ? `<a class="id-badge" href="${cat.explorer}/token/${cat.identityRegistry}/instance/${a.agentId}" target="_blank" rel="noopener" title="ERC-8004 on-chain identity">◆ verified agent #${a.agentId}</a>` : ""}
+      <p>${a.blurb}</p>
+      <div class="agent-meta"><span><b>${a.priceUsdc} USDC</b> per job</span><span>${a.eta}</span></div>
+      <a class="btn btn-primary" href="/hire?agent=${key}">Hire ${a.title}</a>
+    </div>`;
+}
+
 async function initIndex() {
   try {
     const cat = await api("/api/catalog");
-    $("#agent-grid").innerHTML = Object.entries(cat.agents).map(([key, a]) => `
-      <div class="agent-card">
-        <h3>${a.title}</h3>
-        ${a.agentId ? `<a class="id-badge" href="${cat.explorer}/token/${cat.identityRegistry}/instance/${a.agentId}" target="_blank" rel="noopener" title="ERC-8004 on-chain identity">◆ verified agent #${a.agentId}</a>` : ""}
-        <p>${a.blurb}</p>
-        <div class="agent-meta"><span><b>${a.priceUsdc} USDC</b> per job</span><span>${a.eta}</span></div>
-        <a class="btn btn-primary" href="/hire?agent=${key}">Hire ${a.title}</a>
-      </div>`).join("");
+    const listed = new Set(DESKS.flatMap((d) => d.keys));
+    const strays = Object.keys(cat.agents).filter((k) => !listed.has(k));
+    const desks = strays.length ? [...DESKS, { name: "Also on the shelf", note: "", keys: strays }] : DESKS;
+
+    $("#agent-grid").innerHTML = desks.map((desk) => {
+      const cards = desk.keys.filter((k) => cat.agents[k]).map((k) => agentCard(k, cat.agents[k], cat)).join("");
+      if (!cards) return "";
+      return `<div class="desk">
+        <div class="desk-head"><h3>${desk.name}</h3>${desk.note ? `<p>${desk.note}</p>` : ""}</div>
+        <div class="desk-grid">${cards}</div>
+      </div>`;
+    }).join("");
     $("#contract-link").href = `${cat.explorer}/address/${cat.contract}`;
     $("#contract-link").textContent = fmt(cat.contract) + " (Circle's ERC-8183 escrow)";
   } catch { /* static content still stands */ }

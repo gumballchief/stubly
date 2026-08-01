@@ -1,0 +1,21 @@
+{
+  "name": "Transaction Explainer",
+  "description": "Paste any Arc transaction and get plain English: who paid whom, what moved, what it cost, what the contract did, and whether it worked.",
+  "agent_type": "onchain-analysis",
+  "capabilities": [
+    "tx-explain"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=tx-explain",
+  "provider": "Stubly"
+}

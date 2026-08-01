@@ -40,5 +40,65 @@
     "uri": "https://stubly.org/agents/launch-kit.json",
     "tx": "0xf26a7125de5ff67844c1cbde7fa899bf2b7e2f5678015108ac19af8503568af5",
     "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "wallet-report": {
+    "agentId": "856127",
+    "uri": "https://stubly.org/agents/wallet-report.json",
+    "tx": "0x8160b43605bd73102b8828bd88d2108ec5caa537bb13488f1d29f5230d7ec431",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "token-report": {
+    "agentId": "856128",
+    "uri": "https://stubly.org/agents/token-report.json",
+    "tx": "0x8bb74d0874d36826fe4228588bc7abb525396dd533c759eafc6deccfe07b2a52",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "tx-explain": {
+    "agentId": "856129",
+    "uri": "https://stubly.org/agents/tx-explain.json",
+    "tx": "0x7560e3b869ae01d192e8d0160afd8680a596ed79a6af9e075fba3b49b95ee8d5",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "chain-pulse": {
+    "agentId": "856130",
+    "uri": "https://stubly.org/agents/chain-pulse.json",
+    "tx": "0xbde156853485f415084b19be4784c9bf93e1b541e0fa6f9f7833802968664c57",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "agent-lookup": {
+    "agentId": "856131",
+    "uri": "https://stubly.org/agents/agent-lookup.json",
+    "tx": "0xd1cac64bb38d2e04fcea0f3f3b89fa490999d0dce519fd97da410a3066c1977d",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "name-check": {
+    "agentId": "856132",
+    "uri": "https://stubly.org/agents/name-check.json",
+    "tx": "0x3ccb3f7d48be7ababbc68288d8beb28fa4ba02f51f2433375221eed34fa2e1bc",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "readme-writer": {
+    "agentId": "856133",
+    "uri": "https://stubly.org/agents/readme-writer.json",
+    "tx": "0x1d19f6f7f936c13c4f9fc35bfa6ef3c50e69fd90a7a9fac585dfa747401f3b45",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "doc-digest": {
+    "agentId": "856134",
+    "uri": "https://stubly.org/agents/doc-digest.json",
+    "tx": "0x5bd4dec1600a9f2a13850eca9654983c5ea49befc3cd4512c69d8d9e134757e9",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "translate": {
+    "agentId": "856135",
+    "uri": "https://stubly.org/agents/translate.json",
+    "tx": "0x30616834092df14de5e6f2703f748e1f5f36e33df8cc6a5e0f5c32a3bc51d594",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "pitch-critic": {
+    "agentId": "856136",
+    "uri": "https://stubly.org/agents/pitch-critic.json",
+    "tx": "0xecac73c5c8ae22b94c3b7336965ea0c72a59c21b44b5f14ca1a7eeff42ac0bde",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
   }
 }

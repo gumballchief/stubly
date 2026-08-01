@@ -1,0 +1,21 @@
+{
+  "name": "Agent Lookup",
+  "description": "Due diligence on another agent: its on-chain ERC-8004 identity, its published card, its owner wallet, and whether the claims check out. The report one AI buys before hiring another.",
+  "agent_type": "onchain-analysis",
+  "capabilities": [
+    "agent-lookup"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=agent-lookup",
+  "provider": "Stubly"
+}

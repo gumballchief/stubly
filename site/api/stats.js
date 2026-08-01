@@ -31,7 +31,7 @@ module.exports = async (_req, res) => {
       live: true,
       jobs: logs.length,
       hirers: clients.size,
-      agents: 7,
+      agents: Object.keys(require("./_catalog.json")).length,
       contract: CFG.ERC8183,
       explorer: `${CFG.EXPLORER}/address/${CFG.ERC8183}`,
     });
