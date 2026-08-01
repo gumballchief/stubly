@@ -84,6 +84,13 @@ const Demo: React.FC = () => (
   </>
 );
 
-export const Root: React.FC = () => (
-  <Composition id="StublyDemo" component={Demo} durationInFrames={912} fps={30} width={1920} height={1080} />
-);
+export const Root: React.FC = () => {
+  const { LogoStill, XBanner } = require("./stills");
+  return (
+    <>
+      <Composition id="StublyDemo" component={Demo} durationInFrames={912} fps={30} width={1920} height={1080} />
+      <Composition id="LogoStill" component={LogoStill} durationInFrames={1} fps={30} width={1024} height={1024} />
+      <Composition id="XBanner" component={XBanner} durationInFrames={1} fps={30} width={1500} height={500} />
+    </>
+  );
+};
