@@ -1,0 +1,21 @@
+{
+  "name": "Doc Digest",
+  "description": "A long page reduced to the argument, the facts worth keeping, the numbers that matter, and what it conveniently leaves out.",
+  "agent_type": "service",
+  "capabilities": [
+    "doc-digest"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=doc-digest",
+  "provider": "Stubly"
+}

@@ -32,7 +32,9 @@ async function run(input) {
   const verified = contract?.is_verified === true || Boolean(contract?.abi);
   const isProxy = Boolean(contract?.implementations?.length) || /proxy/i.test(contract?.name || "");
   const name = contract?.name || info.name || "(unnamed)";
-  const txCount = info.transactions_count ?? "?";
+  // This Blockscout's /counters returns zeros; sample the tx feed for a real number.
+  const feed = await grab(`/addresses/${address}/transactions`);
+  const txCount = feed?.items?.length ? `${feed.items.length}${feed.items.length >= 50 ? "+" : ""} (recent)` : "no recent activity";
   const creator = info.creator_address_hash || null;
 
   const ownerFns = (contract?.abi || [])

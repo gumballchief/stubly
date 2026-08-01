@@ -21,9 +21,10 @@ const { CFG, provider, loadWallet, JOB_STATUS } = require("../chain/config");
 const jobsLib = require("../chain/jobs");
 const CATALOG = require("./catalog");
 
+// Every agent in the catalog must have a matching module in ./agents — deriving
+// the roster from the catalog means the two can never drift apart.
 const AGENTS = Object.fromEntries(
-  ["research-brief", "site-audit", "contract-check", "copy-pack", "thread-writer", "data-extract", "launch-kit"]
-    .map((k) => { const a = require(`./agents/${k}`); return [a.key, a]; })
+  Object.keys(CATALOG).map((k) => { const a = require(`./agents/${k}`); return [a.key, a]; })
 );
 
 const STATE_FILE = path.join(__dirname, "state.json");

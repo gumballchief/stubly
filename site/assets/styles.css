@@ -180,8 +180,15 @@ h1 .money { color: var(--usdc); }
 }
 .section-title .mono-tag { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--ink-soft); display: block; margin-bottom: 8px; font-weight: 400; }
 
-/* agent spec cards */
+/* agent spec cards, grouped into desks */
 .agent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.desk { grid-column: 1 / -1; margin-bottom: 14px; }
+.desk-head { border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 18px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.desk-head h3 { font-family: "Archivo Black", sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: 0.06em; }
+.desk-head p { font-size: 13.5px; color: var(--ink-soft); }
+.desk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 980px) { .desk-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px) { .desk-grid { grid-template-columns: 1fr; } }
 .agent-card {
   background: var(--paper); border: 1.5px solid var(--ink); border-radius: 6px;
   padding: 24px; display: flex; flex-direction: column; gap: 12px;
