@@ -2,6 +2,7 @@ import React from "react";
 import { Audio, Composition, Sequence, staticFile } from "remotion";
 import { BrandOpen, CLICK_AT, Close, Lifecycle, PIN_KEY_FRAMES, PinWallet, Shelf, Subcontract } from "./scenes";
 import { GetReady, HowToRecord, Intro, OpenGuide, Outro, PasteSubmit, RecPart1, RecPart2, RecPart3, Upload, WhatItIs } from "./howto";
+import { CARD_COUNT, ScriptCard } from "./cards";
 
 /* Scene layout: [start, duration] — 912 frames ≈ 30s total */
 const S1 = [0, 84] as const;
@@ -141,6 +142,15 @@ export const Root: React.FC = () => {
     <>
       <Composition id="StublyDemo" component={Demo} durationInFrames={912} fps={30} width={1920} height={1080} />
       <Composition id="HowTo" component={HowTo} durationInFrames={HOWTO_TOTAL} fps={30} width={1920} height={1080} />
+      <Composition
+        id="ScriptCard"
+        component={ScriptCard}
+        durationInFrames={1}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{ i: 0 }}
+      />
       <Composition id="LogoStill" component={LogoStill} durationInFrames={1} fps={30} width={1024} height={1024} />
       <Composition id="XBanner" component={XBanner} durationInFrames={1} fps={30} width={1500} height={500} />
     </>
