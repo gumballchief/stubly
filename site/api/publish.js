@@ -35,17 +35,19 @@ module.exports = async (req, res) => {
 
     const jobId = String(body.jobId || "");
     const content = String(body.content || "");
+    const kind = body.kind === "judge" ? "judge" : "deliverable";
     if (!/^\d+$/.test(jobId)) return sendJson(res, 400, { error: "jobId must be numeric" });
     if (!content || content.length > MAX_BYTES) return sendJson(res, 400, { error: "content missing or too large" });
 
     // The SDK authenticates itself on Vercel (OIDC) — no token to manage here.
     // The store is private, so /api/deliverable fetches these server-side rather
     // than the browser hitting blob storage directly.
-    const blob = await put(`deliverables/${jobId}.md`, content, {
+    const path = kind === "judge" ? `judge/${jobId}.json` : `deliverables/${jobId}.md`;
+    const blob = await put(path, content, {
       access: "private",
       addRandomSuffix: false,
       allowOverwrite: true,
-      contentType: "text/markdown; charset=utf-8",
+      contentType: kind === "judge" ? "application/json; charset=utf-8" : "text/markdown; charset=utf-8",
       cacheControlMaxAge: 31_536_000,
     });
 

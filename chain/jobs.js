@@ -120,4 +120,22 @@ async function reject(evaluatorSigner, jobId, reasonText) {
   await send(jobs, "reject", [jobId, contentHash(reasonText), NO_PARAMS], "reject");
 }
 
-module.exports = { contracts, contentHash, createJob, setBudget, fund, submit, complete, reject, withRetry, JOB_STATUS };
+/**
+ * Settle with an already-computed bytes32 — used to commit the judge-record
+ * digest itself, rather than a hash of a label. Anyone can fetch the published
+ * record, recompute its digest, and compare it to what is on-chain.
+ */
+async function completeRaw(evaluatorSigner, jobId, digest32) {
+  const { jobs } = await contracts(evaluatorSigner);
+  await send(jobs, "complete", [jobId, digest32, NO_PARAMS], "complete");
+}
+
+async function rejectRaw(evaluatorSigner, jobId, digest32) {
+  const { jobs } = await contracts(evaluatorSigner);
+  await send(jobs, "reject", [jobId, digest32, NO_PARAMS], "reject");
+}
+
+module.exports = {
+  contracts, contentHash, createJob, setBudget, fund, submit,
+  complete, reject, completeRaw, rejectRaw, withRetry, JOB_STATUS,
+};
