@@ -1,7 +1,7 @@
 import React from "react";
 import { Audio, Composition, Sequence, staticFile } from "remotion";
 import { BrandOpen, CLICK_AT, Close, Lifecycle, PIN_KEY_FRAMES, PinWallet, Shelf, Subcontract } from "./scenes";
-import { Intro, Outro, StepDeck, StepGithub, StepSubmit, StepVideo } from "./howto";
+import { GetReady, HowToRecord, Intro, OpenGuide, Outro, PasteSubmit, RecPart1, RecPart2, RecPart3, Upload, WhatItIs } from "./howto";
 
 /* Scene layout: [start, duration] — 912 frames ≈ 30s total */
 const S1 = [0, 84] as const;
@@ -85,40 +85,50 @@ const Demo: React.FC = () => (
   </>
 );
 
-/* ————— How-to video: the four steps Yousof still has to do ————— */
-const H1 = [0, 120] as const;
-const H2 = [120, 210] as const;
-const H3 = [330, 210] as const;
-const H4 = [540, 300] as const;
-const H5 = [840, 180] as const;
-const H6 = [1020, 120] as const;
+/* ————— How-to video: making the grant video, assuming zero code knowledge ————— */
+const HS: Array<[React.FC<{ dur?: number }>, number]> = [
+  [Intro, 150],
+  [WhatItIs, 270],
+  [OpenGuide, 240],
+  [GetReady, 300],
+  [HowToRecord, 300],
+  [RecPart1, 270],
+  [RecPart2, 300],
+  [RecPart3, 270],
+  [Upload, 300],
+  [PasteSubmit, 270],
+  [Outro, 180],
+];
+
+const STARTS = HS.reduce<number[]>((acc, [, d], i) => [...acc, i === 0 ? 0 : acc[i - 1] + HS[i - 1][1]], []);
+const HOWTO_TOTAL = STARTS[STARTS.length - 1] + HS[HS.length - 1][1];
 
 const HOWTO_SFX: Array<[string, number, number]> = [
-  ...[H2, H3, H4, H5, H6].map(([s]) => ["swish.wav", s - 8, 0.3] as [string, number, number]),
-  ["stamp.wav", 62, 0.6],
-  // step 1: the command types itself
-  ...Array.from({ length: 14 }, (_, i) => [KEYS[i % 3], H2[0] + 58 + i * 5, 0.13] as [string, number, number]),
-  // step 2: the file path types, then the Ctrl+P press
-  ...Array.from({ length: 8 }, (_, i) => [KEYS[i % 3], H3[0] + 56 + i * 5, 0.13] as [string, number, number]),
-  ["mouseclick.wav", H3[0] + 112, 0.45],
-  // step 3: a click as each file is named
-  ...[104, 122, 140, 158].map((f) => ["mouseclick.wav", H4[0] + f, 0.3] as [string, number, number]),
-  // step 4: two pastes and the submit
-  ["mouseclick.wav", H5[0] + 46, 0.4],
-  ["mouseclick.wav", H5[0] + 70, 0.4],
-  ["stamp.wav", H5[0] + 128, 0.6],
+  // a soft swish on every scene change
+  ...STARTS.slice(1).map((s) => ["swish.wav", s - 8, 0.28] as [string, number, number]),
+  ["stamp.wav", 70, 0.55],
+  // the two commands type themselves
+  ...Array.from({ length: 16 }, (_, i) => [KEYS[i % 3], STARTS[2] + 36 + i * 5, 0.12] as [string, number, number]),
+  ...Array.from({ length: 14 }, (_, i) => [KEYS[i % 3], STARTS[3] + 50 + i * 5, 0.12] as [string, number, number]),
+  // clicks where the video tells him to click something
+  ["mouseclick.wav", STARTS[4] + 112, 0.42],
+  ["mouseclick.wav", STARTS[7] + 68, 0.42],
+  ["mouseclick.wav", STARTS[8] + 38, 0.36],
+  ["mouseclick.wav", STARTS[8] + 64, 0.36],
+  ["mouseclick.wav", STARTS[9] + 66, 0.36],
+  ["mouseclick.wav", STARTS[9] + 86, 0.36],
+  ["stamp.wav", STARTS[9] + 150, 0.6],
 ];
 
 const HowTo: React.FC = () => (
   <>
-    <Sequence from={H1[0]} durationInFrames={H1[1]}><Intro dur={H1[1]} /></Sequence>
-    <Sequence from={H2[0]} durationInFrames={H2[1]}><StepGithub dur={H2[1]} /></Sequence>
-    <Sequence from={H3[0]} durationInFrames={H3[1]}><StepDeck dur={H3[1]} /></Sequence>
-    <Sequence from={H4[0]} durationInFrames={H4[1]}><StepVideo dur={H4[1]} /></Sequence>
-    <Sequence from={H5[0]} durationInFrames={H5[1]}><StepSubmit dur={H5[1]} /></Sequence>
-    <Sequence from={H6[0]} durationInFrames={H6[1]}><Outro dur={H6[1]} /></Sequence>
+    {HS.map(([Comp, dur], i) => (
+      <Sequence key={i} from={STARTS[i]} durationInFrames={dur}>
+        <Comp dur={dur} />
+      </Sequence>
+    ))}
     {HOWTO_SFX.map(([file, frame, volume], i) => (
-      <Sequence key={i} from={Math.max(0, Math.round(frame))} durationInFrames={20}>
+      <Sequence key={`s${i}`} from={Math.max(0, Math.round(frame))} durationInFrames={20}>
         <Audio src={staticFile(file)} volume={volume} />
       </Sequence>
     ))}
@@ -130,7 +140,7 @@ export const Root: React.FC = () => {
   return (
     <>
       <Composition id="StublyDemo" component={Demo} durationInFrames={912} fps={30} width={1920} height={1080} />
-      <Composition id="HowTo" component={HowTo} durationInFrames={1140} fps={30} width={1920} height={1080} />
+      <Composition id="HowTo" component={HowTo} durationInFrames={HOWTO_TOTAL} fps={30} width={1920} height={1080} />
       <Composition id="LogoStill" component={LogoStill} durationInFrames={1} fps={30} width={1024} height={1024} />
       <Composition id="XBanner" component={XBanner} durationInFrames={1} fps={30} width={1500} height={500} />
     </>
