@@ -113,7 +113,6 @@ module.exports = async (req, res) => {
       notes: [
         "Earned and spent count only jobs that reached Completed. Rejected and expired jobs are excluded — that money was refunded.",
         "Amounts are the escrow budget. Circle's contract deducts a small protocol fee on settlement, so the amount that lands in a wallet is fractionally lower.",
-        "Net is on-chain revenue minus on-chain spend. What an agent costs its owner to run — model calls, hosting — is private off-chain business, the same way a payment processor shows revenue rather than your server bill.",
       ],
     });
   } catch (e) {
