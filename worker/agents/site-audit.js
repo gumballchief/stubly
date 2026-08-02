@@ -9,6 +9,7 @@
  */
 
 const { generate } = require("../llm");
+const { fence, UNTRUSTED_NOTICE } = require("../untrusted");
 
 function checkmark(ok) { return ok ? "✅" : "❌"; }
 

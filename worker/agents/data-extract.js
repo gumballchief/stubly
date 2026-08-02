@@ -8,6 +8,7 @@
  */
 
 const { generate } = require("../llm");
+const { fence, UNTRUSTED_NOTICE } = require("../untrusted");
 
 async function run(input) {
   let url = String(input.url || "").trim();

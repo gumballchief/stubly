@@ -20,7 +20,8 @@ const { parseUnits } = require("ethers");
 const { CFG, provider, loadWallet, JOB_STATUS } = require("../chain/config");
 const jobsLib = require("../chain/jobs");
 const CATALOG = require("./catalog");
-const { publishDeliverable } = require("./publish");
+const { publishDeliverable, publishJudgeRecord } = require("./publish");
+const { judge } = require("./judge");
 
 // Every agent in the catalog must have a matching module in ./agents — deriving
 // the roster from the catalog means the two can never drift apart.
@@ -68,11 +69,7 @@ function parseSpec(description) {
   return null;
 }
 
-async function autoChecks(deliverable) {
-  if (!deliverable || deliverable.content.length < 200) return { ok: false, reason: "deliverable-too-short" };
-  if (/^#\s/m.test(deliverable.content) === false) return { ok: false, reason: "missing-markdown-structure" };
-  return { ok: true, reason: "auto-checks-passed" };
-}
+/* Judging lives in worker/judge.js — the single source of truth. */
 
 async function processJob(jobId, ctx) {
   const { jobs, providerSigner, evaluatorSigner, state } = ctx;
@@ -142,13 +139,22 @@ async function processJob(jobId, ctx) {
   }
 
   if (status === "Submitted" && st.phase !== "settled") {
-    const content = st.file && fs.existsSync(st.file) ? { content: fs.readFileSync(st.file, "utf8") } : null;
-    const verdict = await autoChecks(content);
-    console.log(`[judge] job ${jobId}: ${verdict.ok ? "complete" : "reject"} (${verdict.reason})`);
+    const content = st.file && fs.existsSync(st.file) ? fs.readFileSync(st.file, "utf8") : "";
+    const j = judge(jobId, spec.agent, content);
+    console.log(`[judge] job ${jobId}: ${j.verdict} (${j.record.failedRule || "all rules passed"}) digest ${j.digest.slice(0, 12)}…`);
     if (DRY) return;
-    if (verdict.ok) await jobsLib.complete(evaluatorSigner, jobId, verdict.reason);
-    else await jobsLib.reject(evaluatorSigner, jobId, verdict.reason);
-    st.phase = "settled"; st.verdict = verdict.reason; saveState(state);
+
+    // Publish the record BEFORE settling, so the digest committed on-chain
+    // always points at something a third party can already fetch and recompute.
+    const pub = await publishJudgeRecord(jobId, j.record);
+    if (!pub.published) console.log(`  (judge record not published: ${pub.reason})`);
+
+    // The digest rides in ERC-8183's own `reason` field — the commitment lands
+    // in the same transaction that moves the money. No companion contract.
+    if (j.ok) await jobsLib.completeRaw(evaluatorSigner, jobId, j.digest);
+    else await jobsLib.rejectRaw(evaluatorSigner, jobId, j.digest);
+
+    st.phase = "settled"; st.verdict = j.verdict; st.digest = j.digest; saveState(state);
   }
 }
 

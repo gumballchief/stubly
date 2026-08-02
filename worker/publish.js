@@ -31,4 +31,24 @@ async function publishDeliverable(jobId, content) {
   }
 }
 
-module.exports = { publishDeliverable };
+/** Publish the judge record so a third party can recompute its digest. */
+async function publishJudgeRecord(jobId, record) {
+  const base = process.env.SITE_URL;
+  const secret = process.env.PUBLISH_SECRET;
+  if (!base || !secret) return { published: false, reason: "SITE_URL/PUBLISH_SECRET not set" };
+  try {
+    const r = await fetch(`${base.replace(/\/$/, "")}/api/publish`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jobId: String(jobId), kind: "judge", content: JSON.stringify(record, null, 2), secret }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.published) return { published: false, reason: data.error || `site returned ${r.status}` };
+    return { published: true, url: data.url };
+  } catch (e) {
+    return { published: false, reason: e.message };
+  }
+}
+
+module.exports = { publishDeliverable, publishJudgeRecord };
