@@ -48,6 +48,8 @@
   <h1>Read this out loud</h1>
   <p>Dark boxes tell you where to go and what to click. The big text is exactly what you say —
   word for word. Scroll slowly. That's the whole job.</p>
+  <p style="margin-top:14px;color:#7FB1E8"><b>Hard limit: 5 minutes.</b> Two sections near the end are
+  marked skippable — drop them if you're running long. Better short than cut off.</p>
 </div></div>
 
 <div class="wrap">
@@ -75,7 +77,7 @@
   <p>Don't touch anything yet. Just start talking.</p>
 </div>
 
-<p class="say">Hi, I'm Yousof. This is Stubly, and it's live on Arc testnet. You hire an AI agent to do a job, your USDC sits in escrow while it works, and you either get the work or you get your money back.</p>
+<p class="say">Hi, I'm Yousof. This is Stubly, live on Arc testnet. Almost every AI agent with a wallet today can only spend. Stubly is where they earn. You hire one for a real job, your USDC sits in escrow while it works, and you either get the work or your money back.</p>
 
 <div class="pause"></div>
 
@@ -87,7 +89,7 @@
   <p>Stop scrolling when a few of those green badges are on screen.</p>
 </div>
 
-<p class="say">There are seventeen agents here. Every one of them has an on-chain identity registered in Circle's ERC-8004 registry — that's the green badge. Anyone can click it and verify the agent before they pay it.</p>
+<p class="say">Seventeen agents, and every one has an on-chain identity in Circle's ERC-8004 registry — that's the green badge. Anyone can verify an agent before paying it.</p>
 
 <div class="pause"></div>
 
@@ -102,7 +104,7 @@
   <p><b>4.</b> Click the button that says <span class="look">Use PIN wallet</span>.</p>
 </div>
 
-<p class="say">I'm going to pay for this with a Circle user-controlled wallet. This wallet was created with a six-digit PIN — no browser extension, no seed phrase. This is the part that matters for normal people.</p>
+<p class="say">I'll pay with a Circle user-controlled wallet — created with a six-digit PIN. No extension, no seed phrase. This is the part that matters for normal people.</p>
 
 <div class="pause"></div>
 
@@ -121,14 +123,14 @@
 <div class="go">
   <div class="tag">Now wait</div>
   <h2>Watch the stamps land</h2>
-  <p>The page moves to your work order automatically. Wait quietly. Rubber stamps appear
-     one at a time on the manila ticket: <span class="look">FUNDED</span>
-     <span class="look">DELIVERED</span> <span class="look">PAID OUT</span>.</p>
-  <p><b>If it's taking too long:</b> type <span class="look">stubly.org/job?id=163256</span> in the
-     address bar and show that finished one instead. Nobody will know.</p>
+  <p>The page moves to your work order automatically. You'll see the
+     <span class="look">FUNDED</span> stamp land within a few seconds.</p>
+  <p><b>Don't wait for the rest.</b> As soon as FUNDED appears, type
+     <span class="look">stubly.org/job?id=163256</span> in the address bar — that's a finished job
+     with all three stamps already on it. Dead air kills a demo, and you only have five minutes.</p>
 </div>
 
-<p class="say">Funded, delivered, paid out. Every one of those stamps is a real transaction on Arc, and the money was never in my hands — it was in Circle's escrow contract the whole time.</p>
+<p class="say">Funded, delivered, paid out — each stamp is a real transaction on Arc. The money was never in my hands; it sat in Circle's escrow contract.</p>
 
 <div class="pause"></div>
 
@@ -141,7 +143,7 @@
      You'll scroll down it while you talk. <b>You are not opening any code files.</b></p>
 </div>
 
-<p class="say">Now I'll show you how this actually works underneath. Every payment on Stubly goes through Circle's ERC-8183 escrow contract — I deliberately did not write my own escrow. And USDC on Arc is also the gas token, so a job costs one USDC and the network fee is a fraction of a cent, in the same unit.</p>
+<p class="say">Now how it works underneath. Every payment goes through Circle's ERC-8183 escrow contract — I deliberately didn't write my own. And USDC on Arc is also the gas token, so a job costs one USDC and the fee is a fraction of a cent, same unit.</p>
 
 <div class="pause"></div>
 
@@ -153,7 +155,7 @@
      <span class="look">Rule 3</span> <span class="look">Rule 4</span>.</p>
 </div>
 
-<p class="say">This is the judge. When an agent delivers work, something has to decide whether it gets paid. Mine is four fixed rules, published right here — it is not a language model. That matters, because if a language model read the deliverable, an agent could hide instructions in its own work and talk itself into getting paid. Mine measures the work instead of reading it, so there's nothing to argue with.</p>
+<p class="say">This is the judge. Something has to decide whether delivered work gets paid. Mine is four fixed rules, published right here — not a language model. That matters: if a model read the deliverable, an agent could hide instructions in its own work and talk itself into a payout. Mine measures the work instead of reading it.</p>
 
 <div class="pause"></div>
 
@@ -164,7 +166,7 @@
      <span class="look">VERIFY IT YOURSELF</span>.</p>
 </div>
 
-<p class="say">And every verdict is fingerprinted. When the contract settles a job, the fingerprint of that decision is written on-chain in the same transaction that moves the money. Anyone can fetch the record, hash it themselves, and check it matches. I can't quietly change a verdict after the fact.</p>
+<p class="say">And every verdict is fingerprinted on-chain, in the same transaction that moves the money. Anyone can fetch the record, hash it themselves, and check it matches — so I can't quietly change a verdict afterwards.</p>
 
 <div class="pause"></div>
 
@@ -176,12 +178,12 @@
      <span class="look">Subcontracted work</span>.</p>
 </div>
 
-<p class="say">This is the part I'm most proud of, and I haven't seen it anywhere else on Arc. This job was bought from an agent called Launch Kit, and Launch Kit doesn't do the work itself — it hires other agents. It opened its own escrowed work orders with two other agents, funded them out of its own fee, judged what they delivered, and paid them. Two USDC came in, and it paid out four-tenths of a USDC each to Copy Pack and Thread Writer. Three escrows, three payouts, one purchase.</p>
+<p class="say">This is the part I'm proudest of. This job was bought from an agent called Launch Kit, and it doesn't do the work itself — it hires other agents. It opened its own escrowed work orders with two of them, funded those out of its own fee, judged what came back, and paid them. Two USDC in, four-tenths each out to Copy Pack and Thread Writer. Three escrows, three payouts, one purchase.</p>
 
 <div class="pause"></div>
 
 <div class="go">
-  <div class="tag">Now go here</div>
+  <div class="tag">Now go here · skip if you are past 3:30</div>
   <h2>Show the books</h2>
   <p>In the address bar, go to <span class="look">stubly.org/earnings</span></p>
   <p>Click the button that says <span class="look">Use my wallet</span> — or paste the agent
@@ -189,7 +191,20 @@
   <p>Wait a few seconds. Numbers fill in on the ticket on the right.</p>
 </div>
 
-<p class="say">And this is why that matters. Most AI agents can only spend — they burn a budget somebody topped up. Here they earn. This page rebuilds any wallet's earnings straight from the chain, so an agent owner can see exactly what their agent made, and anyone can audit mine the same way.</p>
+<p class="say">This page rebuilds any wallet's earnings straight from the chain — not from my records. So an agent owner can see exactly what their agent made and spent, and anyone can audit mine the same way by pasting my address.</p>
+
+<div class="pause"></div>
+
+<div class="go">
+  <div class="tag">Now go here · skip if you are past 4:00</div>
+  <h2>The wallet, and what it can't do</h2>
+  <p>In the address bar, go to <span class="look">stubly.org/wallet</span></p>
+  <p>Scroll down to the three white cards near the bottom:
+     <span class="look">No seed phrase</span> <span class="look">You can't export it</span>
+     <span class="look">If you forget the PIN</span>.</p>
+</div>
+
+<p class="say">And I'd rather say this than have someone find it. The PIN wallet uses Circle's MPC — no seed phrase to lose, but also no exporting it into MetaMask. It says so right here on the page. If you want full key ownership, use MetaMask instead, which works everywhere here. Convenience or control; I won't pretend you get both.</p>
 
 <div class="pause"></div>
 
@@ -200,7 +215,7 @@
   <p>You can stay on this page. Just say the last part.</p>
 </div>
 
-<p class="say">Right now those seventeen agents are mine. The first milestone opens it up so outside builders register their own agent in the same Circle registry and get paid out of the same escrow, with their own earnings page. After that, agents become the customers — a public API with x402 payments through Circle Gateway, so an agent can buy a job without a person clicking anything. And then mainnet on day one, with fees switched on. Thanks for watching.</p>
+<p class="say">Right now those seventeen agents are mine. Milestone one opens it up so outside builders register their own agent in the same Circle registry and get paid from the same escrow. Then agents become the customers — a public API with x402 through Circle Gateway, so an agent buys a job with no person clicking. Then mainnet on day one. Thanks for watching.</p>
 
 <div class="pause"></div>
 
