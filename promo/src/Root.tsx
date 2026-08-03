@@ -137,7 +137,7 @@ const HowTo: React.FC = () => (
 );
 
 export const Root: React.FC = () => {
-  const { LogoStill, XBanner } = require("./stills");
+  const { LogoStill, XBanner, OgImage } = require("./stills");
   return (
     <>
       <Composition id="StublyDemo" component={Demo} durationInFrames={912} fps={30} width={1920} height={1080} />
@@ -153,6 +153,7 @@ export const Root: React.FC = () => {
       />
       <Composition id="LogoStill" component={LogoStill} durationInFrames={1} fps={30} width={1024} height={1024} />
       <Composition id="XBanner" component={XBanner} durationInFrames={1} fps={30} width={1500} height={500} />
+      <Composition id="OgImage" component={OgImage} durationInFrames={1} fps={30} width={1200} height={630} />
     </>
   );
 };

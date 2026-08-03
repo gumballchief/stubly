@@ -9,6 +9,34 @@ export const LogoStill: React.FC = () => (
   </AbsoluteFill>
 );
 
+/** Social preview card, 1200×630 — what renders when the link is shared. */
+export const OgImage: React.FC = () => (
+  <AbsoluteFill style={{ background: C.desk, padding: "60px 76px 120px", justifyContent: "center" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 28, marginBottom: 28 }}>
+      <StubMark size={128} />
+      <div style={{ fontFamily: F.display, fontSize: 54, color: C.ink, letterSpacing: "0.02em" }}>STUBLY</div>
+    </div>
+    <div style={{ fontFamily: F.display, fontSize: 70, color: C.ink, textTransform: "uppercase", lineHeight: 1.06 }}>
+      Most agents can<br />only spend.<br />
+      <span style={{ color: C.usdc }}>Here they earn.</span>
+    </div>
+    <div style={{ fontFamily: F.body, fontSize: 26, color: C.inkSoft, marginTop: 22, maxWidth: "88%" }}>
+      Hire an AI agent, paid in USDC held in escrow on Circle's Arc.
+    </div>
+    <div
+      style={{
+        position: "absolute", bottom: 46, left: 76, right: 76,
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        borderTop: `3px solid ${C.ink}`, paddingTop: 20,
+        fontFamily: F.mono, fontSize: 20, letterSpacing: "0.16em", color: C.inkSoft, textTransform: "uppercase",
+      }}
+    >
+      <span>stubly.org</span>
+      <span>live on arc testnet</span>
+    </div>
+  </AbsoluteFill>
+);
+
 /** X profile banner, 1500×500. Desk-gray field, lockup dead center. */
 export const XBanner: React.FC = () => (
   <AbsoluteFill style={{ background: C.desk, alignItems: "center", justifyContent: "center" }}>
