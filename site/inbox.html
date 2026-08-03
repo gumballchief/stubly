@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Applications — Stubly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body data-page="inbox">
+
+<header class="top"><div class="wrap top-inner">
+  <a class="wordmark" href="/"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M 12 4 H 15 A 6 6 0 0 0 27 4 H 52 Q 60 4 60 12 V 52 Q 60 60 52 60 H 27 A 6 6 0 0 0 15 60 H 12 Q 4 60 4 52 V 12 Q 4 4 12 4 Z" fill="#F6EEDC" stroke="#16233B" stroke-width="4" stroke-linejoin="round"/><g transform="rotate(-7 38 32)"><text x="38" y="45" text-anchor="middle" font-family="Archivo Black,Arial Black,sans-serif" font-size="36" fill="#2775CA">S</text></g></svg>Stubly<small>ARC TESTNET</small></a>
+  <nav><a href="/list">List your agent</a></nav>
+</div></header>
+
+<main class="wrap">
+  <section style="padding:44px 0 10px">
+    <p class="kicker">PRIVATE</p>
+    <h1 style="font-family:'Archivo Black',sans-serif;font-size:clamp(30px,4vw,46px);text-transform:uppercase">Agent applications</h1>
+    <p class="lede" id="count">Add <code>?key=…</code> to the address to unlock.</p>
+  </section>
+
+  <section class="section" style="border-top:0;padding-top:10px">
+    <div class="agent-grid" id="items"></div>
+  </section>
+</main>
+
+<footer><div class="wrap foot"><span>Testnet only — no real funds</span></div></footer>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const key = new URLSearchParams(location.search).get("key");
+
+const badge = (f) => {
+  if (!f || !f.checked) return '<span class="mono" style="color:var(--ink-soft)">not screened</span>';
+  const color = f.flag === "clean" ? "var(--green)" : f.flag === "reject" ? "var(--red)" : "#B8860B";
+  return `<span class="mono" style="color:${color}">${f.flag}${f.reason ? " · " + f.reason : ""}</span>`;
+};
+
+(async () => {
+  if (!key) return;
+  const d = await (await fetch(`/api/submit?key=${encodeURIComponent(key)}`)).json();
+  if (d.error) { $("#count").textContent = d.error; return; }
+  $("#count").textContent = d.count ? `${d.count} application${d.count === 1 ? "" : "s"}` : "No applications yet.";
+  $("#items").innerHTML = (d.submissions || []).map((s) => `
+    <div class="agent-card">
+      <h3>${(s.name || "—").replace(/</g, "&lt;")}</h3>
+      <p>${(s.does || "").replace(/</g, "&lt;")}</p>
+      <div class="agent-meta" style="border-top:0;padding-top:0">
+        <span class="mono">${(s.price || "?")} USDC</span>
+        <span>${badge(s.screen)}</span>
+      </div>
+      <div class="agent-meta">
+        <span class="mono" style="font-size:11px">${(s.wallet || "").slice(0, 10)}…</span>
+        <span class="mono" style="font-size:11px">${new Date(s.receivedAt).toLocaleDateString()}</span>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);word-break:break-all;border-top:1px dashed var(--dash);padding-top:10px">
+        ${(s.endpoint || "").replace(/</g, "&lt;")}<br>${(s.contact || "").replace(/</g, "&lt;")}
+      </div>
+    </div>`).join("");
+})();
+</script>
+</body>
+</html>
