@@ -43,8 +43,60 @@
     <div class="ticket-row"><span class="ticket-label">Network</span><span class="ticket-value">Arc Testnet</span></div>
     <div class="ticket-row"><span class="ticket-label">Balance</span><span class="ticket-value ticket-money" id="w-balance">—</span></div>
     <div class="ticket-row"><span class="ticket-label">Top up</span><span class="ticket-value"><a href="https://faucet.circle.com" target="_blank" rel="noopener">faucet.circle.com → 20 free USDC</a></span></div>
+    <div class="ticket-row"><span class="ticket-label">Account ID</span><span class="ticket-value mono" id="w-uid" style="font-size:12px">—</span></div>
     <div class="stamp-zone" id="w-stamps"></div>
   </div>
+
+  <section class="section" id="manage" style="display:none">
+    <h2 class="section-title"><span class="mono-tag">KEEPING IT</span>Save this or you lose the wallet</h2>
+    <div class="split" style="padding:0;gap:32px">
+      <div>
+        <p class="lede" style="margin-top:0">Your wallet is tied to the <strong>Account ID</strong> on the card.
+          Your PIN unlocks it — but only on a browser that knows that ID. Clear your browser data
+          without saving it and the wallet becomes unreachable.</p>
+        <div class="carbon" id="uid-box" style="font-size:13px; margin-top:16px"></div>
+        <div class="cta-row" style="margin-top:16px">
+          <button class="btn" id="btn-copy" type="button">Copy my Account ID</button>
+        </div>
+      </div>
+      <div>
+        <div class="field">
+          <label for="restore">Come back on another browser</label>
+          <input type="text" id="restore" placeholder="paste your Account ID" autocomplete="off">
+        </div>
+        <div class="cta-row" style="margin-top:0">
+          <button class="btn" id="btn-restore" type="button">Restore that wallet</button>
+          <button class="btn" id="btn-new" type="button">Start a fresh wallet</button>
+        </div>
+        <p class="mono" style="font-size:12px;color:var(--ink-soft);margin-top:14px">
+          “Start a fresh wallet” doesn't delete the old one — it just stops using it here.
+          You can always come back with the ID.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title"><span class="mono-tag">BE CLEAR ABOUT THIS</span>What a PIN wallet is, and isn't</h2>
+    <div class="agent-grid">
+      <div class="agent-card">
+        <h3>No seed phrase</h3>
+        <p>There isn't one, and that's deliberate. Circle splits the key into fragments held by
+          separate parties, so a single secret phrase never exists. Nothing to write down, nothing
+          to have stolen off a sticky note.</p>
+      </div>
+      <div class="agent-card">
+        <h3>You can't export it</h3>
+        <p>Because there's no single private key, this wallet <strong>cannot</strong> be imported into
+          MetaMask or any other wallet. If that matters to you, use MetaMask on this site instead —
+          it's supported everywhere a PIN wallet is.</p>
+      </div>
+      <div class="agent-card">
+        <h3>If you forget the PIN</h3>
+        <p>Circle asks the security questions you set when you created it. Three wrong tries locks
+          you out for thirty minutes — that's Circle's rule, not ours.</p>
+      </div>
+    </div>
+  </section>
 
 </main>
 
@@ -80,8 +132,57 @@ async function showWallets(userToken) {
     $("#w-balance").textContent = `${(Number(bal.coin_balance || 0) / 1e18).toFixed(2)} USDC`;
   } catch { $("#w-balance").textContent = "0.00 USDC (new)"; }
   localStorage.setItem("am_wallet_address", wallet.address);
+  showAccountId();
   return true;
 }
+
+/* The account id IS the wallet. Show it, and make it easy to keep. */
+function showAccountId() {
+  const uid = localStorage.getItem("am_circle_user");
+  if (!uid) return;
+  $("#w-uid").textContent = `${uid.slice(0, 8)}…${uid.slice(-4)}`;
+  $("#manage").style.display = "block";
+  $("#uid-box").textContent = uid;
+}
+
+$("#btn-copy").addEventListener("click", async () => {
+  const uid = localStorage.getItem("am_circle_user");
+  if (!uid) return;
+  try { await navigator.clipboard.writeText(uid); log("Account ID copied — paste it somewhere you'll still have next year."); }
+  catch { log("Couldn't copy automatically — select the ID above and copy it manually."); }
+});
+
+$("#btn-restore").addEventListener("click", async () => {
+  const uid = $("#restore").value.trim();
+  if (uid.length < 8) { log("That doesn't look like an Account ID."); return; }
+  try {
+    log("looking for that wallet…");
+    const t = await api({ action: "token", userId: uid });
+    if (t.error) throw new Error(t.error);
+    const found = await showWallets(t.userToken);
+    if (!found) { log("No wallet found for that Account ID."); return; }
+    localStorage.setItem("am_circle_user", uid);
+    showAccountId();
+    log("wallet restored ✓ — your PIN still unlocks it");
+  } catch (e) { log(`✗ ${e.message}`); }
+});
+
+$("#btn-new").addEventListener("click", () => {
+  const old = localStorage.getItem("am_circle_user");
+  if (old && !confirm(`Start a fresh wallet?\n\nYour current Account ID is:\n${old}\n\nSave it first — it's the only way back to the wallet you have now.`)) return;
+  localStorage.removeItem("am_circle_user");
+  localStorage.removeItem("am_wallet_id");
+  localStorage.removeItem("am_wallet_address");
+  $("#w-address").textContent = "—";
+  $("#w-balance").textContent = "—";
+  $("#w-uid").textContent = "—";
+  $("#w-state").textContent = "not created";
+  $("#w-stamps").innerHTML = "";
+  $("#manage").style.display = "none";
+  const btn = $("#btn-wallet");
+  btn.disabled = false; delete btn.dataset.mode; btn.textContent = "Create my wallet";
+  log("Ready for a new wallet. Click “Create my wallet” and choose a new PIN.");
+});
 
 $("#btn-wallet").addEventListener("click", async () => {
   if ($("#btn-wallet").dataset.mode === "go") { location.href = "/hire"; return; }
