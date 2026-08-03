@@ -3,279 +3,225 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Recording guide — scroll and read</title>
+<title>Recording script — read this out loud</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root{--desk:#E8EBEF;--ink:#16233B;--ink-soft:#4D5A70;--manila:#F6EEDC;--edge:#DDCDA4;
         --usdc:#2775CA;--usdc-deep:#1D5DA6;--green:#1E7A4A;--red:#B23A2F;--paper:#FCFCFA;}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--desk);color:var(--ink);font-family:'Public Sans',sans-serif;
-       padding:0 0 200px;font-size:19px;line-height:1.6}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 40px}
+  body{background:var(--desk);color:var(--ink);font-family:'Public Sans',sans-serif;padding:0 0 300px}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 40px}
 
-  .top{background:var(--ink);color:var(--paper);padding:46px 0 40px;margin-bottom:44px}
-  .top h1{font-family:'Archivo Black',sans-serif;font-size:52px;text-transform:uppercase;line-height:1.05}
-  .top p{color:#8FA3C0;font-size:23px;margin-top:16px;max-width:70ch}
-  .top .hint{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.2em;color:#7FB1E8;
-             text-transform:uppercase;margin-bottom:18px}
+  .top{background:var(--ink);color:var(--paper);padding:56px 0}
+  .top h1{font-family:'Archivo Black',sans-serif;font-size:56px;text-transform:uppercase;line-height:1.04}
+  .top p{color:#8FA3C0;font-size:24px;margin-top:18px;max-width:60ch;line-height:1.5}
 
-  .part{border-top:4px solid var(--ink);margin-top:56px;padding-top:26px}
-  .part-num{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.24em;
-            text-transform:uppercase;color:var(--ink-soft)}
-  .part h2{font-family:'Archivo Black',sans-serif;font-size:40px;text-transform:uppercase;margin:10px 0 8px}
-  .part .time{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--usdc-deep)}
+  /* WHERE TO GO — dark navigation instruction */
+  .go{background:var(--ink);color:var(--paper);border-radius:14px;padding:34px 40px;margin:70px 0 40px}
+  .go .tag{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.24em;
+           text-transform:uppercase;color:#7FB1E8;margin-bottom:18px}
+  .go h2{font-family:'Archivo Black',sans-serif;font-size:34px;text-transform:uppercase;margin-bottom:16px}
+  .go p{font-size:23px;line-height:1.6;color:#CFD8E6;margin-bottom:12px}
+  .go b{color:var(--paper)}
+  .go .look{display:inline-block;background:rgba(127,177,232,.16);border:2px solid #7FB1E8;
+            border-radius:8px;padding:4px 12px;font-family:'IBM Plex Mono',monospace;
+            font-size:19px;color:#BFDCFA;margin:0 4px}
 
-  .do{background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:22px 26px;margin:22px 0}
-  .do b{display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.18em;
-        text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
-  .do li{margin:8px 0 8px 22px;font-size:20px}
+  /* SAY — the actual script */
+  .say{font-size:38px;line-height:1.6;color:var(--ink);margin:0 0 30px;font-weight:400}
+  .say::before{content:"“"} .say::after{content:"”"}
+  .pause{height:120px}
+  .beat{font-family:'IBM Plex Mono',monospace;font-size:16px;letter-spacing:.2em;
+        text-transform:uppercase;color:var(--ink-soft);margin:0 0 34px}
 
-  .say{background:var(--manila);border:2px solid var(--edge);border-left:10px solid var(--usdc);
-       border-radius:10px;padding:24px 28px;margin:22px 0;font-size:24px;line-height:1.65}
-  .say b{display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.18em;
-         text-transform:uppercase;color:var(--usdc-deep);margin-bottom:12px}
-  .say em{font-style:normal;background:rgba(39,117,202,.16);padding:1px 5px;border-radius:4px}
-
-  pre{background:var(--ink);color:#CFE6D6;font-family:'IBM Plex Mono',monospace;font-size:17px;
-      line-height:1.75;padding:26px 30px;border-radius:10px;overflow-x:auto;margin:20px 0}
-  pre .c{color:#7E93B2}      /* comment */
-  pre .k{color:#7FB1E8}      /* keyword */
-  pre .s{color:#8FE3B0}      /* string */
-  .file{font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--paper);background:var(--usdc-deep);
-        display:inline-block;padding:7px 14px;border-radius:7px 7px 0 0;margin-bottom:-4px}
-
-  .warn{background:#FDECEA;border:2px solid var(--red);border-radius:10px;padding:20px 24px;margin:22px 0;font-size:20px}
+  .warn{background:#FDECEA;border:3px solid var(--red);border-radius:14px;padding:30px 36px;margin:50px 0;font-size:24px;line-height:1.55}
   .warn b{color:var(--red)}
-  .ok{background:#E8F5EE;border:2px solid var(--green);border-radius:10px;padding:20px 24px;margin:22px 0;font-size:20px}
-  .ok b{color:var(--green)}
-  .end{background:var(--ink);color:var(--paper);border-radius:12px;padding:40px;margin-top:60px;text-align:center}
-  .end h2{font-family:'Archivo Black',sans-serif;font-size:36px;text-transform:uppercase}
-  .end p{color:#8FA3C0;font-size:21px;margin-top:14px}
+  .end{background:var(--ink);color:var(--paper);border-radius:14px;padding:52px;margin-top:90px;text-align:center}
+  .end h2{font-family:'Archivo Black',sans-serif;font-size:40px;text-transform:uppercase}
+  .end p{color:#8FA3C0;font-size:23px;margin-top:16px}
+  code{font-family:'IBM Plex Mono',monospace;background:rgba(22,35,59,.1);padding:2px 8px;border-radius:5px;font-size:.9em}
 </style>
 </head>
 <body>
 
 <div class="top"><div class="wrap">
-  <div class="hint">Open this page · press record · scroll slowly · read the blue boxes out loud</div>
-  <h1>Your recording guide</h1>
-  <p>Everything you need to say is written out below. You never have to remember anything or
-  open a code editor. Blue box = read it out loud. White box = do the thing. Just go top to bottom.</p>
+  <h1>Read this out loud</h1>
+  <p>Dark boxes tell you where to go and what to click. The big text is exactly what you say —
+  word for word. Scroll slowly. That's the whole job.</p>
 </div></div>
 
 <div class="wrap">
 
-  <div class="ok"><b>Before you press record — three things:</b>
-    1. Make sure the worker is running (the black window that says “orchestrator watching”).<br>
-    2. Have <b>stubly.org</b> open in one tab and <b>this page</b> open in another tab.<br>
-    3. Take one deep breath. If you fumble a word, keep going — nobody re-records this.
-  </div>
+<!-- ══════ SETUP ══════ -->
+<div class="go">
+  <div class="tag">Before you press record</div>
+  <h2>Three things</h2>
+  <p><b>1.</b> The worker must be running — the black terminal window that says
+     <span class="look">orchestrator watching</span>. If it's closed, run
+     <code>npm run watch</code> in it first.</p>
+  <p><b>2.</b> Open two Chrome tabs. Tab one: <span class="look">stubly.org</span>.
+     Tab two: <b>this page</b>.</p>
+  <p><b>3.</b> Hold <b>Windows key</b> and press <b>G</b>. A dark bar drops down. Find the small
+     box labelled <span class="look">Capture</span> and click the <b>round record button</b>.
+     Check the microphone icon next to it is NOT crossed out.</p>
+</div>
 
-  <!-- ————— PART 1 ————— -->
-  <div class="part">
-    <div class="part-num">Part 1 of 3</div>
-    <h2>Show the product working</h2>
-    <div class="time">About 90 seconds · you are on the stubly.org tab</div>
+<!-- ══════ PART ONE ══════ -->
+<div class="go">
+  <div class="tag">Part one · about 90 seconds</div>
+  <h2>Go to your stubly.org tab</h2>
+  <p>You're looking at the homepage. The big headline says
+     <span class="look">MOST AGENTS CAN ONLY SPEND. HERE THEY EARN.</span></p>
+  <p>Don't touch anything yet. Just start talking.</p>
+</div>
 
-    <div class="do"><b>Do this</b>
-      <li>Switch to the stubly.org tab. Just let it sit there while you talk.</li>
-    </div>
+<p class="say">Hi, I'm Yousof. This is Stubly, and it's live on Arc testnet. You hire an AI agent to do a job, your USDC sits in escrow while it works, and you either get the work or you get your money back.</p>
 
-    <div class="say"><b>Say this</b>
-      “Hi, I'm Yousof. This is <em>Stubly</em>, and it's live on Arc testnet.
-      You hire an AI agent to do a job, your USDC sits in escrow while it works, and you either
-      get the work or you get your money back.”
-    </div>
+<div class="pause"></div>
 
-    <div class="do"><b>Do this</b>
-      <li>Scroll down slowly to the agents. Stop when you can see the green badges.</li>
-    </div>
+<div class="go">
+  <div class="tag">Now scroll</div>
+  <h2>Scroll down slowly</h2>
+  <p>Keep scrolling until you see the agent cards. Each one has a small
+     <b>green outlined badge</b> that says <span class="look">◆ VERIFIED AGENT #856069</span>.</p>
+  <p>Stop scrolling when a few of those green badges are on screen.</p>
+</div>
 
-    <div class="say"><b>Say this</b>
-      “There are seventeen agents here. Every one of them has an on-chain identity registered in
-      <em>Circle's ERC-8004 registry</em> — that's the green badge. Anyone can click it and verify
-      the agent before they pay it.”
-    </div>
+<p class="say">There are seventeen agents here. Every one of them has an on-chain identity registered in Circle's ERC-8004 registry — that's the green badge. Anyone can click it and verify the agent before they pay it.</p>
 
-    <div class="do"><b>Do this</b>
-      <li>Click <b>Hire an agent</b>. Pick <b>Site Audit</b>. Type any website into the box.</li>
-      <li>Click <b>Use PIN wallet</b>.</li>
-    </div>
+<div class="pause"></div>
 
-    <div class="say"><b>Say this</b>
-      “I'm going to pay for this with a <em>Circle user-controlled wallet</em>. This wallet was
-      created with a six-digit PIN — no browser extension, no seed phrase. This is the part that
-      matters for normal people.”
-    </div>
+<div class="go">
+  <div class="tag">Now click</div>
+  <h2>Start a real purchase</h2>
+  <p><b>1.</b> Scroll back up. Click the <b>blue button</b> on the left that says
+     <span class="look">Hire an agent</span>.</p>
+  <p><b>2.</b> On the new page you'll see a list of agents with radio buttons. Click
+     <span class="look">Site Audit</span>.</p>
+  <p><b>3.</b> Click the text box underneath and type any website — <code>slovey.dev</code> works.</p>
+  <p><b>4.</b> Click the button that says <span class="look">Use PIN wallet</span>.</p>
+</div>
 
-    <div class="do"><b>Do this</b>
-      <li>Click <b>Create work order</b>. Enter your PIN when Circle asks. It will ask three times.</li>
-    </div>
+<p class="say">I'm going to pay for this with a Circle user-controlled wallet. This wallet was created with a six-digit PIN — no browser extension, no seed phrase. This is the part that matters for normal people.</p>
 
-    <div class="say"><b>Say this (while the PIN boxes come up)</b>
-      “Three confirmations. One creates the work order, one approves the USDC, one funds the escrow.
-      Circle's SDK does the signing — I never touch the user's keys.”
-    </div>
+<div class="pause"></div>
 
-    <div class="do"><b>Do this</b>
-      <li>Wait on the job page until the stamps appear. If it's slow, open <b>stubly.org/job?id=163256</b> instead and show that one.</li>
-    </div>
+<div class="go">
+  <div class="tag">Now click</div>
+  <h2>Pay for it</h2>
+  <p>Click the blue <span class="look">Create work order</span> button.</p>
+  <p>A Circle window appears asking for your PIN. <b>It will ask three separate times.</b>
+     Type your PIN each time and keep talking while you do.</p>
+</div>
 
-    <div class="say"><b>Say this</b>
-      “Funded, delivered, paid out. Every one of those stamps is a real transaction on Arc,
-      and the money was never in my hands — it was in Circle's escrow contract the whole time.”
-    </div>
-  </div>
+<p class="say">Three confirmations. One creates the work order, one approves the USDC, one funds the escrow. Circle's SDK does the signing — I never touch the user's keys.</p>
 
-  <!-- ————— PART 2 ————— -->
-  <div class="part">
-    <div class="part-num">Part 2 of 3</div>
-    <h2>Show the code</h2>
-    <div class="time">About 2 and a half minutes · switch to THIS tab and scroll slowly</div>
+<div class="pause"></div>
 
-    <div class="ok"><b>How this part works:</b> switch to this tab. Scroll down slowly through the
-    four code blocks below, and read the blue box under each one. That's the entire code section.
-    You don't need to open anything else.</div>
+<div class="go">
+  <div class="tag">Now wait</div>
+  <h2>Watch the stamps land</h2>
+  <p>The page moves to your work order automatically. Wait quietly. Rubber stamps appear
+     one at a time on the manila ticket: <span class="look">FUNDED</span>
+     <span class="look">DELIVERED</span> <span class="look">PAID OUT</span>.</p>
+  <p><b>If it's taking too long:</b> type <span class="look">stubly.org/job?id=163256</span> in the
+     address bar and show that finished one instead. Nobody will know.</p>
+</div>
 
-    <div class="say"><b>Say this first</b>
-      “Now I'll show you the code where Circle's products are actually wired in. This is the real
-      codebase — four files.”
-    </div>
+<p class="say">Funded, delivered, paid out. Every one of those stamps is a real transaction on Arc, and the money was never in my hands — it was in Circle's escrow contract the whole time.</p>
 
-    <!-- FILE 1 -->
-    <div class="file">chain/config.js</div>
-<pre><span class="c">// Circle's deployments on Arc testnet — constants, not secrets.</span>
-<span class="k">const</span> CFG = {
-  RPC_URL: <span class="s">"https://rpc.testnet.arc.io"</span>,
-  CHAIN_ID: <span class="s">5042002</span>,
-  ERC8183: <span class="s">"0x0747EEf0706327138c69792bF28Cd525089e4583"</span>,  <span class="c">// Circle's escrow</span>
-  USDC:    <span class="s">"0x3600000000000000000000000000000000000000"</span>,  <span class="c">// USDC on Arc</span>
-};</pre>
+<div class="pause"></div>
 
-    <div class="say"><b>Say this</b>
-      “This is the config file. That first address is <em>Circle's ERC-8183 escrow contract</em> —
-      I want to be clear that I did not write my own escrow. Every payment on Stubly goes through
-      Circle's contract. The second one is USDC, which on Arc is also the gas token.”
-    </div>
+<!-- ══════ PART TWO ══════ -->
+<div class="go">
+  <div class="tag">Part two · about 2 minutes</div>
+  <h2>Switch to the code page</h2>
+  <p>Open a new tab and go to <span class="look">stubly.org/judge</span></p>
+  <p>This is a real page on your own site that explains how the money gets released.
+     You'll scroll down it while you talk. <b>You are not opening any code files.</b></p>
+</div>
 
-    <!-- FILE 2 -->
-    <div class="file">chain/jobs.js</div>
-<pre><span class="c">// The six calls that move a job through its life.</span>
-<span class="k">async function</span> createJob(client, { providerAddr, evaluatorAddr, expiresInSec, description })
-<span class="k">async function</span> setBudget(providerSigner, jobId, amount)
-<span class="k">async function</span> fund(clientSigner, jobId, amount)
-<span class="k">async function</span> submit(providerSigner, jobId, deliverableText)
-<span class="k">async function</span> complete(evaluatorSigner, jobId, reasonText)   <span class="c">// pays the agent</span>
-<span class="k">async function</span> reject(evaluatorSigner, jobId, reasonText)     <span class="c">// refunds the client</span>
+<p class="say">Now I'll show you how this actually works underneath. Every payment on Stubly goes through Circle's ERC-8183 escrow contract — I deliberately did not write my own escrow. And USDC on Arc is also the gas token, so a job costs one USDC and the network fee is a fraction of a cent, in the same unit.</p>
 
-<span class="c">// Every write is simulated before it is sent, so a mistake costs a log line, not gas.</span>
-<span class="k">await</span> contract[method].staticCall(...args);</pre>
+<div class="pause"></div>
 
-    <div class="say"><b>Say this</b>
-      “These are the six calls that move a job from created to settled. Create the job, the agent
-      quotes a price, the client funds the escrow, the agent submits the work, and then the
-      evaluator either <em>completes</em> it — which pays the agent — or <em>rejects</em> it, which refunds
-      the buyer. That last line simulates every transaction before sending it, so if something
-      would fail, it costs me a log line instead of gas.”
-    </div>
+<div class="go">
+  <div class="tag">Now scroll</div>
+  <h2>Scroll to the four rules</h2>
+  <p>Scroll down until you see four white cards headed
+     <span class="look">Rule 1</span> <span class="look">Rule 2</span>
+     <span class="look">Rule 3</span> <span class="look">Rule 4</span>.</p>
+</div>
 
-    <!-- FILE 3 -->
-    <div class="file">chain/registry.js</div>
-<pre><span class="c">// Registering an agent in Circle's ERC-8004 IdentityRegistry.</span>
-<span class="k">const</span> REGISTRY = {
-  identity: <span class="s">"0x8004A818BFB912233c491871b3d84c89A494BD9e"</span>,
-};
+<p class="say">This is the judge. When an agent delivers work, something has to decide whether it gets paid. Mine is four fixed rules, published right here — it is not a language model. That matters, because if a language model read the deliverable, an agent could hide instructions in its own work and talk itself into getting paid. Mine measures the work instead of reading it, so there's nothing to argue with.</p>
 
-<span class="k">const</span> tx = <span class="k">await</span> identity.register(uri);   <span class="c">// mints the agent's identity NFT</span>
-<span class="c">// uri → https://stubly.org/agents/&lt;agent&gt;.json  (its public card)</span></pre>
+<div class="pause"></div>
 
-    <div class="say"><b>Say this</b>
-      “This registers each agent in <em>Circle's ERC-8004 identity registry</em>. It mints an identity
-      NFT, and the metadata points at a public card on my domain. That's how a buyer — or another
-      agent — can check what they're about to pay for, before they pay for it. All seventeen agents
-      are registered, IDs eight-five-six-oh-six-eight through eight-five-six-one-three-six.”
-    </div>
+<div class="go">
+  <div class="tag">Now scroll</div>
+  <h2>Scroll to “Verify it yourself”</h2>
+  <p>Keep scrolling to the four dark-bordered steps under the heading
+     <span class="look">VERIFY IT YOURSELF</span>.</p>
+</div>
 
-    <!-- FILE 4 -->
-    <div class="file">site/api/circle.js</div>
-<pre><span class="c">// Server side of Circle's user-controlled wallets. The API key stays here;</span>
-<span class="c">// the browser only ever sees a short-lived user token.</span>
-<span class="k">if</span> (body.action === <span class="s">"execute"</span>) {
-  <span class="c">// Ask Circle to build a transaction the user approves with their PIN</span>
-  fetch(`${BASE}/user/transactions/contractExecution`, {
-    headers: { <span class="s">"X-User-Token"</span>: userToken },
-    body: JSON.stringify({ walletId, contractAddress, abiFunctionSignature })
-  });
-}</pre>
+<p class="say">And every verdict is fingerprinted. When the contract settles a job, the fingerprint of that decision is written on-chain in the same transaction that moves the money. Anyone can fetch the record, hash it themselves, and check it matches. I can't quietly change a verdict after the fact.</p>
 
-    <div class="say"><b>Say this</b>
-      “And this is <em>Circle Wallets</em>. My API key stays on the server — the browser only ever gets
-      a short-lived token. When someone pays with their PIN, this asks Circle to build the
-      transaction, the user approves it in Circle's own secure window, and Circle signs it. That's
-      the flow you watched me do a minute ago.”
-    </div>
+<div class="pause"></div>
 
-    <!-- FILE 5 - the wedge -->
-    <div class="file">worker/agents/launch-kit.js</div>
-<pre><span class="c">// The agent that hires other agents.</span>
-<span class="k">async function</span> subcontract(sub, product, wallets, budget) {
-  <span class="c">// it opens its OWN escrowed job with another agent…</span>
-  <span class="k">const</span> jobId = <span class="k">await</span> jobsLib.createJob(agentWallet, { ... });
-  <span class="k">await</span> jobsLib.setBudget(agentWallet, jobId, budget);
-  <span class="k">await</span> jobsLib.fund(agentWallet, jobId, budget);   <span class="c">// …funds it from its own fee</span>
+<div class="go">
+  <div class="tag">Now go here</div>
+  <h2>Show the agent that hires agents</h2>
+  <p>In the address bar, go to <span class="look">stubly.org/job?id=163256</span></p>
+  <p>Scroll down past the ticket until you reach a heading inside the document that says
+     <span class="look">Subcontracted work</span>.</p>
+</div>
 
-  <span class="k">const</span> deliverable = <span class="k">await</span> worker.run(...);          <span class="c">// the other agent works</span>
+<p class="say">This is the part I'm most proud of, and I haven't seen it anywhere else on Arc. This job was bought from an agent called Launch Kit, and Launch Kit doesn't do the work itself — it hires other agents. It opened its own escrowed work orders with two other agents, funded them out of its own fee, judged what they delivered, and paid them. Two USDC came in, and it paid out four-tenths of a USDC each to Copy Pack and Thread Writer. Three escrows, three payouts, one purchase.</p>
 
-  <span class="k">await</span> jobsLib.submit(agentWallet, jobId, deliverable.content);
-  <span class="k">await</span> jobsLib.complete(evaluator, jobId, <span class="s">"subcontract-accepted"</span>);  <span class="c">// pays it</span>
-}</pre>
+<div class="pause"></div>
 
-    <div class="say"><b>Say this</b>
-      “This is the part I'm most proud of, and I haven't seen it anywhere else on Arc.
-      This agent is called <em>Launch Kit</em>, and it doesn't do the work itself — it hires other agents.
-      When someone hires it, it opens its own escrowed work orders with two other agents on the same
-      Circle contract, funds them out of its own fee, judges what they deliver, and pays them.
-      An agent hiring agents, with real money, on the same escrow.”
-    </div>
+<div class="go">
+  <div class="tag">Now go here</div>
+  <h2>Show the books</h2>
+  <p>In the address bar, go to <span class="look">stubly.org/earnings</span></p>
+  <p>Click the button that says <span class="look">Use my wallet</span> — or paste the agent
+     wallet address into the box and click <span class="look">Show the books</span>.</p>
+  <p>Wait a few seconds. Numbers fill in on the ticket on the right.</p>
+</div>
 
-    <div class="do"><b>Do this</b>
-      <li>Switch back to your browser and open <b>stubly.org/job?id=163256</b></li>
-      <li>Scroll down to the part that says “Subcontracted work”.</li>
-    </div>
+<p class="say">And this is why that matters. Most AI agents can only spend — they burn a budget somebody topped up. Here they earn. This page rebuilds any wallet's earnings straight from the chain, so an agent owner can see exactly what their agent made, and anyone can audit mine the same way.</p>
 
-    <div class="say"><b>Say this</b>
-      “Here's one that actually ran. Job one-six-three-two-five-six. Two USDC came in, and it paid
-      Copy Pack and Thread Writer four-tenths of a USDC each. Three escrows, three payouts,
-      all on chain.”
-    </div>
-  </div>
+<div class="pause"></div>
 
-  <!-- ————— PART 3 ————— -->
-  <div class="part">
-    <div class="part-num">Part 3 of 3</div>
-    <h2>Say what's next, then stop</h2>
-    <div class="time">About 30 seconds</div>
+<!-- ══════ PART THREE ══════ -->
+<div class="go">
+  <div class="tag">Part three · about 30 seconds</div>
+  <h2>Say what's next, then stop</h2>
+  <p>You can stay on this page. Just say the last part.</p>
+</div>
 
-    <div class="say"><b>Say this</b>
-      “Right now those seventeen agents are mine. The first milestone opens it up so outside
-      builders register their own agent in the same Circle registry and get paid out of the same
-      escrow. After that, agents become the customers — a public API with <em>x402 payments through
-      Circle Gateway</em>, so an agent can buy a job without a person clicking anything.
-      And then mainnet on day one, with fees switched on. Thanks for watching.”
-    </div>
+<p class="say">Right now those seventeen agents are mine. The first milestone opens it up so outside builders register their own agent in the same Circle registry and get paid out of the same escrow, with their own earnings page. After that, agents become the customers — a public API with x402 payments through Circle Gateway, so an agent can buy a job without a person clicking anything. And then mainnet on day one, with fees switched on. Thanks for watching.</p>
 
-    <div class="do"><b>Do this</b>
-      <li>Stop talking. Stop the recording (press <b>Windows + G</b>, then the stop button).</li>
-      <li>Don't add an intro, outro, or music. You're done.</li>
-    </div>
+<div class="pause"></div>
 
-    <div class="warn"><b>Never do this:</b> do not open the file called <b>.env</b> on camera, and don't
-    show your Circle or Gemini keys. If you accidentally do, stop and re-record — those are passwords.</div>
-  </div>
+<div class="go">
+  <div class="tag">Finished</div>
+  <h2>Stop the recording</h2>
+  <p>Press <b>Windows key + G</b> again and click the <b>square stop button</b>.</p>
+  <p>Your video is saved in <span class="look">This PC → Videos → Captures</span>.
+     It's the newest file there.</p>
+</div>
 
-  <div class="end">
-    <h2>That's the whole video</h2>
-    <p>Upload it to YouTube, set it to <b>Unlisted</b>, and paste the link into the grant form.</p>
-  </div>
+<div class="warn">
+  <b>Two rules.</b> Never open the file called <code>.env</code> on camera — those are passwords.
+  And when you upload to YouTube, choose <b>Unlisted</b>, not Private. Private stops the Circle
+  reviewers from watching it.
+</div>
+
+<div class="end">
+  <h2>That's the whole video</h2>
+  <p>Upload it to YouTube as Unlisted, copy the link, and paste it into the grant form.</p>
+</div>
 
 </div>
 </body>
