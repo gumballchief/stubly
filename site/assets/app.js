@@ -17,12 +17,21 @@ const ARC = {
 const IFACE_JOBS = [
   "function createJob(address provider, address evaluator, uint256 expiredAt, string description, address hook) returns (uint256)",
   "function fund(uint256 jobId, bytes optParams)",
+  "function claimRefund(uint256 jobId)",
   "event JobCreated(uint256 indexed jobId, address indexed client, address indexed provider, address evaluator, uint256 expiredAt, address hook)",
 ];
 const IFACE_USDC = [
   "function approve(address spender, uint256 value) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)",
 ];
+
+/* How long the client's USDC can sit in escrow before they can pull it back.
+   Set to the shortest the contract permits — ERC-8183 reverts with
+   ExpiryTooShort() under 600s — because this is the buyer's guarantee and a
+   short one is a strong one. The live worker settles in seconds, so it clears
+   this easily; the scheduled fallback runs every five minutes and sometimes
+   won't, and a job that expires refunds the buyer rather than stranding them. */
+const ESCROW_DEADLINE_SEC = 600;
 
 const $ = (sel) => document.querySelector(sel);
 const fmt = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -208,7 +217,7 @@ async function initHire() {
 
   async function circleHireFlow(a, val) {
     const description = JSON.stringify({ v: 1, agent: selected, input: { [a.input.field]: val } });
-    const expiredAt = String(Math.floor(Date.now() / 1000) + 24 * 3600);
+    const expiredAt = String(Math.floor(Date.now() / 1000) + ESCROW_DEADLINE_SEC);
     const amount = String(Math.round(Number(a.priceUsdc) * 1e6)); // USDC has 6 decimals
 
     const before = await postApi({ action: "findjob", client: account });
@@ -275,7 +284,7 @@ async function initHire() {
       const usdc = new ethers.Contract(cat.usdc, IFACE_USDC, signer);
 
       const description = JSON.stringify({ v: 1, agent: selected, input: { [a.input.field]: val } });
-      const expiredAt = Math.floor(Date.now() / 1000) + 24 * 3600;
+      const expiredAt = Math.floor(Date.now() / 1000) + ESCROW_DEADLINE_SEC;
 
       log("1/3 creating the work order (sign in wallet)…");
       const tx1 = await jobs.createJob(cat.providerWallet, cat.evaluatorWallet, expiredAt, description, ethers.ZeroAddress);
@@ -359,7 +368,7 @@ async function initJob() {
     const want = [];
     if (j.status >= 1 && j.status !== 5) want.push(STAMPS[1]);
     if (j.status >= 2 && j.status <= 4) want.push(STAMPS[2]);
-    if (j.status >= 3 && STAMPS[j.status]) want.push(STAMPS[j.status]);
+    if (j.status >= 3 && j.status !== 5 && STAMPS[j.status]) want.push(STAMPS[j.status]);
     if (j.status === 5) want.push(STAMPS[5]);
     zone.innerHTML = want.map(([txt, cls], i) =>
       `<span class="stamp ${cls} ${j.status !== lastStatus && i === want.length - 1 ? "fresh" : ""}">${txt}</span>`).join("");
@@ -377,7 +386,14 @@ async function initJob() {
         }
       } catch {}
     }
-    if (j.status === 4) $("#refund-note").style.display = "block";
+    /* Both of these mean the client already has their money back. Expired is not
+       a state the chain reaches on its own — claimRefund is what sets it. */
+    if (j.status === 4 || j.status === 5) {
+      $("#refund-note").textContent = j.status === 4
+        ? "This order was rejected by the judge — the escrow returned to the client automatically."
+        : "This order passed its deadline without being delivered, and the client withdrew the escrow. Nothing is owed.";
+      $("#refund-note").style.display = "block";
+    }
 
     // order created but escrow not funded → offer funding right here
     const fundZone = $("#fund-zone");
@@ -407,6 +423,54 @@ async function initJob() {
             $("#btn-fund").disabled = false;
           }
         });
+      }
+    }
+
+    /* Money is locked but the job hasn't settled. The escrow's own deadline is the
+       client's guarantee, so show it — and once it passes, give them the button.
+       Only Funded and Submitted qualify: Expired means the refund already happened. */
+    const refundZone = $("#refund-zone");
+    if (refundZone) {
+      const locked = [1, 2].includes(j.status);
+      const left = (j.expiredAt || 0) - Math.floor(Date.now() / 1000);
+      refundZone.style.display = locked ? "block" : "none";
+      if (locked) {
+        const btn = $("#btn-refund");
+        if (left > 0) {
+          const h = Math.floor(left / 3600), m = Math.floor((left % 3600) / 60);
+          $("#refund-copy").textContent =
+            `Your ${j.budgetUsdc} USDC is locked in escrow, not in anyone's wallet. If this order isn't delivered and judged within ${h > 0 ? `${h}h ${m}m` : `${m} minutes`}, you can take it back yourself.`;
+          btn.style.display = "none";
+        } else {
+          $("#refund-copy").textContent =
+            `This order passed its deadline without settling. Your ${j.budgetUsdc} USDC is still in escrow and you can withdraw it now — no one else can.`;
+          btn.style.display = "inline-flex";
+        }
+        if (!refundZone.dataset.wired) {
+          refundZone.dataset.wired = "1";
+          btn.addEventListener("click", async () => {
+            const note = $("#carbon");
+            try {
+              btn.disabled = true;
+              const w = await connectWallet((m) => { note.textContent = m; });
+              if (w.addr.toLowerCase() !== String(j.client).toLowerCase()) {
+                note.textContent = "✗ only the wallet that paid for this order can withdraw it";
+                btn.disabled = false; return;
+              }
+              const signer = await new ethers.BrowserProvider(w.eth).getSigner();
+              const cat = await api("/api/catalog");
+              const jobs = new ethers.Contract(cat.contract, IFACE_JOBS, signer);
+              note.textContent = "withdrawing from escrow…";
+              const tx = await jobs.claimRefund(id);
+              await tx.wait(1);
+              note.textContent = "refunded ✓ — the USDC is back in your wallet";
+              refresh();
+            } catch (e) {
+              note.textContent = `✗ ${e.shortMessage || e.message}`;
+              btn.disabled = false;
+            }
+          });
+        }
       }
     }
 
