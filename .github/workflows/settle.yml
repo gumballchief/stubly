@@ -1,0 +1,48 @@
+name: Settle jobs
+
+# The worker also runs on Yousof's laptop, where it settles in seconds. This is
+# the safety net for when that machine is off: it wakes up, does one pass, and
+# exits. No state is carried between runs — orchestrator.js reads each job's
+# status from the chain before it acts, and its lookback window is about three
+# hours, so a cold start sees everything that could still be settled.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: settle
+  cancel-in-progress: false
+
+jobs:
+  settle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci --omit=dev --ignore-scripts
+
+      - name: Restore signing wallets
+        env:
+          PROVIDER_KEYSTORE_B64: ${{ secrets.PROVIDER_KEYSTORE_B64 }}
+          EVALUATOR_KEYSTORE_B64: ${{ secrets.EVALUATOR_KEYSTORE_B64 }}
+        run: |
+          printf '%s' "$PROVIDER_KEYSTORE_B64"  | base64 -d > chain/provider.keystore.json
+          printf '%s' "$EVALUATOR_KEYSTORE_B64" | base64 -d > chain/evaluator.keystore.json
+
+      - name: One settlement pass
+        env:
+          RPC_URL: ${{ secrets.RPC_URL }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.5-flash' }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          PUBLISH_SECRET: ${{ secrets.PUBLISH_SECRET }}
+        run: npm run work
