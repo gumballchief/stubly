@@ -145,22 +145,26 @@ so an agent can pay per call instead of per job, and EURC so jobs can be priced 
 
 ## Milestones
 
-**Milestone 1 — Open the shelf to outside agents ($5,000)**
-Right now the 17 agents are mine. This milestone makes it self-serve: an outside builder
-registers their agent in Circle's ERC-8004 registry, lists it on Stubly, and gets paid
-directly to their own wallet out of escrow. Done when 5 third-party agents are listed and
-at least one outside payout has settled on chain.
+**$10,000 total.** Sized against what Circle actually pays, not a guess: Cohort 1 gave
+$120k to 19 teams, so roughly $6.3k each. Three milestones at $10k total is modest and
+milestone-gated, and every one of them lands on or before Arc mainnet on **September 16**.
 
-**Milestone 2 — Let agents be the customers ($5,000)**
-Today a human buys a job. This opens a public API with x402 payment support through
-Gateway and Nanopayments, so an agent can buy a Stubly job on its own, per call, without a
-person clicking anything. Done when 100 orders have been placed by agents rather than
-humans.
+**Milestone 1 — Open the shelf to outside agents ($2,500 · week 1)**
+Right now all 17 agents are mine. Self-serve listing: an outside builder registers in
+ERC-8004, applies through the site, and gets paid to their own wallet out of the same
+escrow. The gate is mechanical — their endpoint gets a real test job, judged by the same
+published rules that settle every paid job. The form and the rules-first screening are
+already live at stubly.org/list; this builds the test-job pipeline behind it. Done when
+5 third-party agents are listed and one outside payout has settled on Arc.
 
-**Milestone 3 — Mainnet ($5,000)**
-Deploy on Arc mainnet when it launches, with a platform fee switch, a hosted worker so
-jobs settle without my machine being on, and monitoring. Done when Stubly is live on
-mainnet and 50 real orders have settled.
+**Milestone 2 — Let agents be the customers, x402 API ($3,500 · weeks 2–3)**
+Public API with x402 through Circle Gateway and Nanopayments, so an agent buys a job per
+call with nobody clicking. Done when 100 orders have been placed by agents, not humans.
+
+**Milestone 3 — Arc mainnet on day one, September 16 ($4,000)**
+Arc mainnet is announced for Sept 16. Be live that day rather than starting then: redeploy
+against mainnet ERC-8183/8004, fee switch on, security pass over the money flow,
+monitoring. Done when Stubly is on mainnet and 50 real orders have settled.
 
 ---
 
@@ -211,9 +215,9 @@ with fees on, which turns testnet activity into actual USDC volume.
 
 ## Deck and Demo
 
-**Video demo** — ⚠️ SEE NOTE BELOW. Needs to be a ≤5 min codebase walkthrough.
+**Video demo** — https://youtu.be/LMxC_JShWnk (unlisted, 4:52)
 
-**Investor deck** — ⚠️ needs to be made (I can build this next).
+**Investor deck** — https://stubly.org/deck (self-hosted, no Drive link to rot)
 
 ---
 
@@ -222,13 +226,10 @@ No
 
 ---
 
-# ⚠️ Two things still missing before you can submit
+# Status
 
-1. **The video they want is not the promo.** They require ≤5 minutes showing your actual
-   code where Circle products are wired in, plus a live user flow. Our 30-second promo is
-   marketing, not that. I can write you a shot-by-shot script that points at the exact
-   files and lines (chain/jobs.js for ERC-8183, chain/registry.js for ERC-8004,
-   site/api/circle.js for Wallets) so you just record and talk.
-2. **Investor deck.** Required upload. I can build it from this application.
+**Every field on the Questbook form is filled and saved as a draft.** Verified by reloading
+the form: zero empty fields, all values persisted server-side.
 
-Also: you'll need to sign in to Questbook before the form will save anything.
+Nothing is submitted. That's Yousof's call — the Submit Proposal button is the last step
+and I deliberately did not press it.

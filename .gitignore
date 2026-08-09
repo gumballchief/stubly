@@ -10,3 +10,5 @@ deliverables/
 node_modules/
 .vercel/
 chain/erc8183.abi.json
+
+.vercel
