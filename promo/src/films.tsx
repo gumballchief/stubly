@@ -749,3 +749,127 @@ export const OneJob: React.FC = () => (
   </>
 );
 export const ONEJOB_TOTAL = D.close[0] + D.close[1];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   YouTube thumbnail — 1280×720. Static by design: no springs, so it renders
+   identically at any frame. Big type and hard contrast so it survives being
+   shown at postage-stamp size in a reviewer's sidebar.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const FlatStamp: React.FC<{ label: string; color: string; rotate: number }> = ({ label, color, rotate }) => (
+  <span
+    style={{
+      display: "inline-block",
+      fontFamily: F.display,
+      textTransform: "uppercase",
+      fontSize: 25,
+      letterSpacing: "0.1em",
+      lineHeight: 1,
+      padding: "9px 14px",
+      border: `4px solid ${color}`,
+      borderRadius: 7,
+      color,
+      transform: `rotate(${rotate}deg)`,
+      opacity: 0.9,
+    }}
+  >
+    {label}
+  </span>
+);
+
+export const Thumbnail: React.FC = () => (
+  <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      background: C.ink,
+      display: "flex",
+      alignItems: "center",
+      gap: 54,
+      padding: "0 64px",
+      fontFamily: F.body,
+    }}
+  >
+    <div style={{ flex: "0 0 660px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 26 }}>
+        <StubMark size={78} />
+        <span style={{ fontFamily: F.display, fontSize: 40, color: C.paper, textTransform: "uppercase", letterSpacing: "0.01em" }}>Stubly</span>
+      </div>
+
+      <div style={{ fontFamily: F.display, fontSize: 92, lineHeight: 0.98, color: C.paper, textTransform: "uppercase" }}>
+        Agents that
+        <br />
+        <span style={{ color: "#5AA9F5" }}>earn.</span>
+      </div>
+
+      <div style={{ fontSize: 27, color: "#A9BCD6", marginTop: 26, lineHeight: 1.4, maxWidth: 600 }}>
+        Hire an AI agent for a real job. USDC held in Circle's escrow until the work is judged.
+      </div>
+
+      <div
+        style={{
+          display: "inline-block",
+          marginTop: 26,
+          fontFamily: F.mono,
+          fontSize: 19,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "#7FB1E8",
+          border: "2px solid rgba(127,177,232,.45)",
+          borderRadius: 7,
+          padding: "8px 16px",
+        }}
+      >
+        Live on Arc testnet
+      </div>
+    </div>
+
+    <div
+      style={{
+        flex: 1,
+        background: C.manila,
+        border: `3px solid ${C.manilaEdge}`,
+        borderRadius: 12,
+        padding: "26px 30px 26px 54px",
+        position: "relative",
+        transform: "rotate(1.4deg)",
+        boxShadow: "0 26px 60px -24px rgba(0,0,0,.7)",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: 30,
+          borderRight: `2px dashed ${C.dash}`,
+          backgroundImage: `radial-gradient(circle 5px, ${C.ink} 98%, transparent 100%)`,
+          backgroundSize: "30px 30px",
+          backgroundPosition: "5px 14px",
+          backgroundRepeat: "repeat-y",
+        }}
+      />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", borderBottom: `3px solid ${C.ink}`, paddingBottom: 10, marginBottom: 14 }}>
+        <span style={{ fontFamily: F.display, fontSize: 20, letterSpacing: "0.07em", textTransform: "uppercase", color: C.ink }}>Work order</span>
+        <span style={{ fontFamily: F.mono, fontSize: 18, color: C.inkSoft }}>#173725</span>
+      </div>
+
+      {[
+        ["Agent", "Research Brief"],
+        ["Escrow", "1.00 USDC"],
+      ].map(([l, v], i) => (
+        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: `2px dashed ${C.dash}` }}>
+          <span style={{ fontFamily: F.mono, fontSize: 13, letterSpacing: "0.15em", textTransform: "uppercase", color: C.inkSoft }}>{l}</span>
+          <span style={{ fontFamily: i === 1 ? F.mono : F.body, fontWeight: 700, fontSize: 19, color: i === 1 ? C.usdcDeep : C.ink }}>{v}</span>
+        </div>
+      ))}
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 20 }}>
+        <FlatStamp label="Funded" color={C.stampBlue} rotate={-4} />
+        <FlatStamp label="Delivered" color={C.stampBlue} rotate={2} />
+        <FlatStamp label="Paid out" color={C.green} rotate={-2} />
+      </div>
+    </div>
+  </div>
+);

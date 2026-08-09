@@ -3,7 +3,7 @@ import { Audio, Composition, Sequence, staticFile } from "remotion";
 import { BrandOpen, CLICK_AT, Close, Lifecycle, PIN_KEY_FRAMES, PinWallet, Shelf, Subcontract } from "./scenes";
 import { GetReady, HowToRecord, Intro, OpenGuide, Outro, PasteSubmit, RecPart1, RecPart2, RecPart3, Upload, WhatItIs } from "./howto";
 import { CARD_COUNT, ScriptCard } from "./cards";
-import { Guarantee, GUARANTEE_TOTAL, OneJob, ONEJOB_TOTAL, Thesis, THESIS_TOTAL } from "./films";
+import { Guarantee, GUARANTEE_TOTAL, OneJob, ONEJOB_TOTAL, Thesis, THESIS_TOTAL, Thumbnail } from "./films";
 
 /* Scene layout: [start, duration] — 912 frames ≈ 30s total */
 const S1 = [0, 84] as const;
@@ -202,6 +202,7 @@ export const Root: React.FC = () => {
   const { LogoStill, XBanner, OgImage } = require("./stills");
   return (
     <>
+      <Composition id="Thumbnail" component={Thumbnail} durationInFrames={1} fps={30} width={1280} height={720} />
       <Composition id="OneJob" component={OneJobFilm} durationInFrames={ONEJOB_TOTAL} fps={30} width={1920} height={1080} />
       <Composition id="Thesis" component={ThesisFilm} durationInFrames={THESIS_TOTAL} fps={30} width={1920} height={1080} />
       <Composition id="Guarantee" component={GuaranteeFilm} durationInFrames={GUARANTEE_TOTAL} fps={30} width={1920} height={1080} />
