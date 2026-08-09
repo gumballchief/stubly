@@ -145,26 +145,35 @@ so an agent can pay per call instead of per job, and EURC so jobs can be priced 
 
 ## Milestones
 
-**$10,000 total.** Sized against what Circle actually pays, not a guess: Cohort 1 gave
-$120k to 19 teams, so roughly $6.3k each. Three milestones at $10k total is modest and
-milestone-gated, and every one of them lands on or before Arc mainnet on **September 16**.
+**$40,000 total, milestone-gated.** Three milestones ship the product ($15,000, mostly
+time) and land on or before Arc mainnet on **September 16**. The fourth ($25,000) is a
+different kind of work: turning the settlement layer under Stubly into something other Arc
+teams build on.
 
-**Milestone 1 — Open the shelf to outside agents ($2,500 · week 1)**
-Right now all 17 agents are mine. Self-serve listing: an outside builder registers in
-ERC-8004, applies through the site, and gets paid to their own wallet out of the same
-escrow. The gate is mechanical — their endpoint gets a real test job, judged by the same
-published rules that settle every paid job. The form and the rules-first screening are
-already live at stubly.org/list; this builds the test-job pipeline behind it. Done when
+**Milestone 1 — Open the shelf to outside agents ($5,000 · week 1)**
+Self-serve listing: an outside builder registers in ERC-8004, applies through the site, and
+gets paid to their own wallet out of the same escrow. The gate is mechanical — their endpoint
+gets a real test job, judged by the same published rules that settle every paid job. Done when
 5 third-party agents are listed and one outside payout has settled on Arc.
 
-**Milestone 2 — Let agents be the customers, x402 API ($3,500 · weeks 2–3)**
-Public API with x402 through Circle Gateway and Nanopayments, so an agent buys a job per
-call with nobody clicking. Done when 100 orders have been placed by agents, not humans.
+**Milestone 2 — Let agents be the customers, x402 API ($5,000 · weeks 2–3)**
+Public API with x402 through Circle Gateway and Nanopayments, so an agent buys a job per call
+with nobody clicking. Done when 100 orders have been placed by agents, not humans.
 
-**Milestone 3 — Arc mainnet on day one, September 16 ($4,000)**
-Arc mainnet is announced for Sept 16. Be live that day rather than starting then: redeploy
-against mainnet ERC-8183/8004, fee switch on, security pass over the money flow,
+**Milestone 3 — Arc mainnet on day one, September 16 ($5,000)**
+Redeploy against mainnet ERC-8183/8004, fee switch on, security pass over the money flow,
 monitoring. Done when Stubly is on mainnet and 50 real orders have settled.
+
+**Milestone 4 — The settlement layer other Arc teams build on ($25,000 · by October 31)**
+Open-source SDK for ERC-8183 and ERC-8004 — full job lifecycle plus the production details
+that are easy to get wrong (staticCall before send, nonce management, fee overrides, retries
+against unreliable RPCs, the refund path). A judge others can verify or fork, keeping the
+on-chain verdict fingerprint. EURC so jobs price in euros. Done when 3 independent teams have
+shipped on the SDK, 1,000 mainnet jobs have settled, and euro pricing is live.
+
+Why this one costs more: milestones 1–3 grow one marketplace. This one makes escrowed agent
+work a primitive any Arc team can ship in an afternoon — and every team that does generates
+ERC-8183 volume on Arc that Stubly never has to generate itself.
 
 ---
 
@@ -217,7 +226,7 @@ with fees on, which turns testnet activity into actual USDC volume.
 
 **Video demo** — https://youtu.be/LMxC_JShWnk (unlisted, 4:52)
 
-**Investor deck** — https://stubly.org/deck (self-hosted, no Drive link to rot)
+**Investor deck** — `launch/deck.html` → PDF at `~/Videos/Captures/Stubly deck.pdf`. Not hosted anywhere; Yousof chooses where it goes.
 
 ---
 
