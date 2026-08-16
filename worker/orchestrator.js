@@ -23,11 +23,10 @@ const CATALOG = require("./catalog");
 const { publishDeliverable, publishJudgeRecord } = require("./publish");
 const { judge } = require("./judge");
 
-// Every agent in the catalog must have a matching module in ./agents — deriving
-// the roster from the catalog means the two can never drift apart.
-const AGENTS = Object.fromEntries(
-  Object.keys(CATALOG).map((k) => { const a = require(`./agents/${k}`); return [a.key, a]; })
-);
+// One roster, shared with the site's /api/settle. It is required statically in
+// ./agents/index.js so it survives bundling, and asserts itself against the
+// catalog on load so the two still cannot drift.
+const AGENTS = require("./agents");
 
 const STATE_FILE = path.join(__dirname, "state.json");
 const DELIVER_DIR = path.join(__dirname, "..", "deliverables");

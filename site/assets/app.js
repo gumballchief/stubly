@@ -343,7 +343,15 @@ async function initHire() {
     if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
     await runChallenge(circleCtx, ch.challengeId);
 
-    log("escrow funded ✓ — opening your work order…", "ok");
+    log("escrow funded ✓ — starting the agent…", "ok");
+    /* Tell the site to run it now rather than waiting for a worker to notice.
+       Deliberately not awaited: the buyer should land on their work order and
+       watch the stamps arrive, not stare at this line for half a minute. If the
+       call fails, the polling worker settles it as it always did. */
+    fetch("/api/settle", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jobId }),
+    }).catch(() => { /* the worker is the backstop */ });
     setTimeout(() => { location.href = `/job?id=${jobId}`; }, 1200);
   }
 
