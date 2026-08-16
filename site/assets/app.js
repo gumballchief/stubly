@@ -33,6 +33,21 @@ const IFACE_USDC = [
    won't, and a job that expires refunds the buyer rather than stranding them. */
 const ESCROW_DEADLINE_SEC = 600;
 
+/* Approved once so every later order is a single PIN. Deliberately a bounded
+   number rather than the usual infinite approval: 100 USDC is generous for
+   1–2 USDC jobs and still caps what the escrow could ever pull if it were
+   compromised. */
+const STANDING_ALLOWANCE = String(100 * 1e6);
+
+/** Current USDC allowance the escrow holds for this wallet, read from chain. */
+async function readAllowance(cat, owner) {
+  try {
+    const p = new ethers.JsonRpcProvider(ARC.rpcUrls[0]);
+    const usdc = new ethers.Contract(cat.usdc, IFACE_USDC, p);
+    return await usdc.allowance(owner, cat.contract);
+  } catch { return 0n; }
+}
+
 const $ = (sel) => document.querySelector(sel);
 const fmt = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
@@ -173,6 +188,52 @@ async function initHire() {
   inputField.addEventListener("input", sync);
   renderChoice(); sync();
 
+  /* ————— the front door: describe the job, we pick the agent —————
+     The router only ever selects from this same catalog and the price is read
+     from it locally, so nothing typed here can change what gets charged. The
+     order still isn't created until the buyer presses Create work order. */
+  const askBtn = $("#btn-ask");
+  if (askBtn) {
+    const askNote = (m) => { $("#ask-note").textContent = m; };
+    const runAsk = async () => {
+      const text = $("#ask").value.trim();
+      if (text.length < 4) { askNote("Say a bit more than that."); return; }
+      askBtn.disabled = true;
+      $("#ask-result").style.display = "none";
+      askNote("reading the shelf…");
+      try {
+        const r = await fetch("/api/dispatch", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        const d = await r.json();
+        if (!d.ok) { askNote(d.reason || "no match"); return; }
+
+        selected = d.agent;
+        renderChoice();
+        if (d.input) inputField.value = d.input;
+        sync();
+
+        $("#ask-title").textContent = d.title;
+        $("#ask-why").textContent = d.why ? `picked because: ${d.why}` : "";
+        $("#ask-price").innerHTML =
+          `<b>${d.priceUsdc}.00 USDC</b> · ${d.eta} · ${d.label.toLowerCase()}: ${
+            (d.input || "—").replace(/</g, "&lt;")}`;
+        $("#ask-result").style.display = "block";
+        askNote(d.input
+          ? "Check it below, then create the work order. Nothing is charged yet."
+          : "Fill in the job details below, then create the work order.");
+      } catch (e) {
+        askNote(`✗ ${e.message}`);
+      } finally {
+        askBtn.disabled = false;
+      }
+    };
+    askBtn.addEventListener("click", runAsk);
+    $("#ask").addEventListener("keydown", (e) => { if (e.key === "Enter") runAsk(); });
+  }
+
   $("#btn-connect").addEventListener("click", async () => {
     try {
       const w = await connectWallet(log);
@@ -222,7 +283,7 @@ async function initHire() {
 
     const before = await postApi({ action: "findjob", client: account });
 
-    log("step 1/3 — create the work order (confirm with your PIN)…");
+    log("step 1 — create the work order (confirm with your PIN)…");
     let ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
       contractAddress: cat.contract, abiFunctionSignature: "createJob(address,address,uint256,string,address)",
       abiParameters: [cat.providerWallet, cat.evaluatorWallet, expiredAt, description, "0x0000000000000000000000000000000000000000"] });
@@ -248,14 +309,23 @@ async function initHire() {
     }
     if (!quoted) throw new Error(`quote pending — finish later from /job?id=${jobId}; your money has NOT moved`);
 
-    log("step 2/3 — approve the USDC (PIN again)…");
-    ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
-      contractAddress: cat.usdc, abiFunctionSignature: "approve(address,uint256)",
-      abiParameters: [cat.contract, amount] });
-    if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
-    await runChallenge(circleCtx, ch.challengeId);
+    /* The escrow only needs an allowance, and an allowance persists. Approving
+       the exact price every time cost a PIN prompt per job for no benefit — so
+       approve a standing amount once, and skip this step entirely from then on.
+       Read the current allowance from the chain rather than remembering it, so
+       a wallet used elsewhere is still handled correctly. */
+    const allowance = await readAllowance(cat, account);
+    if (allowance < BigInt(amount)) {
+      log("one-time — approve USDC spending (PIN)…");
+      ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
+        contractAddress: cat.usdc, abiFunctionSignature: "approve(address,uint256)",
+        abiParameters: [cat.contract, STANDING_ALLOWANCE] });
+      if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
+      await runChallenge(circleCtx, ch.challengeId);
+      log("   approved — future orders skip this step", "ok");
+    }
 
-    log("step 3/3 — fund the escrow (last PIN)…");
+    log("last step — fund the escrow (PIN)…");
     ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
       contractAddress: cat.contract, abiFunctionSignature: "fund(uint256,bytes)",
       abiParameters: [jobId, "0x"] });

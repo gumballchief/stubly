@@ -40,7 +40,24 @@
     <p class="kicker">NEW WORK ORDER</p>
 
     <div class="field">
-      <label>Choose your worker</label>
+      <label for="ask">Say what you need</label>
+      <input type="text" id="ask" maxlength="300" autocomplete="off"
+             placeholder="e.g. audit slovey.dev, or research stablecoin adoption">
+      <div class="cta-row" style="margin-top:12px; margin-bottom:0">
+        <button class="btn btn-primary" id="btn-ask" type="button">Find the right agent</button>
+      </div>
+      <div id="ask-result" style="display:none; margin-top:14px; background:var(--manila);
+           border:2px solid var(--manila-edge); border-radius:10px; padding:16px 18px">
+        <div style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; font-size:20px"
+             id="ask-title"></div>
+        <div class="mono" id="ask-why" style="font-size:13px; color:var(--ink-soft); margin-top:6px"></div>
+        <div class="mono" id="ask-price" style="font-size:13px; margin-top:10px"></div>
+      </div>
+      <p class="mono" id="ask-note" style="font-size:12.5px; color:var(--ink-soft); margin-top:10px"></p>
+    </div>
+
+    <div class="field">
+      <label>Or choose your worker</label>
       <div class="choice" id="agent-choice"></div>
     </div>
 
@@ -87,5 +104,6 @@
 </div></footer>
 
 <script src="/assets/app.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
