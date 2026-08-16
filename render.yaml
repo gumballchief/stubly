@@ -1,0 +1,49 @@
+# Settlement worker, hosted.
+#
+# It runs as a *web* service rather than a background worker because Render's
+# background workers are paid and their web tier is not. The process still does
+# the same polling loop; the HTTP endpoint exists so the free tier has something
+# to health-check, and so the GitHub schedule can ping it every five minutes and
+# stop it idling out.
+#
+# Secrets are marked sync:false — they are set once in Render's dashboard and
+# never live in this file.
+
+services:
+  - type: web
+    name: stubly-worker
+    runtime: node
+    plan: free
+    region: oregon
+    branch: master
+    buildCommand: npm ci --omit=dev --ignore-scripts
+    startCommand: npm run serve
+    healthCheckPath: /
+    envVars:
+      - key: POLL_MS
+        value: "10000"
+      - key: CHAIN_ID
+        value: "5042002"
+      - key: ERC8183_ADDRESS
+        value: "0x0747EEf0706327138c69792bF28Cd525089e4583"
+      - key: USDC_ADDRESS
+        value: "0x3600000000000000000000000000000000000000"
+      - key: EXPLORER_API
+        value: "https://testnet.arcscan.app/api/v2"
+      - key: GEMINI_MODEL
+        value: "gemini-3.5-flash"
+      - key: RPC_URL
+        sync: false
+      - key: KEYSTORE_PASSWORD
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SITE_URL
+        sync: false
+      - key: PUBLISH_SECRET
+        sync: false
+      # The two signing wallets, base64 of their encrypted keystore files.
+      - key: PROVIDER_KEYSTORE_B64
+        sync: false
+      - key: EVALUATOR_KEYSTORE_B64
+        sync: false

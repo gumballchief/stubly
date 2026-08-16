@@ -20,6 +20,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # Free hosting tiers idle a service out after ~15 minutes of no traffic.
+      # This job already runs every five, so it doubles as the thing that keeps
+      # the hosted worker awake. Never fails the run: the settlement pass below
+      # is the backstop precisely for when the host is unreachable.
+      - name: Keep the hosted worker awake
+        if: vars.WORKER_URL != ''
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o /tmp/health.json -w '%{http_code}' --max-time 30 "${{ vars.WORKER_URL }}" || echo 000)
+          echo "worker health: HTTP $code"
+          cat /tmp/health.json 2>/dev/null || true
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4

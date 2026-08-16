@@ -8,7 +8,8 @@
     "e2e:dry": "node chain/e2e.js --dry",
     "e2e": "node chain/e2e.js",
     "work": "node worker/orchestrator.js --once",
-    "watch": "node worker/orchestrator.js"
+    "watch": "node worker/orchestrator.js",
+    "serve": "node worker/orchestrator.js"
   },
   "dependencies": {
     "@circle-fin/w3s-pw-web-sdk": "^1.1.11",

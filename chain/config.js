@@ -53,11 +53,21 @@ function provider() {
  * "could not coalesce" errors — local nonce tracking sidesteps that entirely.
  */
 function loadWallet(name, prov) {
-  const file = path.join(__dirname, `${name}.keystore.json`);
-  if (!fs.existsSync(file)) throw new Error(`missing ${file} — run: npm run wallets`);
   const pw = process.env.KEYSTORE_PASSWORD;
   if (!pw) throw new Error("KEYSTORE_PASSWORD not set in .env");
-  const w = Wallet.fromEncryptedJsonSync(fs.readFileSync(file, "utf8"), pw);
+
+  /* Locally the keystore is a file. On a host it can't be — the keystores are
+     gitignored, so nothing that deploys from the repo will find one. Fall back
+     to the same encrypted JSON handed in as base64, which keeps the "encrypted
+     keystore, never a bare key" rule intact wherever this runs. */
+  const file = path.join(__dirname, `${name}.keystore.json`);
+  const b64 = process.env[`${name.toUpperCase()}_KEYSTORE_B64`];
+  let json;
+  if (fs.existsSync(file)) json = fs.readFileSync(file, "utf8");
+  else if (b64) json = Buffer.from(b64, "base64").toString("utf8");
+  else throw new Error(`no keystore for "${name}" — run: npm run wallets, or set ${name.toUpperCase()}_KEYSTORE_B64`);
+
+  const w = Wallet.fromEncryptedJsonSync(json, pw);
   if (!prov) return w;
   const managed = new NonceManager(w.connect(prov));
   managed.address = w.address; // convenience for balance checks and job params

@@ -176,10 +176,51 @@ async function pass() {
   saveState(state);
 }
 
+/**
+ * Free hosting tiers only keep a *web* service alive, and they idle it out
+ * after a spell with no requests. So when PORT is set we answer HTTP as well as
+ * poll: the endpoint reports what the loop is doing, and a ping every few
+ * minutes is enough to stop the host putting us to sleep. Locally PORT is
+ * unset and none of this exists.
+ */
+let lastPassAt = null;
+let lastPassError = null;
+let passes = 0;
+
+function serveHealth() {
+  const port = Number(process.env.PORT || 0);
+  if (!port) return;
+  require("http")
+    .createServer((req, res) => {
+      const age = lastPassAt ? Math.round((Date.now() - lastPassAt) / 1000) : null;
+      const healthy = age !== null && age < (POLL_MS / 1000) * 4;
+      res.writeHead(healthy || passes === 0 ? 200 : 503, { "content-type": "application/json" });
+      res.end(JSON.stringify({
+        ok: healthy || passes === 0,
+        chainId: CFG.CHAIN_ID,
+        passes,
+        secondsSinceLastPass: age,
+        pollSeconds: POLL_MS / 1000,
+        lastError: lastPassError,
+      }));
+    })
+    .listen(port, () => console.log(`health endpoint on :${port}`));
+}
+
 async function main() {
   console.log(`orchestrator ${DRY ? "(dry) " : ""}watching provider jobs on chain ${CFG.CHAIN_ID}`);
+  serveHealth();
   do {
-    await pass();
+    try {
+      await pass();
+      lastPassError = null;
+    } catch (e) {
+      // One bad pass (a flaky RPC, usually) must not kill a hosted worker.
+      lastPassError = e.shortMessage || e.message;
+      console.log(`[pass failed] ${lastPassError}`);
+    }
+    lastPassAt = Date.now();
+    passes++;
     if (!ONCE) await new Promise((r) => setTimeout(r, POLL_MS));
   } while (!ONCE);
   console.log("pass complete");
