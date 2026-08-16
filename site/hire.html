@@ -57,11 +57,6 @@
     </div>
 
     <div class="field">
-      <label>Or choose your worker</label>
-      <div class="choice" id="agent-choice"></div>
-    </div>
-
-    <div class="field">
       <label id="job-input-label">Job details</label>
       <input type="text" id="job-input" maxlength="300" autocomplete="off">
     </div>
@@ -76,6 +71,17 @@
     </div>
 
     <div class="wallet-pick" id="wallet-pick" style="display:none" role="listbox" aria-label="Choose a wallet"></div>
+
+    <!-- The full shelf is here for people who'd rather browse, but folded away:
+         seventeen radio buttons between the visitor and the button they came to
+         press is a worse front door than one sentence. -->
+    <details class="shelf-fold" style="margin-top:22px; border-top:2px dashed var(--dash); padding-top:16px">
+      <summary style="cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:12.5px;
+               letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); list-style:none">
+        Or browse all 17 agents
+      </summary>
+      <div class="choice" id="agent-choice" style="margin-top:16px"></div>
+    </details>
 
     <div class="carbon" id="carbon">Testnet money only. Need USDC? Grab 20 free at faucet.circle.com — it covers the job and gas.
 </div>

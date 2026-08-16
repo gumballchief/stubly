@@ -300,3 +300,9 @@ footer { border-top: 2px solid var(--ink); margin-top: 30px; padding: 26px 0 40p
   .escrow-step:last-child { border-bottom: 0; }
   .top nav { gap: 14px; }
 }
+
+/* Folded shelf on /hire — the browse-everything path, out of the way by default. */
+.shelf-fold summary::-webkit-details-marker { display: none; }
+.shelf-fold summary::after { content: " +"; font-weight: 700; }
+.shelf-fold[open] summary::after { content: " −"; }
+.shelf-fold summary:hover { color: var(--ink); }
