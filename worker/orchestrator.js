@@ -60,6 +60,21 @@ async function findOurJobs(prov, jobs, providerAddr, state) {
   return latest;
 }
 
+/** The hosted copy of a deliverable, for work this worker did not submit. */
+async function fetchPublished(jobId) {
+  const base = process.env.SITE_URL;
+  if (!base) return "";
+  try {
+    const r = await fetch(`${base.replace(/\/$/, "")}/api/deliverable?id=${jobId}`, {
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!r.ok) return "";
+    const text = await r.text();
+    // /api/deliverable answers with JSON when it has nothing to serve.
+    return text.trim().startsWith("{") ? "" : text;
+  } catch { return ""; }
+}
+
 function parseSpec(description) {
   try {
     const spec = JSON.parse(description);
@@ -138,7 +153,20 @@ async function processJob(jobId, ctx) {
   }
 
   if (status === "Submitted" && st.phase !== "settled") {
-    const content = st.file && fs.existsSync(st.file) ? fs.readFileSync(st.file, "utf8") : "";
+    /* The deliverable is not always ours to find locally. Since the site can
+       submit a job too, this worker regularly meets work it did not do and has
+       no file for — so fall back to the published copy.
+
+       And if both come up empty, stop. Judging an unread deliverable is not a
+       verdict, it is a guaranteed rejection: every rule fails against "" and
+       the agent loses a payment it earned. Better to leave the job Submitted
+       and try again than to reject work that might be perfectly good. */
+    let content = st.file && fs.existsSync(st.file) ? fs.readFileSync(st.file, "utf8") : "";
+    if (!content) content = await fetchPublished(jobId);
+    if (!content) {
+      console.log(`[judge] job ${jobId}: skipped — deliverable not readable yet, will retry`);
+      return;
+    }
     const j = judge(jobId, spec.agent, content);
     console.log(`[judge] job ${jobId}: ${j.verdict} (${j.record.failedRule || "all rules passed"}) digest ${j.digest.slice(0, 12)}…`);
     if (DRY) return;
