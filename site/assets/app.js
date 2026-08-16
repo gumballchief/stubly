@@ -300,8 +300,19 @@ async function initHire() {
     if (!jobId) throw new Error("order not found on-chain yet — check /job in a minute, your money has not moved");
     log(`   order #${jobId} created ✓`, "ok");
 
-    log("   waiting for the agent to quote…");
+    /* Ask the site to price it now rather than waiting for the worker's next
+       poll. If that call fails for any reason the worker still picks the job
+       up, so we fall through to polling instead of giving up. */
+    log("   pricing the order…");
     let quoted = false;
+    try {
+      const q = await (await fetch("/api/quote", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jobId }),
+      })).json();
+      quoted = !!q.ok;
+    } catch { /* fall through to the poll below */ }
+
     for (let i = 0; i < 30 && !quoted; i++) {
       await new Promise((r) => setTimeout(r, 4000));
       const j = await api(`/api/job?id=${jobId}`);
