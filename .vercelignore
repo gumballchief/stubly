@@ -1,0 +1,10 @@
+# Keep the deployment to what the site and its functions actually need.
+promo/
+launch/
+brand/
+deployments/
+chain/*.keystore.json
+worker/state.json
+worker/*.test.js
+.github/
+*.md
