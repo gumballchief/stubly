@@ -160,5 +160,443 @@
     "uri": "https://stubly.org/agents/changelog-writer.json",
     "tx": "0x792a1ef0df20a2c5e5478db7ac9e9af574754f5f1a9533fbcbd74d931f44227d",
     "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "blog-outline": {
+    "agentId": "880421",
+    "uri": "https://stubly.org/agents/blog-outline.json",
+    "tx": "0x4f328cdeae27f854de108e9ec97eadeb4bf345ce74ea607a63ac8138b8132acc",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "newsletter": {
+    "agentId": "880422",
+    "uri": "https://stubly.org/agents/newsletter.json",
+    "tx": "0x011a87530271c80b34dccb76811f9e64825ae861a6f94e38e7cd1bf54550c1e2",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "product-description": {
+    "agentId": "880423",
+    "uri": "https://stubly.org/agents/product-description.json",
+    "tx": "0xb749480d6e02be7f582a2599c5a649ff5e9e53a6105f3e195fc2e7fec8b895c2",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "press-release": {
+    "agentId": "880425",
+    "uri": "https://stubly.org/agents/press-release.json",
+    "tx": "0xd821643b73046081a2b9a730496f11830ded4ae3bc999f09204a2f9850bcfbc4",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "ad-copy": {
+    "agentId": "880426",
+    "uri": "https://stubly.org/agents/ad-copy.json",
+    "tx": "0x38579145a6ef63e8c1097d22cf569f6be0d60e865554ffd03530f37b2442b67a",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "tagline": {
+    "agentId": "880427",
+    "uri": "https://stubly.org/agents/tagline.json",
+    "tx": "0x75a15241a654b646c99a3d255d52b7b2689c31dbdc4c85f4efc4c30dd567f24f",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "faq-writer": {
+    "agentId": "880428",
+    "uri": "https://stubly.org/agents/faq-writer.json",
+    "tx": "0x8c77de33b839de1fc9e3cb889282307604d9e22d19f16087d061f1c0b0d2ec83",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "case-study": {
+    "agentId": "880429",
+    "uri": "https://stubly.org/agents/case-study.json",
+    "tx": "0x02addd8843228f29685c1d0d8d2bbda0edcd1c34c8dbd496129aa419afb9ad5c",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "linkedin-post": {
+    "agentId": "880430",
+    "uri": "https://stubly.org/agents/linkedin-post.json",
+    "tx": "0xdefb231e5394e5c79863bf950b6688394725555f0c93ca4d3db65754ca77a617",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "youtube-description": {
+    "agentId": "880431",
+    "uri": "https://stubly.org/agents/youtube-description.json",
+    "tx": "0x285d4cb992a118120429cf68680a91240bc9b1efcd354af2f4cc2d33dddccd4c",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "show-notes": {
+    "agentId": "880432",
+    "uri": "https://stubly.org/agents/show-notes.json",
+    "tx": "0xab868fcd06d24ed03afa2520c79cf960659d3b7a091ebb0bc8658eae45b55240",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "subject-lines": {
+    "agentId": "880433",
+    "uri": "https://stubly.org/agents/subject-lines.json",
+    "tx": "0x6a18eb11cb06feeff1fcb602c0529153c5f18b8218dc1ffbd636047387f14ca7",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "value-prop": {
+    "agentId": "880434",
+    "uri": "https://stubly.org/agents/value-prop.json",
+    "tx": "0x45f286513bff16a768647f8910d436c5c0c5eb9de334f3121c3bf646c88329e1",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "elevator-pitch": {
+    "agentId": "880435",
+    "uri": "https://stubly.org/agents/elevator-pitch.json",
+    "tx": "0x4a215fcb6683a28a7093605f2a7cda9e5340e41f6eeeddf43bed98de8fc873bb",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "code-review-checklist": {
+    "agentId": "880436",
+    "uri": "https://stubly.org/agents/code-review-checklist.json",
+    "tx": "0x12fe605fede64b858056eeaf23c47e6ba6ab64143549b069c6a05ebd5f58353e",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "api-docs": {
+    "agentId": "880437",
+    "uri": "https://stubly.org/agents/api-docs.json",
+    "tx": "0xd757cb58afb2d54bc2763b17c1d840f979f85c6b141d7be9377e3a19076fdeea",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "commit-message": {
+    "agentId": "880438",
+    "uri": "https://stubly.org/agents/commit-message.json",
+    "tx": "0xfc1cc08a7a751cd6771d415321a7eba2ae5489f3f5dff2e51902f570516ce46c",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "pr-description": {
+    "agentId": "880439",
+    "uri": "https://stubly.org/agents/pr-description.json",
+    "tx": "0x6d39faf9f97a1a1fc647cceff1447e6ebe4c303f84c3fd82ecc2d8bd04131f06",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "dockerfile": {
+    "agentId": "880440",
+    "uri": "https://stubly.org/agents/dockerfile.json",
+    "tx": "0x04861ebe88a9dc242faf98d07e3d1cfa69b8ebfa4f460a32c31301f34b4c91d3",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "ci-config": {
+    "agentId": "880441",
+    "uri": "https://stubly.org/agents/ci-config.json",
+    "tx": "0xe75ed65a37679593eed0a9c8700b039ff9be0886ce3e0cbff66a2be8d41cd657",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "migration-plan": {
+    "agentId": "880442",
+    "uri": "https://stubly.org/agents/migration-plan.json",
+    "tx": "0x6d0e1e056abb582f55a5ca0819199a0f12a9cda5e9d232b2939eb5f06af83aac",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "refactor-plan": {
+    "agentId": "880443",
+    "uri": "https://stubly.org/agents/refactor-plan.json",
+    "tx": "0x95f49863b349ab5a0b182d7bac23ef83f928ddb9d3d6e3cc4e42d6d4780b35dc",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "adr": {
+    "agentId": "880444",
+    "uri": "https://stubly.org/agents/adr.json",
+    "tx": "0x4bce3380f0378b2f444dbba7dc5ce58efd73c9d437251e990e6576edbb96125b",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "bug-report": {
+    "agentId": "880445",
+    "uri": "https://stubly.org/agents/bug-report.json",
+    "tx": "0x4841b50164f125dcdc7be4b2d76be00626636a454fee3b2ee209914397c4d664",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "tech-spec": {
+    "agentId": "880446",
+    "uri": "https://stubly.org/agents/tech-spec.json",
+    "tx": "0x34bcc9cf70477f711b0664e0806f604c3719a7335a906512704cfd7f6b51617b",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "env-audit": {
+    "agentId": "880447",
+    "uri": "https://stubly.org/agents/env-audit.json",
+    "tx": "0x4b558a97ac69617f9c8e7c3d988e5a48ef7f24be1965398277375fb8ecd6375a",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "gitignore": {
+    "agentId": "880448",
+    "uri": "https://stubly.org/agents/gitignore.json",
+    "tx": "0xa87c88eeea3357cf1996c7eb02a6ca62c2342c0bcf4ce2d65171f2b860e54451",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "csv-schema": {
+    "agentId": "880449",
+    "uri": "https://stubly.org/agents/csv-schema.json",
+    "tx": "0xcafa3f9f25a9f010f6dc369a356d4589d8d88317e1b4d42d39c71e3db9d18dff",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "chart-suggestion": {
+    "agentId": "880451",
+    "uri": "https://stubly.org/agents/chart-suggestion.json",
+    "tx": "0xdfd20d662857ee6e9987b0a638192c154d966741311019b0a44950483385f182",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "metric-definitions": {
+    "agentId": "880452",
+    "uri": "https://stubly.org/agents/metric-definitions.json",
+    "tx": "0x16d7513dbaab1c82f5365acd2d162ab1b3e5ca255b84113657c118e725a786c7",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "ab-test": {
+    "agentId": "880453",
+    "uri": "https://stubly.org/agents/ab-test.json",
+    "tx": "0x5d53ac2becfc59e3ea06bdc30bf46934f1b9cc282c9e0798660734b5258659a9",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "survey-questions": {
+    "agentId": "880454",
+    "uri": "https://stubly.org/agents/survey-questions.json",
+    "tx": "0x038948d3aef94b6e248b7d0dd8f47b511e09a1f07248dd5bcf60412bca9a385f",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "competitor-matrix": {
+    "agentId": "880455",
+    "uri": "https://stubly.org/agents/competitor-matrix.json",
+    "tx": "0x1055a364c45d39ed58a5c3fe456c379721d572b6adc998f9543728f4e7c9d6bc",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "swot": {
+    "agentId": "880456",
+    "uri": "https://stubly.org/agents/swot.json",
+    "tx": "0xedfd5eb10db69d87eaafa77e78b1bb27304ef19e486adff1fa485c8495d93d58",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "pricing-review": {
+    "agentId": "880457",
+    "uri": "https://stubly.org/agents/pricing-review.json",
+    "tx": "0x5a68eb8b4d67193c7c59c41a5cd61af8e75e46bcd20f2e40081401103ed1cfa4",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "unit-economics": {
+    "agentId": "880458",
+    "uri": "https://stubly.org/agents/unit-economics.json",
+    "tx": "0x6c301542996013df30c09e5e065f0c8d1e35fcd552d33629eb6c06a35593efaa",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "job-description": {
+    "agentId": "880459",
+    "uri": "https://stubly.org/agents/job-description.json",
+    "tx": "0xfc183a79d5176425f616326b77e09f79f4817e2fa63a542e4a3ebb5dbe224ba4",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "interview-questions": {
+    "agentId": "880460",
+    "uri": "https://stubly.org/agents/interview-questions.json",
+    "tx": "0x76d6bf5721406a27e40604a78493f5e29b0bc73eac86618447423327fb141aec",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "onboarding-checklist": {
+    "agentId": "880461",
+    "uri": "https://stubly.org/agents/onboarding-checklist.json",
+    "tx": "0x93097d330bfcb8602ac7965bc5ba5278746d4dc8dfd8bd7c8b42253f884a2ed3",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "meeting-agenda": {
+    "agentId": "880462",
+    "uri": "https://stubly.org/agents/meeting-agenda.json",
+    "tx": "0x4f79e2cea055e1e24da87f68a42593d06937be92b51299009e611f6026f8074f",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "postmortem": {
+    "agentId": "880463",
+    "uri": "https://stubly.org/agents/postmortem.json",
+    "tx": "0x2789208644dd935e738bba4b36ec0a2be9e0e5bb7d064844707c70481d696b6f",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "runbook": {
+    "agentId": "880464",
+    "uri": "https://stubly.org/agents/runbook.json",
+    "tx": "0xced1aad89214ce05794acf32bbcee33750e67f46558c79d7a59a120a6f32c148",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "sop": {
+    "agentId": "880465",
+    "uri": "https://stubly.org/agents/sop.json",
+    "tx": "0xa7cb3e067fd432ad5575cf882f8d1a13ae076cfd5428a66078438a37d0a653b3",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "vendor-comparison": {
+    "agentId": "880466",
+    "uri": "https://stubly.org/agents/vendor-comparison.json",
+    "tx": "0xaf54de0b6e8d8d016414eea415a217d9eb51d31c2d0aff01691582d18f48fdf6",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "eli5": {
+    "agentId": "880467",
+    "uri": "https://stubly.org/agents/eli5.json",
+    "tx": "0x451eb0ad261c8974331f9691df3da139787407e10a5712b3cbf88332a2fb6324",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "glossary": {
+    "agentId": "880468",
+    "uri": "https://stubly.org/agents/glossary.json",
+    "tx": "0x5f131c8c0677fc1145c84dfe10b0262639bebeaee304a15a9b954cc58d9591ab",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "study-plan": {
+    "agentId": "880469",
+    "uri": "https://stubly.org/agents/study-plan.json",
+    "tx": "0xa2acb392be8a6d79d65041c02edf7299ac3d8a1e4c9031e08a6cf2cd33b9f665",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "quiz": {
+    "agentId": "880470",
+    "uri": "https://stubly.org/agents/quiz.json",
+    "tx": "0xeda6c59cc1cf4bac154429d4aeba39644ea5e0bf4fa2e6559c1b02d43691eec2",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "flashcards": {
+    "agentId": "880471",
+    "uri": "https://stubly.org/agents/flashcards.json",
+    "tx": "0x8e0573728a94247bc9b5feec6adc819ad310b77470a5564adc20a6c795c0c52a",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "tone-rewrite": {
+    "agentId": "880472",
+    "uri": "https://stubly.org/agents/tone-rewrite.json",
+    "tx": "0x6ed0cb3591f31d7f01436bbcc72b8ea23d2ede16ddaf973f973323d5606a57a7",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "simplify": {
+    "agentId": "880473",
+    "uri": "https://stubly.org/agents/simplify.json",
+    "tx": "0xf65ea2eb7bf3a8fda8091a57acc336f4d93d3fe9a6579bfd60fe25e18a2ddc3b",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "grammar-fix": {
+    "agentId": "880474",
+    "uri": "https://stubly.org/agents/grammar-fix.json",
+    "tx": "0x458695363d6cdce80ef92b8a056482faa267bd9c23c394a735984078c3c66726",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "user-journey": {
+    "agentId": "880475",
+    "uri": "https://stubly.org/agents/user-journey.json",
+    "tx": "0x6dcba61285488ffda3f5fd03eb21df3f20cd4caceff02bd6e6c9c887122f62b7",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "empty-states": {
+    "agentId": "880477",
+    "uri": "https://stubly.org/agents/empty-states.json",
+    "tx": "0x4b6770f556615b2a0fd31ef8ca9fe3c986c5309eea44a6035d682156869b0c9e",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "error-messages": {
+    "agentId": "880478",
+    "uri": "https://stubly.org/agents/error-messages.json",
+    "tx": "0x90bec02b3f3007fcb2c61ef28c90803b7bb538671665888667b565c736135d09",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "microcopy": {
+    "agentId": "880479",
+    "uri": "https://stubly.org/agents/microcopy.json",
+    "tx": "0xc25287268b3e5e48c6c595848074e326fe8ad03b1eed6cc00a018c9456da7172",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "a11y-checklist": {
+    "agentId": "880480",
+    "uri": "https://stubly.org/agents/a11y-checklist.json",
+    "tx": "0x179dd42c8e3a007ca754ec54c91e4341e296c082d222ddf1b67cc7985fd91bf7",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "ia-review": {
+    "agentId": "880481",
+    "uri": "https://stubly.org/agents/ia-review.json",
+    "tx": "0xad6308c841eff3bd64cc601ffb2bda47503c250ea9b84081bf7ae3675bcb7299",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "wireframe": {
+    "agentId": "880482",
+    "uri": "https://stubly.org/agents/wireframe.json",
+    "tx": "0xba6a7a9e6634d029b5aba87b53dd14c240307f027890f6a8abb8d4f7112f2eb3",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "gas-estimate": {
+    "agentId": "880483",
+    "uri": "https://stubly.org/agents/gas-estimate.json",
+    "tx": "0xef218400441ccc5ec772b686291dcd2827e9fb4ecd7796bd5604adf162691657",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "contract-summary": {
+    "agentId": "880484",
+    "uri": "https://stubly.org/agents/contract-summary.json",
+    "tx": "0xae266e47c1214cfd8ee951de42fd8eec966a052d3a0b717793e0ba6b08478615",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "tokenomics-review": {
+    "agentId": "880485",
+    "uri": "https://stubly.org/agents/tokenomics-review.json",
+    "tx": "0xd41864b16f66f9395f8f75120298e99fc742db4b78b6c49e51fe549839b58030",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "whitepaper-digest": {
+    "agentId": "880486",
+    "uri": "https://stubly.org/agents/whitepaper-digest.json",
+    "tx": "0xb5e6ed852227e7b3a0892695b93fb24841d74c3571ff706d6719f30ae9292685",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "okrs": {
+    "agentId": "880487",
+    "uri": "https://stubly.org/agents/okrs.json",
+    "tx": "0x0a5f3e3b2c48b3ca360cfed7188775ff5fe0ddef2162ab71e9627cedb5c5cdc5",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "roadmap": {
+    "agentId": "880488",
+    "uri": "https://stubly.org/agents/roadmap.json",
+    "tx": "0x5ffe66fcbc2c81d4bf303addd5c6dd0d02452c00452f6a28bafcd12143087e57",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "risk-register": {
+    "agentId": "880489",
+    "uri": "https://stubly.org/agents/risk-register.json",
+    "tx": "0x0681a4f8d8902be67de144bda0b575c9243b41f032615547f36ef8c3888d91ce",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "retro": {
+    "agentId": "880490",
+    "uri": "https://stubly.org/agents/retro.json",
+    "tx": "0xd52292e0035f140e007e4b777847877a69438811065dea49a1673781a1362a9b",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "decision-brief": {
+    "agentId": "880491",
+    "uri": "https://stubly.org/agents/decision-brief.json",
+    "tx": "0x1ac84b36171993073a172d6b83688bbc5ae306f9b9fe082fbe01327eb8ce9d17",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "negotiation-prep": {
+    "agentId": "880492",
+    "uri": "https://stubly.org/agents/negotiation-prep.json",
+    "tx": "0x971f2a5e9a9ff9bbb2b05ef27f21257a83359b1b7e8ea6765c52d36be3769d4c",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "cold-dm": {
+    "agentId": "880493",
+    "uri": "https://stubly.org/agents/cold-dm.json",
+    "tx": "0x1270d88bb6a70c30d007ec7ed16136223e94cf28d6c43e3379a255598ebd2684",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "outreach-sequence": {
+    "agentId": "880494",
+    "uri": "https://stubly.org/agents/outreach-sequence.json",
+    "tx": "0x994e190a83e12f7ff5dae34c49a0ae56f2c71ba48779e58366d5d007580b00ad",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "deck-outline": {
+    "agentId": "880495",
+    "uri": "https://stubly.org/agents/deck-outline.json",
+    "tx": "0x05d85bc5a8c44fc9774a2698aa135cf4a0e0511be7dcfdcbf3d8b2b5bd098fcb",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "landing-critique": {
+    "agentId": "880496",
+    "uri": "https://stubly.org/agents/landing-critique.json",
+    "tx": "0x55b776e6d69dc35443496017d67d290d695673af8c75c827fdd930a6cba8a4b4",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
   }
 }

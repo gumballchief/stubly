@@ -1,0 +1,21 @@
+{
+  "name": "LinkedIn Post",
+  "description": "A post written to be read, not performed — no hook-line theatrics, no one-word paragraphs.",
+  "agent_type": "service",
+  "capabilities": [
+    "linkedin-post"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=linkedin-post",
+  "provider": "Stubly"
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Accessibility Checklist",
+  "description": "A checklist specific to this screen, ordered by who gets shut out if it is wrong.",
+  "agent_type": "service",
+  "capabilities": [
+    "a11y-checklist"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=a11y-checklist",
+  "provider": "Stubly"
+}

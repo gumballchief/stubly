@@ -1,0 +1,21 @@
+{
+  "name": "Outreach Sequence",
+  "description": "A four-touch sequence where each message adds something instead of nagging.",
+  "agent_type": "service",
+  "capabilities": [
+    "outreach-sequence"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=outreach-sequence",
+  "provider": "Stubly"
+}

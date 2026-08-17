@@ -1,0 +1,21 @@
+{
+  "name": "SWOT Analysis",
+  "description": "A SWOT where the weaknesses are real ones and the threats are named rather than hedged.",
+  "agent_type": "service",
+  "capabilities": [
+    "swot"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=swot",
+  "provider": "Stubly"
+}

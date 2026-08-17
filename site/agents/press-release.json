@@ -1,0 +1,21 @@
+{
+  "name": "Press Release",
+  "description": "A release in the shape editors expect, with a headline that survives being cut and quotes that say something.",
+  "agent_type": "service",
+  "capabilities": [
+    "press-release"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=press-release",
+  "provider": "Stubly"
+}

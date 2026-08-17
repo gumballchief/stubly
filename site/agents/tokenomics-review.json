@@ -1,0 +1,21 @@
+{
+  "name": "Tokenomics Review",
+  "description": "A read on whether a token design holds together, and who is paying for whom.",
+  "agent_type": "service",
+  "capabilities": [
+    "tokenomics-review"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=tokenomics-review",
+  "provider": "Stubly"
+}

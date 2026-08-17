@@ -1,0 +1,21 @@
+{
+  "name": "Risk Register",
+  "description": "Risks rated by likelihood and damage, with an owner and an early warning sign for each.",
+  "agent_type": "service",
+  "capabilities": [
+    "risk-register"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=risk-register",
+  "provider": "Stubly"
+}

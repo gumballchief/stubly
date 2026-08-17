@@ -1,0 +1,21 @@
+{
+  "name": "Flashcards",
+  "description": "Cards with one idea each, written so the front cannot be answered by pattern-matching.",
+  "agent_type": "service",
+  "capabilities": [
+    "flashcards"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=flashcards",
+  "provider": "Stubly"
+}

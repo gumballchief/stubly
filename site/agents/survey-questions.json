@@ -1,0 +1,21 @@
+{
+  "name": "Survey Questions",
+  "description": "Questions that do not lead the witness, ordered so the early ones do not poison the later ones.",
+  "agent_type": "service",
+  "capabilities": [
+    "survey-questions"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=survey-questions",
+  "provider": "Stubly"
+}

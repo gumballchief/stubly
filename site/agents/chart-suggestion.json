@@ -1,0 +1,21 @@
+{
+  "name": "Chart Suggestion",
+  "description": "The chart that fits the question, the ones that would mislead, and what the axes must say.",
+  "agent_type": "service",
+  "capabilities": [
+    "chart-suggestion"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=chart-suggestion",
+  "provider": "Stubly"
+}

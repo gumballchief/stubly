@@ -295,5 +295,808 @@
       "placeholder": "e.g. fix: nonce race; feat: add refund button…"
     },
     "blurb": "Raw commit messages turned into release notes written from the reader position, with breaking changes called out first."
+  },
+  "blog-outline": {
+    "title": "Blog Outline",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "topic",
+      "label": "Article topic",
+      "placeholder": "e.g. why escrow matters for AI agents"
+    },
+    "blurb": "A section-by-section outline with the argument each section has to land, plus the three openings worth trying."
+  },
+  "newsletter": {
+    "title": "Newsletter Issue",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "topic",
+      "label": "What is this issue about?",
+      "placeholder": "e.g. what shipped this week and why"
+    },
+    "blurb": "One issue written to be finished: a subject line, an opening that earns the next line, the body, and one clear thing to do at the end."
+  },
+  "product-description": {
+    "title": "Product Description",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "product",
+      "label": "What is the product?",
+      "placeholder": "e.g. a marketplace for hiring AI agents"
+    },
+    "blurb": "Three lengths of product copy from one description, each written for a different place it will actually appear."
+  },
+  "press-release": {
+    "title": "Press Release",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "announcement",
+      "label": "What are you announcing?",
+      "placeholder": "e.g. we launched on Arc mainnet"
+    },
+    "blurb": "A release in the shape editors expect, with a headline that survives being cut and quotes that say something."
+  },
+  "ad-copy": {
+    "title": "Ad Copy",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "offer",
+      "label": "What are you advertising?",
+      "placeholder": "e.g. hire an AI agent, pay in escrowed USDC"
+    },
+    "blurb": "Five ad variants built on different hooks, with the audience each is aimed at and what makes it stop the scroll."
+  },
+  "tagline": {
+    "title": "Tagline",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "product",
+      "label": "What are you naming a line for?",
+      "placeholder": "e.g. a marketplace where AI agents get paid"
+    },
+    "blurb": "Ten taglines across four registers, sorted by which ones survive being said out loud."
+  },
+  "faq-writer": {
+    "title": "FAQ Writer",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "product",
+      "label": "Describe your product",
+      "placeholder": "e.g. escrowed AI agent jobs on Arc"
+    },
+    "blurb": "The questions people actually ask before paying, including the awkward ones most FAQs dodge."
+  },
+  "case-study": {
+    "title": "Case Study",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "story",
+      "label": "What happened?",
+      "placeholder": "e.g. an agent hired two other agents and settled all three"
+    },
+    "blurb": "A case study in problem, approach, result order, honest about what is not yet provable."
+  },
+  "linkedin-post": {
+    "title": "LinkedIn Post",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "topic",
+      "label": "What do you want to say?",
+      "placeholder": "e.g. what I learned shipping in two days"
+    },
+    "blurb": "A post written to be read, not performed — no hook-line theatrics, no one-word paragraphs."
+  },
+  "youtube-description": {
+    "title": "Video Description",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "video",
+      "label": "What is the video about?",
+      "placeholder": "e.g. a five-minute demo of escrowed agent jobs"
+    },
+    "blurb": "A description that works as both a summary and a search surface, with timestamps and links laid out."
+  },
+  "show-notes": {
+    "title": "Podcast Show Notes",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "episode",
+      "label": "What was the episode about?",
+      "placeholder": "e.g. an interview about stablecoin settlement"
+    },
+    "blurb": "Show notes with a real summary, the moments worth jumping to, and the things mentioned that listeners will hunt for."
+  },
+  "subject-lines": {
+    "title": "Email Subject Lines",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "email",
+      "label": "What is the email about?",
+      "placeholder": "e.g. announcing a refund guarantee"
+    },
+    "blurb": "Twelve subject lines across six tactics, with a blunt read on which will get marked as spam."
+  },
+  "value-prop": {
+    "title": "Value Proposition",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "product",
+      "label": "Describe what you do",
+      "placeholder": "e.g. escrow and judging for AI agent work"
+    },
+    "blurb": "A value proposition built from the customer's problem, plus the three weaker versions and why they are weaker."
+  },
+  "elevator-pitch": {
+    "title": "Elevator Pitch",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "idea",
+      "label": "Describe the idea",
+      "placeholder": "e.g. a marketplace where AI agents earn"
+    },
+    "blurb": "Three pitches at 10, 30 and 60 seconds, each ending somewhere a conversation can start."
+  },
+  "code-review-checklist": {
+    "title": "Code Review Checklist",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "change",
+      "label": "Describe the change",
+      "placeholder": "e.g. added a refund button that calls claimRefund"
+    },
+    "blurb": "A review checklist specific to this change, ordered by what would actually cause damage."
+  },
+  "api-docs": {
+    "title": "API Docs",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "endpoint",
+      "label": "Describe the endpoint",
+      "placeholder": "e.g. POST /api/settle takes a jobId and runs the agent"
+    },
+    "blurb": "Documentation with the request, the responses including the failures, and the mistake most callers make."
+  },
+  "commit-message": {
+    "title": "Commit Message",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "change",
+      "label": "What did you change?",
+      "placeholder": "e.g. fixed the worker judging an empty deliverable"
+    },
+    "blurb": "A commit message that explains why, in the shape reviewers and future readers expect."
+  },
+  "pr-description": {
+    "title": "Pull Request Description",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "change",
+      "label": "What does this PR do?",
+      "placeholder": "e.g. moves settlement to serverless"
+    },
+    "blurb": "A PR description a reviewer can act on: what changed, why, what to look at hardest, how it was checked."
+  },
+  "dockerfile": {
+    "title": "Dockerfile",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "app",
+      "label": "Describe the app",
+      "placeholder": "e.g. a Node worker that polls a chain and calls an API"
+    },
+    "blurb": "A Dockerfile with the layer order that keeps rebuilds fast, and the reasoning for each line."
+  },
+  "ci-config": {
+    "title": "CI Pipeline",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "project",
+      "label": "Describe the project",
+      "placeholder": "e.g. a Node repo with tests and a Vercel deploy"
+    },
+    "blurb": "A CI workflow with the stages that catch real problems, and honesty about what CI cannot catch."
+  },
+  "migration-plan": {
+    "title": "Migration Plan",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "migration",
+      "label": "What are you migrating?",
+      "placeholder": "e.g. moving settlement from a laptop worker to serverless"
+    },
+    "blurb": "A migration plan with the rollback written before the rollout, because that is the part people skip."
+  },
+  "refactor-plan": {
+    "title": "Refactor Plan",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "code",
+      "label": "What needs refactoring?",
+      "placeholder": "e.g. one file doing routing, judging and payment"
+    },
+    "blurb": "A refactor split into steps that each leave the code working, with the reason to stop early."
+  },
+  "adr": {
+    "title": "Architecture Decision Record",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "decision",
+      "label": "What decision are you recording?",
+      "placeholder": "e.g. build on Circle's escrow instead of our own"
+    },
+    "blurb": "A decision recorded with the options that lost and why, so nobody relitigates it in six months."
+  },
+  "bug-report": {
+    "title": "Bug Report",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "bug",
+      "label": "Describe what went wrong",
+      "placeholder": "e.g. a job was refunded even though the work was delivered"
+    },
+    "blurb": "A bug report someone can actually reproduce, separating what was observed from what is assumed."
+  },
+  "tech-spec": {
+    "title": "Technical Spec",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "feature",
+      "label": "Describe the feature",
+      "placeholder": "e.g. sweeping earnings to a cold wallet"
+    },
+    "blurb": "A spec that states the problem before the solution and is explicit about what is out of scope."
+  },
+  "env-audit": {
+    "title": "Env Var Audit",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "envlist",
+      "label": "Paste your variable names",
+      "placeholder": "e.g. RPC_URL, API_KEY, ADMIN_TOKEN, DEBUG"
+    },
+    "blurb": "A read on which of your variables are secrets, which leak to the browser, and which are dangerous to default."
+  },
+  "gitignore": {
+    "title": "Gitignore",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "stack",
+      "label": "What is the project built with?",
+      "placeholder": "e.g. Node, Vercel, Hardhat, Windows"
+    },
+    "blurb": "A gitignore for this stack, grouped and commented, with the entries people forget until it is too late."
+  },
+  "csv-schema": {
+    "title": "CSV Schema",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "sample",
+      "label": "Paste a few rows",
+      "placeholder": "e.g. date,amount,status\\n2026-08-01,1.00,paid"
+    },
+    "blurb": "Column types inferred from real rows, plus the values that will break an import."
+  },
+  "chart-suggestion": {
+    "title": "Chart Suggestion",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "data",
+      "label": "What are you trying to show?",
+      "placeholder": "e.g. jobs settled per day and their value"
+    },
+    "blurb": "The chart that fits the question, the ones that would mislead, and what the axes must say."
+  },
+  "metric-definitions": {
+    "title": "Metric Definitions",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "metrics",
+      "label": "Which metrics?",
+      "placeholder": "e.g. active users, conversion, retention"
+    },
+    "blurb": "Metrics defined precisely enough that two people counting get the same number."
+  },
+  "ab-test": {
+    "title": "A/B Test Design",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "test",
+      "label": "What do you want to test?",
+      "placeholder": "e.g. does the dispatcher increase completed orders"
+    },
+    "blurb": "A test design with the sample size, the stopping rule, and the reasons the result might not mean anything."
+  },
+  "survey-questions": {
+    "title": "Survey Questions",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "goal",
+      "label": "What do you want to learn?",
+      "placeholder": "e.g. why people abandon checkout"
+    },
+    "blurb": "Questions that do not lead the witness, ordered so the early ones do not poison the later ones."
+  },
+  "competitor-matrix": {
+    "title": "Competitor Matrix",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "market",
+      "label": "What market?",
+      "placeholder": "e.g. marketplaces for hiring AI agents"
+    },
+    "blurb": "A comparison built on the dimensions buyers actually decide on, with the honest column for you."
+  },
+  "swot": {
+    "title": "SWOT Analysis",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "subject",
+      "label": "What are you analysing?",
+      "placeholder": "e.g. a solo-built agent marketplace"
+    },
+    "blurb": "A SWOT where the weaknesses are real ones and the threats are named rather than hedged."
+  },
+  "pricing-review": {
+    "title": "Pricing Review",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "pricing",
+      "label": "Describe your pricing",
+      "placeholder": "e.g. 1 USDC per job, no subscription"
+    },
+    "blurb": "A read on what your price signals, where it leaves money, and what to test first."
+  },
+  "unit-economics": {
+    "title": "Unit Economics",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "business",
+      "label": "Describe the business",
+      "placeholder": "e.g. 1 USDC per job, one agent per job"
+    },
+    "blurb": "Cost and margin per unit laid out, with the assumptions listed so wrong ones are visible."
+  },
+  "job-description": {
+    "title": "Job Description",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "role",
+      "label": "What role are you hiring?",
+      "placeholder": "e.g. a founding engineer for an agent marketplace"
+    },
+    "blurb": "A job post that describes the actual work, with the honest parts most postings hide."
+  },
+  "interview-questions": {
+    "title": "Interview Questions",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "role",
+      "label": "What role?",
+      "placeholder": "e.g. backend engineer who will own settlement"
+    },
+    "blurb": "Questions that reveal how someone works, with what a good and bad answer actually sounds like."
+  },
+  "onboarding-checklist": {
+    "title": "Onboarding Checklist",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "role",
+      "label": "Who is joining?",
+      "placeholder": "e.g. a first engineer joining a solo project"
+    },
+    "blurb": "A first-week checklist ordered so the new person ships something small on day one."
+  },
+  "meeting-agenda": {
+    "title": "Meeting Agenda",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "meeting",
+      "label": "What is the meeting for?",
+      "placeholder": "e.g. deciding whether to go to mainnet on day one"
+    },
+    "blurb": "An agenda with a decision attached to each item, and an honest test of whether to meet at all."
+  },
+  "postmortem": {
+    "title": "Incident Postmortem",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "incident",
+      "label": "What happened?",
+      "placeholder": "e.g. the site 404'd for 35 minutes after a deploy"
+    },
+    "blurb": "A blameless postmortem with a real timeline and actions that stop recurrence rather than add vigilance."
+  },
+  "runbook": {
+    "title": "Runbook",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "procedure",
+      "label": "What procedure?",
+      "placeholder": "e.g. restarting the settlement worker"
+    },
+    "blurb": "A runbook someone can follow at 3am without knowing the system."
+  },
+  "sop": {
+    "title": "Standard Procedure",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "task",
+      "label": "What task needs a procedure?",
+      "placeholder": "e.g. listing a new agent on the marketplace"
+    },
+    "blurb": "A repeatable procedure with the checks that catch mistakes before they matter."
+  },
+  "vendor-comparison": {
+    "title": "Vendor Comparison",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "need",
+      "label": "What are you choosing between?",
+      "placeholder": "e.g. hosting for a small always-on worker"
+    },
+    "blurb": "A comparison on the criteria that decide it, including the cost of leaving later."
+  },
+  "eli5": {
+    "title": "Explain Simply",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "concept",
+      "label": "What needs explaining?",
+      "placeholder": "e.g. what escrow means on a blockchain"
+    },
+    "blurb": "An explanation with no jargon, one good analogy, and the place the analogy breaks."
+  },
+  "glossary": {
+    "title": "Glossary",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "field",
+      "label": "What field or product?",
+      "placeholder": "e.g. escrowed agent jobs on Arc"
+    },
+    "blurb": "Terms defined in plain English, with the ones people routinely confuse placed side by side."
+  },
+  "study-plan": {
+    "title": "Study Plan",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "goal",
+      "label": "What do you want to learn?",
+      "placeholder": "e.g. enough Solidity to read an escrow contract"
+    },
+    "blurb": "A plan built around things you build, not chapters you read."
+  },
+  "quiz": {
+    "title": "Quiz Generator",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "material",
+      "label": "Paste the material",
+      "placeholder": "e.g. a page about how escrow releases payment"
+    },
+    "blurb": "Questions that test understanding rather than recall, with the wrong answers chosen to be tempting."
+  },
+  "flashcards": {
+    "title": "Flashcards",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "material",
+      "label": "Paste what you are learning",
+      "placeholder": "e.g. notes on how ERC-8183 settles a job"
+    },
+    "blurb": "Cards with one idea each, written so the front cannot be answered by pattern-matching."
+  },
+  "tone-rewrite": {
+    "title": "Tone Rewrite",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "text",
+      "label": "Paste the text",
+      "placeholder": "e.g. a paragraph that reads too corporate"
+    },
+    "blurb": "The same text in four registers, with a note on what each one costs you."
+  },
+  "simplify": {
+    "title": "Simplify Text",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "text",
+      "label": "Paste the text",
+      "placeholder": "e.g. a dense paragraph of documentation"
+    },
+    "blurb": "The same meaning at half the length, with a list of what was cut and why it was safe."
+  },
+  "grammar-fix": {
+    "title": "Proofread",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "text",
+      "label": "Paste the text",
+      "placeholder": "e.g. a paragraph you want checked"
+    },
+    "blurb": "Corrections with the reason for each, separating actual errors from matters of taste."
+  },
+  "user-journey": {
+    "title": "User Journey",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "scenario",
+      "label": "Describe the user and goal",
+      "placeholder": "e.g. someone hiring their first agent with no crypto"
+    },
+    "blurb": "Each step with what the user is thinking and the moment they are most likely to quit."
+  },
+  "empty-states": {
+    "title": "Empty State Copy",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "screen",
+      "label": "Which screen is empty?",
+      "placeholder": "e.g. the earnings page before any jobs"
+    },
+    "blurb": "Copy for an empty screen that explains and points somewhere, instead of apologising."
+  },
+  "error-messages": {
+    "title": "Error Message Copy",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "errors",
+      "label": "What can go wrong?",
+      "placeholder": "e.g. wallet not connected, not enough USDC"
+    },
+    "blurb": "Messages that say what happened and what to do, written without blaming the user."
+  },
+  "microcopy": {
+    "title": "Microcopy Review",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "copy",
+      "label": "Paste your buttons and labels",
+      "placeholder": "e.g. Submit, Cancel, Learn more, Continue"
+    },
+    "blurb": "A review of the small words, replacing vague labels with ones that say what happens."
+  },
+  "a11y-checklist": {
+    "title": "Accessibility Checklist",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "screen",
+      "label": "Describe the screen",
+      "placeholder": "e.g. a form with a wallet picker and a submit button"
+    },
+    "blurb": "A checklist specific to this screen, ordered by who gets shut out if it is wrong."
+  },
+  "ia-review": {
+    "title": "Information Architecture",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "structure",
+      "label": "Describe your pages or nav",
+      "placeholder": "e.g. home, hire, job, judge, earnings, wallet"
+    },
+    "blurb": "A read on whether your structure matches how people think, with the renames worth making."
+  },
+  "wireframe": {
+    "title": "Wireframe Description",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "screen",
+      "label": "What screen do you need?",
+      "placeholder": "e.g. a page for hiring an agent in one sentence"
+    },
+    "blurb": "A screen described block by block in priority order, so it can be built without a picture."
+  },
+  "gas-estimate": {
+    "title": "Gas Estimator",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "action",
+      "label": "What action?",
+      "placeholder": "e.g. funding a 1 USDC escrow on Arc"
+    },
+    "blurb": "What an on-chain action costs on Arc, priced in USDC because that is the gas token."
+  },
+  "contract-summary": {
+    "title": "Contract Summary",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "contract",
+      "label": "Paste the contract or describe it",
+      "placeholder": "e.g. an escrow that holds funds until an evaluator signs off"
+    },
+    "blurb": "What a contract does in plain English, plus the powers its owner keeps."
+  },
+  "tokenomics-review": {
+    "title": "Tokenomics Review",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "tokenomics",
+      "label": "Describe the token design",
+      "placeholder": "e.g. fees fund buybacks distributed to holders"
+    },
+    "blurb": "A read on whether a token design holds together, and who is paying for whom."
+  },
+  "whitepaper-digest": {
+    "title": "Whitepaper Digest",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "text",
+      "label": "Paste the document",
+      "placeholder": "e.g. a protocol whitepaper"
+    },
+    "blurb": "A digest that separates what a document claims from what it actually demonstrates."
+  },
+  "okrs": {
+    "title": "OKR Draft",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "goal",
+      "label": "What are you trying to achieve?",
+      "placeholder": "e.g. get outside agents listed before mainnet"
+    },
+    "blurb": "Objectives with measurable results, and a check on which are just tasks in disguise."
+  },
+  "roadmap": {
+    "title": "Roadmap Draft",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "goals",
+      "label": "What do you want to build?",
+      "placeholder": "e.g. open listing, agent API, mainnet"
+    },
+    "blurb": "A sequenced roadmap where each stage ships something usable, with the dependencies made explicit."
+  },
+  "risk-register": {
+    "title": "Risk Register",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "project",
+      "label": "Describe the project",
+      "placeholder": "e.g. launching an agent marketplace on mainnet"
+    },
+    "blurb": "Risks rated by likelihood and damage, with an owner and an early warning sign for each."
+  },
+  "retro": {
+    "title": "Retrospective",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "period",
+      "label": "What period or project?",
+      "placeholder": "e.g. two days building and shipping a marketplace"
+    },
+    "blurb": "A retro that produces changes rather than feelings, with one thing to stop doing."
+  },
+  "decision-brief": {
+    "title": "Decision Brief",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "decision",
+      "label": "What are you deciding?",
+      "placeholder": "e.g. whether to pay for hosting or stay free"
+    },
+    "blurb": "A brief that names the real trade-off and gives a recommendation rather than a menu."
+  },
+  "negotiation-prep": {
+    "title": "Negotiation Prep",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "situation",
+      "label": "What are you negotiating?",
+      "placeholder": "e.g. a grant amount with a funder"
+    },
+    "blurb": "Your position, theirs, and the walk-away point decided before the room."
+  },
+  "cold-dm": {
+    "title": "Cold DM",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "target",
+      "label": "Who are you messaging and why?",
+      "placeholder": "e.g. an Arc developer about listing their agent"
+    },
+    "blurb": "Short direct messages that read like a person, not a sequence step."
+  },
+  "outreach-sequence": {
+    "title": "Outreach Sequence",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "campaign",
+      "label": "What are you reaching out about?",
+      "placeholder": "e.g. inviting builders to list an agent"
+    },
+    "blurb": "A four-touch sequence where each message adds something instead of nagging."
+  },
+  "deck-outline": {
+    "title": "Pitch Deck Outline",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "pitch",
+      "label": "What are you pitching?",
+      "placeholder": "e.g. a marketplace where AI agents earn"
+    },
+    "blurb": "Slide by slide, the one point each must land and the evidence it needs to be believed."
+  },
+  "landing-critique": {
+    "title": "Landing Page Critique",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "url",
+      "label": "Page address",
+      "placeholder": "e.g. stubly.org"
+    },
+    "blurb": "Your page read as a first-time visitor sees it in five seconds, with findings ordered by what costs the most conversions."
   }
 }

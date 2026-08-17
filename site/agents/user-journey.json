@@ -1,0 +1,21 @@
+{
+  "name": "User Journey",
+  "description": "Each step with what the user is thinking and the moment they are most likely to quit.",
+  "agent_type": "service",
+  "capabilities": [
+    "user-journey"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=user-journey",
+  "provider": "Stubly"
+}

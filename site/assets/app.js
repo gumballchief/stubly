@@ -573,16 +573,43 @@ async function initJob() {
 /* Desks group the shelf so seventeen agents read as a directory, not a wall. */
 const DESKS = [
   { name: "Chain desk", note: "Reads Arc itself — free public chain data, no guesswork.",
-    keys: ["wallet-report", "token-report", "tx-explain", "contract-check", "chain-pulse", "agent-lookup"] },
-  { name: "Research desk", note: "Turns questions and long pages into something you can act on.",
-    keys: ["research-brief", "doc-digest", "data-extract", "site-audit"] },
-  { name: "Writing desk", note: "Words that ship — copy, threads, docs, other languages.",
-    keys: ["copy-pack", "thread-writer", "readme-writer", "translate"] },
+    keys: ["wallet-report", "token-report", "tx-explain", "contract-check", "chain-pulse", "agent-lookup",
+           "gas-estimate", "contract-summary", "tokenomics-review", "whitepaper-digest"] },
+  { name: "Site desk", note: "Points an agent at a real URL and reports what it measured.",
+    keys: ["site-audit", "headers-check", "meta-tags", "landing-critique", "seo-keywords",
+           "ia-review", "a11y-checklist", "wireframe", "user-journey", "empty-states",
+           "error-messages", "microcopy"] },
+  { name: "Writing desk", note: "Words that ship — copy, posts, emails, other languages.",
+    keys: ["copy-pack", "thread-writer", "translate", "blog-outline", "newsletter",
+           "product-description", "press-release", "ad-copy", "tagline", "faq-writer",
+           "case-study", "linkedin-post", "youtube-description", "show-notes", "subject-lines",
+           "value-prop", "elevator-pitch", "cold-email", "cold-dm", "outreach-sequence",
+           "deck-outline", "tone-rewrite", "simplify", "grammar-fix"] },
+  { name: "Engineering desk", note: "The writing around code that nobody wants to do.",
+    keys: ["regex-builder", "error-explain", "sql-explain", "test-plan", "code-review-checklist",
+           "api-docs", "commit-message", "pr-description", "dockerfile", "ci-config",
+           "migration-plan", "refactor-plan", "adr", "bug-report", "tech-spec", "env-audit",
+           "gitignore", "readme-writer", "changelog-writer", "runbook"] },
+  { name: "Research desk", note: "Turns questions, documents and numbers into something to act on.",
+    keys: ["research-brief", "doc-digest", "data-extract", "csv-schema", "chart-suggestion",
+           "metric-definitions", "ab-test", "survey-questions", "competitor-matrix", "swot",
+           "pricing-review", "unit-economics"] },
+  { name: "Operations desk", note: "The paperwork that keeps a team from repeating itself.",
+    keys: ["job-description", "interview-questions", "onboarding-checklist", "meeting-agenda",
+           "postmortem", "sop", "vendor-comparison", "okrs", "roadmap", "risk-register",
+           "retro", "decision-brief", "negotiation-prep"] },
+  { name: "Learning desk", note: "For getting something into your head, or someone else's.",
+    keys: ["eli5", "glossary", "study-plan", "quiz", "flashcards"] },
   { name: "Founder desk", note: "The unglamorous checks before you commit.",
-    keys: ["name-check", "pitch-critic"] },
+    keys: ["name-check", "pitch-critic", "user-personas"] },
   { name: "The foreman", note: "Doesn't do the work. Hires the agents who do.",
     keys: ["launch-kit"] },
 ];
+
+/* The homepage used to print the entire shelf. At a hundred agents that is a
+   wall you scroll past to reach anything, so it now shows a handful and sends
+   people to /agents, where they can search. */
+const FEATURED = ["site-audit", "research-brief", "launch-kit", "landing-critique", "error-explain", "cold-email"];
 
 function agentCard(key, a, cat) {
   return `
@@ -598,18 +625,16 @@ function agentCard(key, a, cat) {
 async function initIndex() {
   try {
     const cat = await api("/api/catalog");
-    const listed = new Set(DESKS.flatMap((d) => d.keys));
-    const strays = Object.keys(cat.agents).filter((k) => !listed.has(k));
-    const desks = strays.length ? [...DESKS, { name: "Also on the shelf", note: "", keys: strays }] : DESKS;
+    const total = Object.keys(cat.agents).length;
 
-    $("#agent-grid").innerHTML = desks.map((desk) => {
-      const cards = desk.keys.filter((k) => cat.agents[k]).map((k) => agentCard(k, cat.agents[k], cat)).join("");
-      if (!cards) return "";
-      return `<div class="desk">
-        <div class="desk-head"><h3>${desk.name}</h3>${desk.note ? `<p>${desk.note}</p>` : ""}</div>
-        <div class="desk-grid">${cards}</div>
-      </div>`;
-    }).join("");
+    $("#agent-grid").innerHTML = `<div class="desk">
+      <div class="desk-head"><h3>A few of them</h3><p>Six of ${total}. You don't have to pick — say what you need and the shelf picks for you.</p></div>
+      <div class="desk-grid">${FEATURED.filter((k) => cat.agents[k]).map((k) => agentCard(k, cat.agents[k], cat)).join("")}</div>
+      <div class="cta-row" style="margin-top:26px">
+        <a class="btn btn-primary" href="/hire">Say what you need</a>
+        <a class="btn" href="/agents">Browse all ${total} agents</a>
+      </div>
+    </div>`;
     $("#contract-link").href = `${cat.explorer}/address/${cat.contract}`;
     $("#contract-link").textContent = fmt(cat.contract) + " (Circle's ERC-8183 escrow)";
   } catch { /* static content still stands */ }
@@ -624,9 +649,59 @@ async function initIndex() {
   } catch { /* numbers are a bonus, not the page */ }
 }
 
+/* ————— page: the whole shelf ————— */
+async function initAgents() {
+  const cat = await api("/api/catalog");
+  const all = cat.agents;
+  const total = Object.keys(all).length;
+  $("#count").textContent =
+    `${total} agents, each with an identity on Arc you can check before you pay. One USDC unless it says otherwise.`;
+
+  const listed = new Set(DESKS.flatMap((d) => d.keys));
+  const strays = Object.keys(all).filter((k) => !listed.has(k));
+  const desks = strays.length ? [...DESKS, { name: "Also on the shelf", note: "", keys: strays }] : DESKS;
+
+  // Searchable haystack per agent, built once.
+  const hay = Object.fromEntries(
+    Object.entries(all).map(([k, a]) => [k, `${k} ${a.title} ${a.blurb} ${a.input?.label || ""}`.toLowerCase()])
+  );
+
+  /* Match every word in the query, tolerating a trailing s. Plain substring
+     matching meant "tests" found nothing while Test Plan sat right there, and
+     typing the plural is the normal thing to do. */
+  const matches = (key, terms) => terms.every((t) => {
+    const h = hay[key];
+    return h.includes(t) || (t.endsWith("s") && h.includes(t.slice(0, -1)));
+  });
+
+  function render(query) {
+    const q = query.trim().toLowerCase();
+    const terms = q.split(/\s+/).filter(Boolean);
+    let shown = 0;
+    const html = desks.map((desk) => {
+      const keys = desk.keys.filter((k) => all[k] && (!terms.length || matches(k, terms)));
+      if (!keys.length) return "";
+      shown += keys.length;
+      return `<div class="desk">
+        <div class="desk-head"><h3>${desk.name} <span class="mono" style="font-size:13px;color:var(--ink-soft)">${keys.length}</span></h3>${desk.note ? `<p>${desk.note}</p>` : ""}</div>
+        <div class="desk-grid">${keys.map((k) => agentCard(k, all[k], cat)).join("")}</div>
+      </div>`;
+    }).join("");
+
+    $("#all").innerHTML = html || `<p class="lede">Nothing matches “${query}”. <a href="/hire">Describe the job instead</a> — the shelf is better at that than search is.</p>`;
+    $("#hits").textContent = q ? `${shown} of ${total} match “${query}”` : "";
+  }
+
+  render("");
+  const box = $("#q");
+  let t;
+  box.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => render(box.value), 120); });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const page = document.body.dataset.page;
   if (page === "hire") initHire().catch((e) => { $("#carbon").textContent = e.message; });
   if (page === "job") initJob();
   if (page === "index") initIndex();
+  if (page === "agents") initAgents().catch((e) => { $("#count").textContent = e.message; });
 });

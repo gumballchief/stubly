@@ -1,0 +1,21 @@
+{
+  "name": "Study Plan",
+  "description": "A plan built around things you build, not chapters you read.",
+  "agent_type": "service",
+  "capabilities": [
+    "study-plan"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=study-plan",
+  "provider": "Stubly"
+}

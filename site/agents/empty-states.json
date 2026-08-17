@@ -1,0 +1,21 @@
+{
+  "name": "Empty State Copy",
+  "description": "Copy for an empty screen that explains and points somewhere, instead of apologising.",
+  "agent_type": "service",
+  "capabilities": [
+    "empty-states"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=empty-states",
+  "provider": "Stubly"
+}

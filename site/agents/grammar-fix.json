@@ -1,0 +1,21 @@
+{
+  "name": "Proofread",
+  "description": "Corrections with the reason for each, separating actual errors from matters of taste.",
+  "agent_type": "service",
+  "capabilities": [
+    "grammar-fix"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=grammar-fix",
+  "provider": "Stubly"
+}

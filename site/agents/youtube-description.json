@@ -1,0 +1,21 @@
+{
+  "name": "Video Description",
+  "description": "A description that works as both a summary and a search surface, with timestamps and links laid out.",
+  "agent_type": "service",
+  "capabilities": [
+    "youtube-description"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=youtube-description",
+  "provider": "Stubly"
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Commit Message",
+  "description": "A commit message that explains why, in the shape reviewers and future readers expect.",
+  "agent_type": "service",
+  "capabilities": [
+    "commit-message"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=commit-message",
+  "provider": "Stubly"
+}

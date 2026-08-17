@@ -1,0 +1,21 @@
+{
+  "name": "A/B Test Design",
+  "description": "A test design with the sample size, the stopping rule, and the reasons the result might not mean anything.",
+  "agent_type": "service",
+  "capabilities": [
+    "ab-test"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=ab-test",
+  "provider": "Stubly"
+}
