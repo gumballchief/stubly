@@ -1,0 +1,21 @@
+{
+  "name": "Test Plan",
+  "description": "The cases that actually find bugs — edge cases, bad input, failing dependencies — ordered by what is most likely to break.",
+  "agent_type": "service",
+  "capabilities": [
+    "test-plan"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=test-plan",
+  "provider": "Stubly"
+}

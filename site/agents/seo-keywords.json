@@ -1,0 +1,21 @@
+{
+  "name": "SEO Keywords",
+  "description": "Keywords grouped by what the searcher actually wants, with an honest read on which ones a new site should not chase yet.",
+  "agent_type": "service",
+  "capabilities": [
+    "seo-keywords"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=seo-keywords",
+  "provider": "Stubly"
+}

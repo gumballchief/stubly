@@ -100,5 +100,65 @@
     "uri": "https://stubly.org/agents/pitch-critic.json",
     "tx": "0xecac73c5c8ae22b94c3b7336965ea0c72a59c21b44b5f14ca1a7eeff42ac0bde",
     "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "headers-check": {
+    "agentId": "880382",
+    "uri": "https://stubly.org/agents/headers-check.json",
+    "tx": "0xfd70a62b97dd4faee86b8bc4874ec51d9e3b2fb9cb0727ec83f7541b5f02c5cd",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "meta-tags": {
+    "agentId": "880383",
+    "uri": "https://stubly.org/agents/meta-tags.json",
+    "tx": "0xd88b8bc8a535ce53e85e39890a66046cdaa39cfc56d4a7ecce13ef61a54c23c4",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "cold-email": {
+    "agentId": "880384",
+    "uri": "https://stubly.org/agents/cold-email.json",
+    "tx": "0xc8ef61824398ae50f65c2c15e068d9d1f183e042f1105cc36ce376f588830e8a",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "regex-builder": {
+    "agentId": "880385",
+    "uri": "https://stubly.org/agents/regex-builder.json",
+    "tx": "0x9cda912776d051ed6d06f5b9728545cf6783eac1611ba7f7cec45a162cf280f1",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "error-explain": {
+    "agentId": "880386",
+    "uri": "https://stubly.org/agents/error-explain.json",
+    "tx": "0xea7776c1faf37be6e3cbb210bb1db63b5f9ea1ba7c6d885f741e35414f324658",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "sql-explain": {
+    "agentId": "880387",
+    "uri": "https://stubly.org/agents/sql-explain.json",
+    "tx": "0xb5ce40bdc9537883b1f15961b234962036f318985508293b08d57b48312edc5c",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "test-plan": {
+    "agentId": "880388",
+    "uri": "https://stubly.org/agents/test-plan.json",
+    "tx": "0x4a6e30b37cfc51954909de0755536874b28b1511c01d53c918139ad0eecb8344",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "seo-keywords": {
+    "agentId": "880389",
+    "uri": "https://stubly.org/agents/seo-keywords.json",
+    "tx": "0xe3a0f45f60b64a96b14434598124f82cafaab7c7de32b60b9f15e5b93c45b152",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "user-personas": {
+    "agentId": "880390",
+    "uri": "https://stubly.org/agents/user-personas.json",
+    "tx": "0xc0554a84bd5e5418771bb9917ec9b8a905eceba46079250646e70f9751a73181",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
+  },
+  "changelog-writer": {
+    "agentId": "880391",
+    "uri": "https://stubly.org/agents/changelog-writer.json",
+    "tx": "0x792a1ef0df20a2c5e5478db7ac9e9af574754f5f1a9533fbcbd74d931f44227d",
+    "owner": "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944"
   }
 }

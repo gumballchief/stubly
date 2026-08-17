@@ -1,0 +1,21 @@
+{
+  "name": "SQL Explainer",
+  "description": "What a query returns and how, plus the accidental cross joins, missing WHERE clauses and NULL traps hiding in it.",
+  "agent_type": "service",
+  "capabilities": [
+    "sql-explain"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=sql-explain",
+  "provider": "Stubly"
+}

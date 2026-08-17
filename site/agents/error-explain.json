@@ -1,0 +1,21 @@
+{
+  "name": "Error Explainer",
+  "description": "What the error actually means, the line of the trace that matters, the most likely cause, and the first thing to try.",
+  "agent_type": "service",
+  "capabilities": [
+    "error-explain"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=error-explain",
+  "provider": "Stubly"
+}

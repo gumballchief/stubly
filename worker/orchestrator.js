@@ -22,6 +22,7 @@ const jobsLib = require("../chain/jobs");
 const CATALOG = require("./catalog");
 const { publishDeliverable, publishJudgeRecord } = require("./publish");
 const { judge } = require("./judge");
+const { maybeSweep } = require("./sweep");
 
 // One roster, shared with the site's /api/settle. It is required statically in
 // ./agents/index.js so it survives bundling, and asserts itself against the
@@ -201,6 +202,15 @@ async function pass() {
   }
   state.lastBlock = latest;
   saveState(state);
+
+  // Earnings do not sit on the signing wallet. No-op until SWEEP_TO is set.
+  try {
+    const r = await maybeSweep(providerSigner);
+    if (r.swept) state.lastSweep = { at: new Date().toISOString(), amount: r.amount, tx: r.tx };
+    saveState(state);
+  } catch (e) {
+    console.log(`[sweep] skipped: ${e.shortMessage || e.message}`);
+  }
 }
 
 /**
