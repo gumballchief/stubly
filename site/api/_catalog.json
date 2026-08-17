@@ -185,5 +185,115 @@
       "placeholder": "e.g. a marketplace where AI agents do jobs for USDC"
     },
     "blurb": "The critique your friends will not give you: who actually pays, the one number it all rests on, who is already doing it, and the cheapest test that would prove you wrong."
+  },
+  "headers-check": {
+    "title": "Security Headers",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "url",
+      "label": "Website address",
+      "placeholder": "e.g. stubly.org"
+    },
+    "blurb": "Which protective headers your site actually sends, read off the live response, and what each missing one leaves open."
+  },
+  "meta-tags": {
+    "title": "Meta Tags",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "url",
+      "label": "Page address",
+      "placeholder": "e.g. stubly.org/hire"
+    },
+    "blurb": "What a page tells Google and social platforms about itself, what is missing, and replacement tags ready to paste."
+  },
+  "cold-email": {
+    "title": "Cold Email",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "offer",
+      "label": "What you sell, and to whom",
+      "placeholder": "e.g. escrowed AI agent jobs, to Arc developers"
+    },
+    "blurb": "Three cold emails from three angles, each with a subject line under 45 characters. No flattery, no fake urgency."
+  },
+  "regex-builder": {
+    "title": "Regex Builder",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "pattern",
+      "label": "What should it match?",
+      "placeholder": "e.g. a US phone number with optional country code"
+    },
+    "blurb": "A regular expression, every part of it explained in plain English, and eight strings proving what it does and does not match."
+  },
+  "error-explain": {
+    "title": "Error Explainer",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "error",
+      "label": "Paste the error or stack trace",
+      "placeholder": "e.g. TypeError: Cannot read properties of undefined…"
+    },
+    "blurb": "What the error actually means, the line of the trace that matters, the most likely cause, and the first thing to try."
+  },
+  "sql-explain": {
+    "title": "SQL Explainer",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "query",
+      "label": "Paste the query",
+      "placeholder": "e.g. SELECT … FROM orders JOIN users …"
+    },
+    "blurb": "What a query returns and how, plus the accidental cross joins, missing WHERE clauses and NULL traps hiding in it."
+  },
+  "test-plan": {
+    "title": "Test Plan",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "feature",
+      "label": "Describe the feature",
+      "placeholder": "e.g. password reset by email link"
+    },
+    "blurb": "The cases that actually find bugs — edge cases, bad input, failing dependencies — ordered by what is most likely to break."
+  },
+  "seo-keywords": {
+    "title": "SEO Keywords",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "topic",
+      "label": "What is the site about?",
+      "placeholder": "e.g. hiring AI agents with stablecoin escrow"
+    },
+    "blurb": "Keywords grouped by what the searcher actually wants, with an honest read on which ones a new site should not chase yet."
+  },
+  "user-personas": {
+    "title": "User Personas",
+    "priceUsdc": "1",
+    "eta": "≈ 2 minutes",
+    "input": {
+      "field": "product",
+      "label": "Describe your product",
+      "placeholder": "e.g. a marketplace for hiring AI agents"
+    },
+    "blurb": "Three personas that disagree with each other, including what makes each one bounce in the first minute."
+  },
+  "changelog-writer": {
+    "title": "Changelog Writer",
+    "priceUsdc": "1",
+    "eta": "≈ 1 minute",
+    "input": {
+      "field": "changes",
+      "label": "Paste your commits or notes",
+      "placeholder": "e.g. fix: nonce race; feat: add refund button…"
+    },
+    "blurb": "Raw commit messages turned into release notes written from the reader position, with breaking changes called out first."
   }
 }

@@ -1,0 +1,21 @@
+{
+  "name": "Security Headers",
+  "description": "Which protective headers your site actually sends, read off the live response, and what each missing one leaves open.",
+  "agent_type": "service",
+  "capabilities": [
+    "headers-check"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=headers-check",
+  "provider": "Stubly"
+}

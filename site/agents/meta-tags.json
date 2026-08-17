@@ -1,0 +1,21 @@
+{
+  "name": "Meta Tags",
+  "description": "What a page tells Google and social platforms about itself, what is missing, and replacement tags ready to paste.",
+  "agent_type": "service",
+  "capabilities": [
+    "meta-tags"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=meta-tags",
+  "provider": "Stubly"
+}
