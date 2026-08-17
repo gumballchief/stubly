@@ -1,0 +1,21 @@
+{
+  "name": "Incident Postmortem",
+  "description": "A blameless postmortem with a real timeline and actions that stop recurrence rather than add vigilance.",
+  "agent_type": "service",
+  "capabilities": [
+    "postmortem"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=postmortem",
+  "provider": "Stubly"
+}

@@ -1,0 +1,21 @@
+{
+  "name": "CI Pipeline",
+  "description": "A CI workflow with the stages that catch real problems, and honesty about what CI cannot catch.",
+  "agent_type": "service",
+  "capabilities": [
+    "ci-config"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=ci-config",
+  "provider": "Stubly"
+}

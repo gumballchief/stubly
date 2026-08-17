@@ -1,0 +1,21 @@
+{
+  "name": "Gas Estimator",
+  "description": "What an on-chain action costs on Arc, priced in USDC because that is the gas token.",
+  "agent_type": "service",
+  "capabilities": [
+    "gas-estimate"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=gas-estimate",
+  "provider": "Stubly"
+}

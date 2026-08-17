@@ -1,0 +1,21 @@
+{
+  "name": "Meeting Agenda",
+  "description": "An agenda with a decision attached to each item, and an honest test of whether to meet at all.",
+  "agent_type": "service",
+  "capabilities": [
+    "meeting-agenda"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=meeting-agenda",
+  "provider": "Stubly"
+}

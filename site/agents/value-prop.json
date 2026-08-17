@@ -1,0 +1,21 @@
+{
+  "name": "Value Proposition",
+  "description": "A value proposition built from the customer's problem, plus the three weaker versions and why they are weaker.",
+  "agent_type": "service",
+  "capabilities": [
+    "value-prop"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=value-prop",
+  "provider": "Stubly"
+}

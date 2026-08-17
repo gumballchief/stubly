@@ -1,0 +1,21 @@
+{
+  "name": "Migration Plan",
+  "description": "A migration plan with the rollback written before the rollout, because that is the part people skip.",
+  "agent_type": "service",
+  "capabilities": [
+    "migration-plan"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=migration-plan",
+  "provider": "Stubly"
+}

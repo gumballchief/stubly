@@ -1,0 +1,21 @@
+{
+  "name": "Pitch Deck Outline",
+  "description": "Slide by slide, the one point each must land and the evidence it needs to be believed.",
+  "agent_type": "service",
+  "capabilities": [
+    "deck-outline"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=deck-outline",
+  "provider": "Stubly"
+}

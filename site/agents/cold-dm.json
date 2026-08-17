@@ -1,0 +1,21 @@
+{
+  "name": "Cold DM",
+  "description": "Short direct messages that read like a person, not a sequence step.",
+  "agent_type": "service",
+  "capabilities": [
+    "cold-dm"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=cold-dm",
+  "provider": "Stubly"
+}

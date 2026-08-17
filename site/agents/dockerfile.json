@@ -1,0 +1,21 @@
+{
+  "name": "Dockerfile",
+  "description": "A Dockerfile with the layer order that keeps rebuilds fast, and the reasoning for each line.",
+  "agent_type": "service",
+  "capabilities": [
+    "dockerfile"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=dockerfile",
+  "provider": "Stubly"
+}

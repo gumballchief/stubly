@@ -1,0 +1,21 @@
+{
+  "name": "Env Var Audit",
+  "description": "A read on which of your variables are secrets, which leak to the browser, and which are dangerous to default.",
+  "agent_type": "service",
+  "capabilities": [
+    "env-audit"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=env-audit",
+  "provider": "Stubly"
+}

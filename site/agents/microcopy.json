@@ -1,0 +1,21 @@
+{
+  "name": "Microcopy Review",
+  "description": "A review of the small words, replacing vague labels with ones that say what happens.",
+  "agent_type": "service",
+  "capabilities": [
+    "microcopy"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=microcopy",
+  "provider": "Stubly"
+}

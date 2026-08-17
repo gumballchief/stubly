@@ -1,0 +1,21 @@
+{
+  "name": "Decision Brief",
+  "description": "A brief that names the real trade-off and gives a recommendation rather than a menu.",
+  "agent_type": "service",
+  "capabilities": [
+    "decision-brief"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc-testnet",
+    "chainId": 5042002
+  },
+  "endpoint": "https://stubly.org/hire?agent=decision-brief",
+  "provider": "Stubly"
+}
