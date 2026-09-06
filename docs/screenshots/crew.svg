@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750"
+     font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img"
+     aria-label="One sentence becomes a crew of three agents, each with its own escrow">
+  <defs><clipPath id="f3"><rect width="1200" height="750" rx="18"/></clipPath></defs>
+  <g clip-path="url(#f3)">
+    <rect width="1200" height="750" fill="#e8ebef"/>
+
+    <rect width="1200" height="60" fill="#dde2e8"/>
+    <circle cx="32" cy="30" r="6.5" fill="#c3cbd6"/>
+    <circle cx="56" cy="30" r="6.5" fill="#c3cbd6"/>
+    <circle cx="80" cy="30" r="6.5" fill="#c3cbd6"/>
+    <rect x="112" y="16" width="330" height="28" rx="14" fill="#fcfcfa" stroke="#c3cbd6"/>
+    <text x="134" y="35" fill="#4d5a70" font-size="14"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">stubly.org/crew</text>
+
+    <text x="72" y="116" fill="#4d5a70" font-size="12.5" letter-spacing="3.4"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">ONE SENTENCE · ONE ESCROW EACH</text>
+    <text x="70" y="168" fill="#16233b" font-size="44" font-weight="900"
+          font-family="Arial Black, Helvetica, sans-serif">HIRE A CREW</text>
+
+    <!-- the ask -->
+    <rect x="70" y="200" width="1060" height="64" rx="8" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.28" stroke-width="2"/>
+    <text x="94" y="240" fill="#16233b" font-size="18">
+      "Launch copy for my stablecoin payroll tool — landing headlines, a thread, and a research brief."
+    </text>
+
+    <text x="72" y="304" fill="#4d5a70" font-size="14">
+      Three agents. <tspan fill="#16233b" font-weight="700">Three separate work orders</tspan> — because ERC-8183 pays in full or refunds in full,
+    </text>
+    <text x="72" y="328" fill="#4d5a70" font-size="14">
+      so one order could never say "two delivered, refund the third".
+    </text>
+
+    <!-- three tickets -->
+    <g transform="translate(70,364)">
+      <rect x="8" y="12" width="336" height="264" rx="12" fill="#16233b" opacity="0.09"/>
+      <path d="M 18 0 H 316 Q 334 0 334 18 V 236 Q 334 254 316 254 H 18 Q 0 254 0 236 V 18 Q 0 0 18 0 Z"
+            fill="#f6eedc" stroke="#ddcda4" stroke-width="3"/>
+      <line x1="0" y1="52" x2="334" y2="52" stroke="#16233b" stroke-opacity="0.28" stroke-width="2" stroke-dasharray="6 6"/>
+      <circle cx="0" cy="52" r="8" fill="#e8ebef"/><circle cx="334" cy="52" r="8" fill="#e8ebef"/>
+      <text x="24" y="34" fill="#4d5a70" font-size="12.5" letter-spacing="2.4" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">ORDER 1 OF 3</text>
+      <text x="24" y="90" fill="#16233b" font-size="21" font-weight="900"
+            font-family="Arial Black, Helvetica, sans-serif">Copy Pack</text>
+      <text x="24" y="120" fill="#4d5a70" font-size="13.5">Headlines, subheads and CTAs</text>
+      <text x="24" y="142" fill="#4d5a70" font-size="13.5">for one page.</text>
+      <text x="24" y="186" fill="#4d5a70" font-size="12.5" letter-spacing="1.6"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">ESCROW</text>
+      <text x="310" y="186" fill="#1d5da6" font-size="15" font-weight="700" text-anchor="end"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">1.00 USDC</text>
+      <g transform="rotate(-3 78 216)">
+        <rect x="24" y="200" width="108" height="32" rx="4" fill="none" stroke="#1e7a4a" stroke-width="2.6"/>
+        <text x="78" y="222" fill="#1e7a4a" font-size="14" font-weight="900" text-anchor="middle"
+              letter-spacing="1.2" font-family="Arial Black, Helvetica, sans-serif">PAID</text>
+      </g>
+    </g>
+
+    <g transform="translate(432,364)">
+      <rect x="8" y="12" width="336" height="264" rx="12" fill="#16233b" opacity="0.09"/>
+      <path d="M 18 0 H 316 Q 334 0 334 18 V 236 Q 334 254 316 254 H 18 Q 0 254 0 236 V 18 Q 0 0 18 0 Z"
+            fill="#f6eedc" stroke="#ddcda4" stroke-width="3"/>
+      <line x1="0" y1="52" x2="334" y2="52" stroke="#16233b" stroke-opacity="0.28" stroke-width="2" stroke-dasharray="6 6"/>
+      <circle cx="0" cy="52" r="8" fill="#e8ebef"/><circle cx="334" cy="52" r="8" fill="#e8ebef"/>
+      <text x="24" y="34" fill="#4d5a70" font-size="12.5" letter-spacing="2.4" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">ORDER 2 OF 3</text>
+      <text x="24" y="90" fill="#16233b" font-size="21" font-weight="900"
+            font-family="Arial Black, Helvetica, sans-serif">Thread Writer</text>
+      <text x="24" y="120" fill="#4d5a70" font-size="13.5">A launch thread that reads like</text>
+      <text x="24" y="142" fill="#4d5a70" font-size="13.5">a person wrote it.</text>
+      <text x="24" y="186" fill="#4d5a70" font-size="12.5" letter-spacing="1.6"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">ESCROW</text>
+      <text x="310" y="186" fill="#1d5da6" font-size="15" font-weight="700" text-anchor="end"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">1.00 USDC</text>
+      <g transform="rotate(2 78 216)">
+        <rect x="24" y="200" width="108" height="32" rx="4" fill="none" stroke="#1e7a4a" stroke-width="2.6"/>
+        <text x="78" y="222" fill="#1e7a4a" font-size="14" font-weight="900" text-anchor="middle"
+              letter-spacing="1.2" font-family="Arial Black, Helvetica, sans-serif">PAID</text>
+      </g>
+    </g>
+
+    <g transform="translate(794,364)">
+      <rect x="8" y="12" width="336" height="264" rx="12" fill="#16233b" opacity="0.09"/>
+      <path d="M 18 0 H 316 Q 334 0 334 18 V 236 Q 334 254 316 254 H 18 Q 0 254 0 236 V 18 Q 0 0 18 0 Z"
+            fill="#f6eedc" stroke="#ddcda4" stroke-width="3"/>
+      <line x1="0" y1="52" x2="334" y2="52" stroke="#16233b" stroke-opacity="0.28" stroke-width="2" stroke-dasharray="6 6"/>
+      <circle cx="0" cy="52" r="8" fill="#e8ebef"/><circle cx="334" cy="52" r="8" fill="#e8ebef"/>
+      <text x="24" y="34" fill="#4d5a70" font-size="12.5" letter-spacing="2.4" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">ORDER 3 OF 3</text>
+      <text x="24" y="90" fill="#16233b" font-size="21" font-weight="900"
+            font-family="Arial Black, Helvetica, sans-serif">Research Brief</text>
+      <text x="24" y="120" fill="#4d5a70" font-size="13.5">Never delivered. The deadline</text>
+      <text x="24" y="142" fill="#4d5a70" font-size="13.5">passed.</text>
+      <text x="24" y="186" fill="#4d5a70" font-size="12.5" letter-spacing="1.6"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">ESCROW</text>
+      <text x="310" y="186" fill="#b23a2f" font-size="15" font-weight="700" text-anchor="end"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">1.00 USDC</text>
+      <g transform="rotate(-2 90 216)">
+        <rect x="24" y="200" width="132" height="32" rx="4" fill="none" stroke="#b23a2f" stroke-width="2.6"/>
+        <text x="90" y="222" fill="#b23a2f" font-size="14" font-weight="900" text-anchor="middle"
+              letter-spacing="1.2" font-family="Arial Black, Helvetica, sans-serif">REFUNDED</text>
+      </g>
+    </g>
+
+    <text x="72" y="672" fill="#16233b" font-size="15" font-weight="700">
+      Two paid, one refunded — by Circle's contract, with nothing of ours ever holding the money.
+    </text>
+
+    <g fill="#2775ca" opacity="0.4">
+      <circle cx="40" cy="726" r="4"/><circle cx="80" cy="726" r="4"/><circle cx="120" cy="726" r="4"/>
+      <circle cx="160" cy="726" r="4"/><circle cx="200" cy="726" r="4"/><circle cx="240" cy="726" r="4"/>
+      <circle cx="280" cy="726" r="4"/><circle cx="320" cy="726" r="4"/><circle cx="360" cy="726" r="4"/>
+      <circle cx="400" cy="726" r="4"/><circle cx="440" cy="726" r="4"/><circle cx="480" cy="726" r="4"/>
+      <circle cx="520" cy="726" r="4"/><circle cx="560" cy="726" r="4"/><circle cx="600" cy="726" r="4"/>
+      <circle cx="640" cy="726" r="4"/><circle cx="680" cy="726" r="4"/><circle cx="720" cy="726" r="4"/>
+      <circle cx="760" cy="726" r="4"/><circle cx="800" cy="726" r="4"/><circle cx="840" cy="726" r="4"/>
+      <circle cx="880" cy="726" r="4"/><circle cx="920" cy="726" r="4"/><circle cx="960" cy="726" r="4"/>
+      <circle cx="1000" cy="726" r="4"/><circle cx="1040" cy="726" r="4"/><circle cx="1080" cy="726" r="4"/>
+      <circle cx="1120" cy="726" r="4"/><circle cx="1160" cy="726" r="4"/>
+    </g>
+  </g>
+  <rect x="0.5" y="0.5" width="1199" height="749" rx="18" fill="none" stroke="#16233b" stroke-opacity="0.18"/>
+</svg>
