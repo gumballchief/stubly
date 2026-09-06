@@ -38,6 +38,41 @@ function sanitize(s) {
     .trim();
 }
 
+/* Agents whose job is how a site is BUILT, rather than what the thing behind it is. */
+const BUILD_AGENTS = new Set(["site-audit", "headers-check", "meta-tags", "landing-critique"]);
+
+/* Asking what something IS. */
+const ASKS_WHAT_IT_IS =
+  /(research|what ?i?s|who ?i?s|tell me about|explain|background|look into|find out)/i;
+
+/* Naming something about how the page is built. Any of these and the buyer really
+   did ask for a site agent, so the correction below leaves them alone. */
+const BUILD_SIGNAL =
+  /(audit|speed|performance|seo|meta ?tags?|headers?|markup|html|css|broken|links?|design|layout|conversion|copy|ux|load|lighthouse|critique|redesign|mobile|accessibw*)/i;
+
+/**
+ * The model over-indexes on a bare domain. "research sinjoh.com" came back as a
+ * landing-page critique, and "what is sinjoh.com" as a site audit, because the
+ * shape of the input was the only signal it weighted. Rewording the prompt did
+ * not shift it.
+ *
+ * So the model still chooses, and this checks the one way it is reliably wrong —
+ * the same principle as keywordAll() on the crew path: the model is not left
+ * alone with a decision that costs the buyer money. It only fires when they asked
+ * what something IS and named nothing about how the site is built, so "audit x.com
+ * for speed" and "is my landing page any good" are untouched.
+ */
+function correctSiteMisroute(picked, text) {
+  if (!picked || !BUILD_AGENTS.has(picked.agent)) return picked;
+  if (!ASKS_WHAT_IT_IS.test(text) || BUILD_SIGNAL.test(text)) return picked;
+  if (!CATALOG["research-brief"]) return picked;
+  return {
+    agent: "research-brief",
+    input: picked.input,
+    why: "asked what it is, not how the site is built",
+  };
+}
+
 /** Ask the model to choose. Constrained to catalog keys; validated on the way out. */
 async function modelPick(text) {
   const key = process.env.GEMINI_API_KEY;
@@ -58,6 +93,16 @@ async function modelPick(text) {
     '  want — pick it and return "input": "". Only return a null agent when no agent fits at all.',
     '- "input" is the single value that agent needs, pulled out of the request. Extract a URL,',
     '  address, topic or body of text if one is there. Never invent one — leave it "" instead.',
+    "- What the buyer ASKS FOR decides the agent. A web address, wallet address or",
+    "  transaction hash in the request is material to work ON — it is not a vote for the",
+    '  agent that happens to take that shape. "Research example.com and explain it" wants',
+    "  research about that company, not a technical audit of its pages. Read the verb and the",
+    "  deliverable they name first, and only fall back to the shape of the input when they",
+    "  name neither.",
+    "- Site agents — audits, page critiques, header checks — are for requests about how a",
+    "  site is BUILT: its pages, speed, markup, design, links. If the buyer wants to know",
+    "  what a company or product IS, that is research, even when a bare domain is all they",
+    "  gave you to identify it.",
     "- Prefer a null agent over the wrong agent. A wrong one wastes the buyer's money.",
     "",
     "THE LIST:",
@@ -103,10 +148,13 @@ module.exports = async (req, res) => {
     const text = sanitize(body.text);
     if (text.length < 4) return sendJson(res, 200, { ok: false, reason: "Tell me what you need in a sentence." });
 
-    const picked = (await modelPick(text)) || (() => {
-      const k = keywordPick(text);
-      return k ? { agent: k, input: "", why: "matched on keywords" } : null;
-    })();
+    const picked = correctSiteMisroute(
+      (await modelPick(text)) || (() => {
+        const k = keywordPick(text);
+        return k ? { agent: k, input: "", why: "matched on keywords" } : null;
+      })(),
+      text
+    );
 
     if (!picked) {
       return sendJson(res, 200, {
