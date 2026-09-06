@@ -7,17 +7,18 @@
 
 const { cfg, CATALOG, sendJson } = require("./_shared");
 
-/* Identity token ids belong to the chain they were minted on. ids.json is the
-   original testnet file; anything else lives beside it as ids.<chainId>.json.
-   A chain with no file serves null ids rather than another chain's — showing a
-   testnet agent id as if it were a mainnet identity would be a wrong answer,
-   not a missing one. */
+/* Identity token ids belong to the chain they were minted on. A chain with no
+   file serves null ids rather than another chain's — showing a testnet agent id
+   as if it were a mainnet identity would be a wrong answer, not a missing one.
+
+   Every require below is deliberately a static literal. A computed require path
+   is invisible to the deployment bundler, so the file never ships and the catch
+   quietly turns every agentId into null. Add one line per chain, by hand. */
+const IDS_BY_CHAIN = {};
+try { IDS_BY_CHAIN[5042002] = require("../agents/ids.json"); } catch { /* none on testnet */ }
+
 function idsFor(chainId) {
-  for (const p of [`../agents/ids.${chainId}.json`, chainId === 5042002 ? "../agents/ids.json" : null]) {
-    if (!p) continue;
-    try { return require(p); } catch { /* not registered on this chain */ }
-  }
-  return {};
+  return IDS_BY_CHAIN[chainId] || {};
 }
 
 module.exports = async (req, res) => {
