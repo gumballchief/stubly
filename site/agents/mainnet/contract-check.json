@@ -1,0 +1,21 @@
+{
+  "name": "Contract Check",
+  "description": "Due diligence on any Arc contract: verified source, proxy shape, owner powers, activity — straight from chain data, with a plain-English risk read.",
+  "agent_type": "service",
+  "capabilities": [
+    "contract-check"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc",
+    "chainId": 5042
+  },
+  "endpoint": "https://stubly.org/hire?agent=contract-check&chain=mainnet",
+  "provider": "Stubly"
+}

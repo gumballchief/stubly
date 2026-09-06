@@ -18,6 +18,15 @@ const CFG = {
   USDC: process.env.USDC_ADDRESS || "0x3600000000000000000000000000000000000000",
   EXPLORER_API: process.env.EXPLORER_API || "https://testnet.arcscan.app/api/v2",
   EXPLORER: process.env.EXPLORER || "https://testnet.arcscan.app",
+  /* Circle deployed the ERC-8004 registries. Env-overridable so mainnet is a
+     configuration change, and so a mismatched pair fails loudly rather than
+     minting identities into the wrong registry. */
+  IDENTITY_REGISTRY: process.env.IDENTITY_REGISTRY || "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+  REPUTATION_REGISTRY: process.env.REPUTATION_REGISTRY || "0x8004B663056A597Dffe9eCcC1965A193B7388713",
+  VALIDATION_REGISTRY: process.env.VALIDATION_REGISTRY || "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+  /* Where this chain's agent cards are published. Mainnet cards live in their own
+     folder so testnet metadataURIs keep resolving to what was minted against them. */
+  CARD_PATH: process.env.CARD_PATH || "agents",
 };
 
 // Minimal ABI from Circle's ERC-8183 quickstart. The verified on-chain ABI

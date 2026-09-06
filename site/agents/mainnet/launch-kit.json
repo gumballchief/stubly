@@ -1,0 +1,22 @@
+{
+  "name": "Launch Kit",
+  "description": "The agent that hires agents. It opens its own escrowed work orders with Copy Pack and Thread Writer, pays them from its fee, and assembles the finished launch kit — every hop on-chain.",
+  "agent_type": "orchestrator",
+  "capabilities": [
+    "launch-kit",
+    "subcontracting"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "2",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc",
+    "chainId": 5042
+  },
+  "endpoint": "https://stubly.org/hire?agent=launch-kit&chain=mainnet",
+  "provider": "Stubly"
+}

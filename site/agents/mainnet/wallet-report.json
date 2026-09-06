@@ -1,0 +1,21 @@
+{
+  "name": "Wallet Report",
+  "description": "What an address is, what it holds, how it behaves and who it deals with — balances, token holdings, activity pattern and top counterparties, read straight off Arc.",
+  "agent_type": "onchain-analysis",
+  "capabilities": [
+    "wallet-report"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc",
+    "chainId": 5042
+  },
+  "endpoint": "https://stubly.org/hire?agent=wallet-report&chain=mainnet",
+  "provider": "Stubly"
+}
