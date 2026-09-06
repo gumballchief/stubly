@@ -3,7 +3,7 @@
 /** GET /api/job?id=161321 → live job state straight from the chain. */
 
 const { formatUnits } = require("ethers");
-const { CFG, JOB_STATUS, jobsContract, sendJson } = require("./_shared");
+const { cfg, JOB_STATUS, jobsContract, sendJson } = require("./_shared");
 
 module.exports = async (req, res) => {
   try {
@@ -11,7 +11,8 @@ module.exports = async (req, res) => {
     const id = url.searchParams.get("id");
     if (!id || !/^\d+$/.test(id)) return sendJson(res, 400, { error: "pass ?id=<job number>" });
 
-    const j = await jobsContract().getJob(BigInt(id));
+    const C = cfg(req);
+    const j = await jobsContract(C).getJob(BigInt(id));
     if (j.client === "0x0000000000000000000000000000000000000000") return sendJson(res, 404, { error: "no such job" });
 
     let spec = null;
@@ -30,8 +31,9 @@ module.exports = async (req, res) => {
       expiredAt: Number(j.expiredAt),
       agent: spec?.agent || null,
       input: spec?.input || null,
-      ours: j.provider.toLowerCase() === CFG.PROVIDER_WALLET.toLowerCase(),
-      explorer: `${CFG.EXPLORER}/address/${CFG.ERC8183}`,
+      ours: j.provider.toLowerCase() === C.PROVIDER_WALLET.toLowerCase(),
+      explorer: `${C.EXPLORER}/address/${C.ERC8183}`,
+      chain: C.KEY,
     });
   } catch (e) {
     sendJson(res, 200, { live: false, error: e.shortMessage || e.message });

@@ -8,15 +8,98 @@
 
 const { JsonRpcProvider, Contract } = require("ethers");
 
-const CFG = {
-  RPC_URL: process.env.RPC_URL || "https://rpc.drpc.testnet.arc.io",
-  CHAIN_ID: 5042002,
-  ERC8183: "0x0747EEf0706327138c69792bF28Cd525089e4583",
-  USDC: "0x3600000000000000000000000000000000000000",
-  EXPLORER: "https://testnet.arcscan.app",
-  PROVIDER_WALLET: "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944",
-  EVALUATOR_WALLET: "0x6F5A2E61DA4C779c6b4119F3BfEC8ec53Db488C7",
+/**
+ * Two chains, one codebase.
+ *
+ * Testnet's values are literals because they are settled, public and permanent —
+ * every job id we have ever published resolves against them. Mainnet's arrive
+ * from the environment on 16 September 2026, when Circle publishes the addresses;
+ * nothing here is guessed in advance. A chain with no RPC and no escrow address
+ * counts as "not configured" and can never be selected, so a half-filled mainnet
+ * config degrades to testnet instead of serving wrong data.
+ *
+ * The serverless RPC default deliberately differs from chain/config.js: Arc's
+ * plain public RPC returns malformed errors under Vercel's concurrency, so the
+ * functions default to a dedicated host. In production RPC_URL overrides both.
+ */
+const CHAINS = {
+  testnet: {
+    KEY: "testnet",
+    NAME: "Arc Testnet",
+    TESTNET: true,
+    CHAIN_ID: 5042002,
+    RPC_URL: process.env.RPC_URL || "https://rpc.drpc.testnet.arc.io",
+    /* wallet_addEthereumChain writes this into the visitor's wallet permanently,
+       so it must be the chain's canonical public endpoint — never whichever
+       provider we happen to be paying for server-side reads. */
+    PUBLIC_RPC_URL: "https://rpc.testnet.arc.io",
+    ERC8183: "0x0747EEf0706327138c69792bF28Cd525089e4583",
+    USDC: "0x3600000000000000000000000000000000000000",
+    IDENTITY_REGISTRY: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    EXPLORER: "https://testnet.arcscan.app",
+    EXPLORER_API: "https://testnet.arcscan.app/api",
+    CIRCLE_CHAIN: "ARC-TESTNET",
+    PROVIDER_WALLET: "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944",
+    EVALUATOR_WALLET: "0x6F5A2E61DA4C779c6b4119F3BfEC8ec53Db488C7",
+    PROVIDER_KEY: "provider",
+    EVALUATOR_KEY: "evaluator",
+  },
+  mainnet: {
+    KEY: "mainnet",
+    NAME: "Arc",
+    TESTNET: false,
+    CHAIN_ID: Number(process.env.MAINNET_CHAIN_ID || 5042),
+    RPC_URL: process.env.MAINNET_RPC_URL || "",
+    PUBLIC_RPC_URL: process.env.MAINNET_PUBLIC_RPC_URL || process.env.MAINNET_RPC_URL || "",
+    ERC8183: process.env.MAINNET_ERC8183 || "",
+    USDC: process.env.MAINNET_USDC || "",
+    IDENTITY_REGISTRY: process.env.MAINNET_IDENTITY_REGISTRY || "",
+    EXPLORER: process.env.MAINNET_EXPLORER || "",
+    EXPLORER_API: process.env.MAINNET_EXPLORER_API || "",
+    CIRCLE_CHAIN: process.env.MAINNET_CIRCLE_CHAIN || "ARC",
+    PROVIDER_WALLET: process.env.MAINNET_PROVIDER_WALLET || "",
+    EVALUATOR_WALLET: process.env.MAINNET_EVALUATOR_WALLET || "",
+    /* Separate keystores, never the testnet ones: a key that has lived on a
+       laptop and in three CI environments does not get to sign for real money. */
+    PROVIDER_KEY: "provider_mainnet",
+    EVALUATOR_KEY: "evaluator_mainnet",
+  },
 };
+
+/** A chain is usable once it can be reached and has an escrow to read. */
+function configured(c) {
+  return Boolean(c && c.RPC_URL && c.ERC8183 && c.PROVIDER_WALLET);
+}
+
+/** Read every call so a test (or a launch-day env flip) takes effect at once. */
+function defaultChain() {
+  const want = process.env.DEFAULT_CHAIN || "testnet";
+  return configured(CHAINS[want]) ? want : "testnet";
+}
+
+/** ?chain=testnet|mainnet picks the chain for one request. Anything unknown,
+    unconfigured or missing falls through to the default rather than erroring —
+    an old link with no ?chain must keep resolving. */
+function chainKey(req) {
+  let want = "";
+  try { want = new URL(req && req.url || "", "http://x").searchParams.get("chain") || ""; } catch { /* not a URL */ }
+  return configured(CHAINS[want]) ? want : defaultChain();
+}
+
+function cfg(req) { return CHAINS[chainKey(req)]; }
+
+/* Back-compat: CFG still reads like the old flat constant, resolved against
+   whichever chain is currently the default. Every line not yet migrated — and
+   every call site that never sees a request — keeps working untouched. */
+const CFG = new Proxy({}, {
+  get: (_t, k) => CHAINS[defaultChain()][k],
+  has: (_t, k) => k in CHAINS[defaultChain()],
+  ownKeys: () => Reflect.ownKeys(CHAINS[defaultChain()]),
+  getOwnPropertyDescriptor: (_t, k) => {
+    const d = Object.getOwnPropertyDescriptor(CHAINS[defaultChain()], k);
+    return d && { ...d, configurable: true };
+  },
+});
 
 const JOB_STATUS = ["Open", "Funded", "Submitted", "Completed", "Rejected", "Expired"];
 
@@ -87,12 +170,23 @@ function keywordAll(text, skip = new Set()) {
   return out;
 }
 
-let _provider;
-function provider() {
-  if (!_provider) _provider = new JsonRpcProvider(CFG.RPC_URL, CFG.CHAIN_ID, { staticNetwork: true });
-  return _provider;
+/* One provider per chain, memoised across warm invocations so a cold start is
+   paid once. Passing a config object selects that chain; passing nothing keeps
+   the old single-chain behaviour for call sites that never see a request. */
+const _providers = {};
+function chainOf(c) { return c && c.KEY ? c : CHAINS[defaultChain()]; }
+
+function provider(c) {
+  const conf = chainOf(c);
+  if (!_providers[conf.KEY]) {
+    _providers[conf.KEY] = new JsonRpcProvider(conf.RPC_URL, conf.CHAIN_ID, { staticNetwork: true });
+  }
+  return _providers[conf.KEY];
 }
-function jobsContract() { return new Contract(CFG.ERC8183, ABI, provider()); }
+function jobsContract(c) {
+  const conf = chainOf(c);
+  return new Contract(conf.ERC8183, ABI, provider(conf));
+}
 
 /** cacheControl overrides the default for endpoints that are expensive to compute. */
 function sendJson(res, status, body, cacheControl) {
@@ -102,4 +196,8 @@ function sendJson(res, status, body, cacheControl) {
   res.end(JSON.stringify(body));
 }
 
-module.exports = { CFG, JOB_STATUS, CATALOG, HINTS, keywordPick, keywordAll, provider, jobsContract, sendJson };
+module.exports = {
+  CFG, CHAINS, cfg, chainKey, defaultChain, configured,
+  JOB_STATUS, CATALOG, HINTS, keywordPick, keywordAll,
+  provider, jobsContract, sendJson,
+};

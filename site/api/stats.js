@@ -19,7 +19,7 @@
  */
 
 const { Interface, zeroPadValue } = require("ethers");
-const { CFG, sendJson, jobsContract } = require("./_shared");
+const { cfg, sendJson, jobsContract } = require("./_shared");
 
 const IFACE = new Interface([
   "event JobCreated(uint256 indexed jobId, address indexed client, address indexed provider, address evaluator, uint256 expiredAt, address hook)",
@@ -49,12 +49,13 @@ async function mapWithLimit(items, limit, fn) {
   return out;
 }
 
-module.exports = async (_req, res) => {
+module.exports = async (req, res) => {
   try {
+    const C = cfg(req);
     const topic0 = IFACE.getEvent("JobCreated").topicHash;
-    const providerTopic = zeroPadValue(CFG.PROVIDER_WALLET, 32);
-    const url = `https://testnet.arcscan.app/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest` +
-      `&address=${CFG.ERC8183}&topic0=${topic0}&topic3=${providerTopic}&topic0_3_opr=and`;
+    const providerTopic = zeroPadValue(C.PROVIDER_WALLET, 32);
+    const url = `${C.EXPLORER_API}?module=logs&action=getLogs&fromBlock=0&toBlock=latest` +
+      `&address=${C.ERC8183}&topic0=${topic0}&topic3=${providerTopic}&topic0_3_opr=and`;
     const r = await fetch(url, { signal: AbortSignal.timeout(25_000) });
     const data = await r.json().catch(() => ({}));
     const logs = Array.isArray(data.result) ? data.result : [];
@@ -65,7 +66,7 @@ module.exports = async (_req, res) => {
     // figure — a partial count would quietly under-report settlements as fact.
     let settled = null;
     try {
-      const jobs = jobsContract();
+      const jobs = jobsContract(C);
       const deadline = Date.now() + STATUS_BUDGET_MS;
       const ids = logs.map((l) => BigInt(l.topics[1]));
       const statuses = await mapWithLimit(ids, STATUS_CONCURRENCY, async (id) => {
@@ -83,8 +84,9 @@ module.exports = async (_req, res) => {
       jobs: logs.length, // work orders created, all time
       hirers: clients.size,
       agents: Object.keys(require("./_catalog.json")).length,
-      contract: CFG.ERC8183,
-      explorer: `${CFG.EXPLORER}/address/${CFG.ERC8183}`,
+      chain: C.KEY,
+      contract: C.ERC8183,
+      explorer: `${C.EXPLORER}/address/${C.ERC8183}`,
     }, STATS_CACHE);
   } catch (e) {
     sendJson(res, 200, { live: false, error: e.message });
