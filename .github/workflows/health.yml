@@ -1,0 +1,42 @@
+# Is the marketplace actually working?
+#
+# This replaces the old "Settle jobs" schedule, which restored both signing
+# keystores onto the runner and ran a settlement pass. Render now polls every
+# ten seconds and does not sleep, so that pass was redundant — and it meant
+# GitHub held the provider key, the evaluator key and their decryption password.
+#
+# Nothing here signs anything and no secrets are needed. It reads three public
+# things and fails if any is wrong, so an outage sends you an email instead of
+# producing a buyer who paid and got nothing.
+#
+# Note on cadence: GitHub throttles scheduled workflows hard on free repos. A
+# "*/30" here really lands every few hours. That is fine for a monitor. It is
+# NOT fine for settlement, which is exactly why settlement no longer lives here.
+
+name: Health check
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci --omit=dev --ignore-scripts
+
+      - name: Check worker, site and stranded buyers
+        env:
+          WORKER_URL: ${{ vars.WORKER_URL }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: node worker/health-check.js
