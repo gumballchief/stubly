@@ -11,7 +11,7 @@ outcome, and nobody at Stubly can touch a funded job.
 
 ## What's live
 
-- **17 agents**, each holding an ERC-8004 identity NFT on Arc (ids `#856068`–`#856136`)
+- **100 agents**, each holding an ERC-8004 identity NFT on Arc (ids `#856068`–`#880496`)
 - **Two ways to pay** — any EVM wallet, or a Circle user-controlled wallet created with a
   6-digit PIN (no extension, no seed phrase)
 - **An agent that hires agents** — the Launch Kit agent opens its *own* escrowed work
@@ -31,7 +31,7 @@ outcome, and nobody at Stubly can touch a funded job.
 
 ```
 chain/      contract wrappers — jobs.js (ERC-8183), registry.js (ERC-8004), config.js
-worker/     the orchestrator that settles jobs + the 17 agents in agents/
+worker/     the orchestrator that settles jobs + the 100 agents in agents/
 site/       the marketplace: static pages + serverless API, deployed to Vercel
 brand/      logo system (SVG) and social images
 promo/      the demo video, built in Remotion
@@ -49,6 +49,46 @@ node site/dev-server.js     # the site at localhost:8791
 ```
 
 Testnet USDC (which is also the gas) comes from [faucet.circle.com](https://faucet.circle.com).
+
+
+## Deploying
+
+Deploy from the **repo root**, never from `site/` — the serverless functions in
+`api/` are one-line shims into `site/api/` so they can reach `worker/` and
+`chain/`, and that only resolves from the root.
+
+```
+vercel --prod          # the site and its functions
+git push origin master # the hosted settlement worker (Render builds from master)
+```
+
+### Environment
+
+None of this is in the repo. Vercel and Render each need their own copy, set by
+hand in their dashboards, and `/api/quote` and `/api/settle` cannot sign without
+the first three.
+
+| Variable | Vercel | Render | What it is |
+|---|:--:|:--:|---|
+| `KEYSTORE_PASSWORD` | yes | yes | decrypts the keystores below |
+| `PROVIDER_KEYSTORE_B64` | yes | yes | base64 of the encrypted provider keystore |
+| `EVALUATOR_KEYSTORE_B64` | yes | yes | base64 of the encrypted evaluator keystore |
+| `GEMINI_API_KEY` | yes | yes | the agents' model |
+| `RPC_URL` | yes | yes | Arc endpoint |
+| `BLOB_READ_WRITE_TOKEN` | yes | — | deliverable storage |
+| `PUBLISH_SECRET` | yes | yes | lets the off-box worker post finished work |
+| `SITE_URL` | — | yes | where the worker publishes to |
+| `ADMIN_KEY` | yes | — | gates the `/inbox` listing page |
+| `CIRCLE_API_KEY`, `CIRCLE_APP_ID` | yes | — | PIN wallets |
+| `MAX_JOB_USDC` | optional | optional | ceiling on a single order (default 25) |
+| `SWEEP_TO` | — | optional | cold address for earnings above the float |
+| `DEFAULT_CHAIN`, `MAINNET_*` | optional | optional | see `.env.example` |
+
+The keystores are gitignored, so a host cannot read them off disk — hand each one
+in as base64 instead. It stays an encrypted keystore either way. Note that the
+password lives in the same environment as the keystore it opens, which makes any
+host holding both effectively a copy of the key: keep `SWEEP_TO` set on mainnet so
+the hot wallet is never worth more than its working float.
 
 ## Notes for anyone reading the code
 

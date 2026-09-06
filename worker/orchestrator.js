@@ -17,7 +17,7 @@
 const fs = require("fs");
 const path = require("path");
 const { parseUnits } = require("ethers");
-const { CFG, provider, loadWallet, JOB_STATUS } = require("../chain/config");
+const { CFG, provider, loadWallet, JOB_STATUS, assertChain } = require("../chain/config");
 const jobsLib = require("../chain/jobs");
 const CATALOG = require("./catalog");
 const { publishDeliverable, publishJudgeRecord } = require("./publish");
@@ -251,6 +251,9 @@ function serveHealth() {
 }
 
 async function main() {
+  /* Before anything signs, prove the node is the chain we think it is. A worker
+     settling against another chain's addresses is worse than one that is down. */
+  await assertChain(provider());
   console.log(`orchestrator ${DRY ? "(dry) " : ""}watching provider jobs on chain ${CFG.CHAIN_ID}`);
   serveHealth();
   do {
