@@ -83,4 +83,27 @@ function loadWallet(name, prov) {
   return managed;
 }
 
-module.exports = { CFG, ERC8183_ABI_MIN, ERC20_ABI, JOB_STATUS, provider, loadWallet };
+/**
+ * Refuse to run against a chain we are not configured for.
+ *
+ * CHAIN_ID and the contract addresses come from separate env vars, so nothing
+ * stops them disagreeing. Point RPC_URL at one chain while the addresses belong
+ * to another and every read returns nothing while every write goes somewhere
+ * unintended. On testnet that is merely confusing; with real money it is not.
+ *
+ * This asks the node rather than the provider. Ours is built with staticNetwork,
+ * so getNetwork() hands back the chain id we configured instead of the one we are
+ * talking to, which would make this compare a value against itself and pass.
+ */
+async function assertChain(prov) {
+  const live = Number(BigInt(await prov.send("eth_chainId", [])));
+  if (live !== CFG.CHAIN_ID) {
+    throw new Error(
+      "connected to chain " + live + " but configured for " + CFG.CHAIN_ID +
+      " - RPC_URL and CHAIN_ID disagree, refusing to touch money"
+    );
+  }
+  return live;
+}
+
+module.exports = { CFG, ERC8183_ABI_MIN, ERC20_ABI, JOB_STATUS, provider, loadWallet, assertChain };

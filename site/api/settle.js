@@ -19,6 +19,7 @@
  * a different agent or a different price than the catalog says.
  */
 
+const { formatUnits } = require("ethers");
 const { cfg, CATALOG, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
 const { loadWallet } = require("../../chain/config");
 const jobsLib = require("../../chain/jobs");
@@ -76,6 +77,21 @@ module.exports = async (req, res) => {
     }
     if (status !== "Funded" && status !== "Submitted") {
       return sendJson(res, 200, { ok: false, reason: `job is ${status}` });
+    }
+
+    /* A ceiling on what a single order is worth acting on. This endpoint is
+       unauthenticated by design and it signs with the provider key, so the thing
+       to bound is not who calls it — the guards above already restrict that to our
+       own funded orders — but how much one order can be worth if a price is ever
+       wrong. Catalog pricing bounds it today; this bounds it if that ever breaks.
+       Anything above the ceiling is left for a human, not refused outright. */
+    const MAX_JOB_USDC = Number(process.env.MAX_JOB_USDC || 25);
+    const budget = Number(formatUnits(j.budget, 6));
+    if (budget > MAX_JOB_USDC) {
+      return sendJson(res, 200, {
+        ok: false,
+        reason: `budget ${budget} USDC is over the ${MAX_JOB_USDC} ceiling — settle this one by hand`,
+      });
     }
 
     let spec = null;
