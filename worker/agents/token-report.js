@@ -21,7 +21,7 @@ async function run(input) {
     C.get(`/tokens/${address}/transfers`),
     C.get(`/tokens/${address}/counters`),
   ]);
-  if (!token || !token.symbol) throw new Error("no ERC-20 token found at that address on Arc testnet");
+  if (!token || !token.symbol) throw new Error(`no ERC-20 token found at that address on ${C.CHAIN_LABEL}`);
 
   const dec = Number(token.decimals || 0);
   const supply = Number(BigInt(token.total_supply || 0)) / 10 ** dec;
@@ -47,7 +47,7 @@ recent_transfers_sampled: ${(transfers?.items || []).length}`;
   let read = "(risk read unavailable)", model = "-";
   try {
     const o = await generate(
-      `You are a token analyst. From ONLY these facts about an ERC-20 on Arc testnet, write <=130 words of markdown bullets: distribution health, what the top-holder concentration implies, and what a buyer should verify next. Do not invent price or market data — none exists here. Be blunt about concentration risk.\n\n${facts}`,
+      `You are a token analyst. From ONLY these facts about an ERC-20 on ${C.CHAIN_LABEL}, write <=130 words of markdown bullets: distribution health, what the top-holder concentration implies, and what a buyer should verify next. Do not invent price or market data — none exists here. Be blunt about concentration risk.\n\n${facts}`,
       { maxOutputTokens: 512 }
     );
     read = o.text; model = o.model;
