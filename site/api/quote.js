@@ -15,8 +15,9 @@
  * that job is still unpriced. There is nothing a caller can steer.
  */
 
-const { Wallet, Contract, parseUnits } = require("ethers");
+const { Contract, parseUnits } = require("ethers");
 const { CFG, CATALOG, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
+const { loadWallet } = require("../../chain/config");
 
 const SET_BUDGET_ABI = ["function setBudget(uint256 jobId, uint256 amount, bytes optParams)"];
 
@@ -27,19 +28,34 @@ async function readBody(req) {
 }
 
 /* Decrypting a keystore runs scrypt on purpose, so it is slow. Hold the result
-   for the life of the warm function rather than paying it on every order. */
+   for the life of the warm function rather than paying it on every order.
+
+   loadWallet is the one place that knows how to find this key: the encrypted
+   file on a machine that has it, the base64 env var on Vercel where there is no
+   filesystem. Reading the env var directly here meant quoting worked in
+   production and refused everywhere else, so nothing could be run end to end
+   locally without deploying it first. */
 let _signer = null;
 async function providerSigner() {
-  if (_signer) return _signer;
-  const b64 = process.env.PROVIDER_KEYSTORE_B64;
-  const pass = process.env.KEYSTORE_PASSWORD;
-  if (!b64 || !pass) throw new Error("quoting is not configured");
-  const json = Buffer.from(b64, "base64").toString("utf8");
-  _signer = (await Wallet.fromEncryptedJson(json, pass)).connect(provider());
+  /* loadWallet with no provider hands back a plain Wallet. That matters: given
+     one it returns a NonceManager, which keeps its own idea of the next nonce —
+     and this key is also used by /api/settle and the worker, so a second cached
+     counter produces "nonce has already been used" the moment two of them are
+     in flight. Let the RPC assign nonces and there is nothing to disagree with. */
+  if (!_signer) _signer = loadWallet("provider").connect(provider());
   return _signer;
 }
 
+/* One function, two doors. Vercel's Hobby plan allows 12 serverless functions and
+   the shelf already fills all 12, so /api/plan is rewritten onto this file (see
+   the repo-root vercel.json) instead of shipping a thirteenth. The planner is
+   still its own module and knows nothing about quoting — this only decides which
+   one answers, before any quoting work starts. */
 module.exports = async (req, res) => {
+  if (new URL(req.url, "http://x").searchParams.get("_route") === "plan") {
+    return require("./plan.js")(req, res);
+  }
+
   if (req.method !== "POST") return sendJson(res, 405, { error: "POST only" });
   try {
     const { jobId } = await readBody(req);

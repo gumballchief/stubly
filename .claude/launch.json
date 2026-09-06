@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "stubly",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["site/dev-server.js"],
+      "port": 8791
+    }
+  ]
+}

@@ -13,7 +13,7 @@
  * charged. The model chooses; it does not quote.
  */
 
-const { CATALOG, sendJson } = require("./_shared");
+const { CATALOG, keywordPick, sendJson } = require("./_shared");
 
 const MAX = 2000;
 
@@ -36,29 +36,6 @@ function sanitize(s) {
     .replace(/```/g, "'''")
     .slice(0, 600)
     .trim();
-}
-
-/** Cheap keyword pass — catches the obvious cases without spending a model call. */
-const HINTS = [
-  [/\b(audit|check|review|speed|seo|broken link)\b.*\b(site|website|page|url|landing)\b/i, "site-audit"],
-  [/\b(site|website|page|landing)\b.*\b(audit|check|review|speed|seo|slow)\b/i, "site-audit"],
-  [/\bresearch\b|\bbrief\b|\bwrite.*about\b|\bexplain\b.*\bmarket\b/i, "research-brief"],
-  [/\bcontract\b.*\b(check|audit|safe|verify|rug)\b/i, "contract-check"],
-  [/\b(wallet|address)\b.*\b(report|holdings|balance|activity|what.*hold)\b/i, "wallet-report"],
-  [/\btoken\b.*\b(report|supply|holders|distribution)\b/i, "token-report"],
-  [/\b(tx|transaction)\b.*\b(explain|what happened|decode)\b/i, "tx-explain"],
-  [/\btranslate\b|\binto (spanish|french|german|arabic|chinese)\b/i, "translate"],
-  [/\breadme\b/i, "readme-writer"],
-  [/\b(thread|tweet|twitter|x post)\b/i, "thread-writer"],
-  [/\b(landing copy|copywriting|copy pack|headlines?|taglines?)\b/i, "copy-pack"],
-  [/\b(name|brand).{0,20}\b(check|available|taken)\b/i, "name-check"],
-  [/\b(pitch|deck)\b.*\b(critic|feedback|review|tear)\b/i, "pitch-critic"],
-  [/\blaunch\b.*\b(kit|package|everything)\b/i, "launch-kit"],
-];
-
-function keywordPick(text) {
-  for (const [re, key] of HINTS) if (re.test(text) && CATALOG[key]) return key;
-  return null;
 }
 
 /** Ask the model to choose. Constrained to catalog keys; validated on the way out. */

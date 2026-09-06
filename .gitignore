@@ -12,3 +12,10 @@ node_modules/
 chain/erc8183.abi.json
 
 .vercel
+
+# Marketing and promo material is kept out of the repo — see NON-CODE-ASSETS.md.
+# These are local working files: rendered video, post images, launch copy and
+# grant paperwork. Some of it contains personal contact details and internal
+# operational notes that have no business in a public repository.
+promo/
+launch/

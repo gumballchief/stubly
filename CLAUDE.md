@@ -56,3 +56,29 @@ from console.circle.com → API & Client Keys → Standard/Testnet).
 - `npm run wallets` — generate client/provider/evaluator testnet keystores (prints addresses to faucet-fund)
 - `npm run e2e:dry` — connectivity check: chain-id, balances, contract code present
 - `npm run e2e` — full job lifecycle on testnet (create→budget→fund→submit→complete, then refund paths)
+- `npm run site` — local stand-in for Vercel on :8791 (static + `api/`); needed by the crew script
+- `npm run crew:dry "…"` — plan a crew from a sentence, no chain writes
+- `npm run crew "…"` — the same crew for real: one escrow per agent, created, funded and settled
+- `npm run crew -- --break=2 "…"` — same, but step 2 is funded and never delivered, then its
+  deadline is run out and the refund claimed: the partial-refund proof, one paid + one refunded
+
+## Crews (multi-agent jobs)
+
+`/crew` + `POST /api/plan` turn one sentence into 1–5 agents. **Each agent gets its own
+ERC-8183 work order** — deliberately not one order for the whole crew. ERC-8183 pays out
+in full or refunds in full, so a single order cannot express "four delivered, refund the
+fifth"; separate orders can, and a failed step is refunded to the buyer by Circle's
+contract with nothing of ours ever holding the money. The cost is one wallet confirmation
+per agent, softened by the standing USDC allowance (approve once, then fund only).
+`launch-kit` is excluded from crews — it is itself a fixed 2-agent bundle, and the planner
+replaces it.
+
+Crew size is not left to the model alone. At temperature 0 the same sentence came back as
+two agents one minute and one the next, so `keywordAll()` in `site/api/_shared.js` adds any
+agent the request names outright that the model missed (flagged `fromWords`). The model can
+still only name catalog keys, prices still come from the catalog, and every row on `/crew`
+has a **remove** control — nothing is forced into a crew and nothing is charged until the
+buyer funds each order themselves.
+
+`chain/jobs.js` decodes ERC-8183's custom errors, so a revert now reads `WrongStatus()`
+rather than "unknown custom error", and named reverts are no longer retried three times.
