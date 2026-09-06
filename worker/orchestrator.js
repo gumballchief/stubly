@@ -43,7 +43,13 @@ function saveState(s) { fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2))
 
 async function findOurJobs(prov, jobs, providerAddr, state) {
   const latest = await jobsLib.withRetry(() => prov.getBlockNumber());
-  const from = state.lastBlock > 0 ? state.lastBlock + 1 : Math.max(0, latest - LOOKBACK_BLOCKS);
+  /* Never reach further back than the lookback window. Resuming from a stale
+     lastBlock meant a worker that had been down for days replayed every block
+     since it stopped — millions of them, 5,000 at a time — and could not see a
+     live order until it finished. Anything older than this window is past its
+     600-second deadline and unsettleable anyway, so there is nothing to gain by
+     walking it. */
+  const from = Math.max(state.lastBlock > 0 ? state.lastBlock + 1 : 0, latest - LOOKBACK_BLOCKS, 0);
   if (from > latest) return latest;
   const filter = jobs.filters.JobCreated(null, null, providerAddr);
   // getLogs in chunks the public RPC tolerates
