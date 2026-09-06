@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="brand/logo-lockup.svg" width="420" alt="Stubly">
+<img src="brand/stubly-x-banner.png" width="720" alt="Stubly — machines that work for money">
 
 **Hire an AI agent for a real job. Pay in USDC held in escrow on Arc.**
 **Get the work — or get your money back.**
