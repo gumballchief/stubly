@@ -385,14 +385,27 @@ async function initHire() {
       if (!jobId) throw new Error("job id not found in receipt");
       log(`   order #${jobId} created ✓`, "ok");
 
-      log("2/3 waiting for the agent to quote the price…");
+      /* Ask the site to price it now rather than waiting for the worker to
+         notice on its next sweep. Without this the order sat unpriced for up to
+         two minutes and the page gave up before ever reaching the approve step —
+         which is how six buyers with money in their wallets walked away. The
+         poll below stays as the backstop for when this call fails. */
+      log("2/3 pricing the order…");
       let quoted = false;
+      try {
+        const q = await (await fetch("/api/quote", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ jobId }),
+        })).json();
+        quoted = !!q.ok;
+      } catch { /* fall through to the poll below */ }
+
       for (let i = 0; i < 30 && !quoted; i++) {
         await new Promise((r) => setTimeout(r, 4000));
         const j = await api(`/api/job?id=${jobId}`);
         quoted = j.hasBudget;
       }
-      if (!quoted) throw new Error("agent has not quoted yet — the orchestrator may be offline. Your money has NOT moved; try again later from the job page.");
+      if (!quoted) throw new Error(`quote pending — finish later from /job?id=${jobId}; your money has NOT moved`);
       log("   quote posted ✓", "ok");
 
       const amount = ethers.parseUnits(a.priceUsdc, 6);
@@ -402,6 +415,18 @@ async function initHire() {
       const tx2 = await jobs.fund(jobId, "0x");
       await tx2.wait(1);
       log(`   escrow funded ✓ — money is now locked in the contract`, "ok");
+
+      /* Tell the site to run the job now rather than waiting for a worker to
+         notice it. Without this a funded order sat untouched until a background
+         sweep found it — order #184451 was funded by a real buyer and expired
+         undelivered, and we had to refund them by hand. Deliberately not
+         awaited: the buyer should land on their work order and watch the stamps
+         arrive. If the call fails, the polling worker settles it as before. */
+      fetch("/api/settle", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jobId }),
+      }).catch(() => { /* the worker is the backstop */ });
+
       log(`opening work order #${jobId}…`);
       location.href = `/job?id=${jobId}`;
     } catch (e) {
@@ -642,8 +667,12 @@ async function initIndex() {
   try {
     const s = await api("/api/stats");
     if (s.live) {
+      // Only claim "settled" when the escrow actually told us how the orders ended.
+      const orders = typeof s.settled === "number"
+        ? `<b>${s.settled}</b> work orders settled`
+        : `<b>${s.jobs}</b> work orders on-chain`;
       $("#stats-line").innerHTML =
-        `<b>${s.jobs}</b> work orders settled · <b>${s.hirers}</b> hirers · <b>${s.agents}</b> agents on the shelf ` +
+        `${orders} · <b>${s.hirers}</b> hirers · <b>${s.agents}</b> agents on the shelf ` +
         `<a href="${s.explorer}" target="_blank" rel="noopener">— counted on-chain</a>`;
     }
   } catch { /* numbers are a bonus, not the page */ }
@@ -698,10 +727,302 @@ async function initAgents() {
   box.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => render(box.value), 120); });
 }
 
+/* ————————————————————————— crews —————————————————————————
+   One sentence in, several agents out. /api/plan picks the crew; this places
+   one work order per agent, in sequence, and lets each settle on its own.
+
+   Separate orders rather than one big one is the whole point. ERC-8183 pays out
+   in full or refunds in full, so a single order covering five agents could not
+   express "four delivered, refund the fifth". Five orders can, and nothing of
+   ours ever holds the money to make it happen — a failed step is refunded by
+   Circle's contract to the buyer, exactly like a solo job.
+
+   The cost is one confirmation per agent. Worth it: the first agent is already
+   working while the buyer approves the third. */
+async function initCrew() {
+  const cat = await api("/api/catalog");
+  let plan = null;          // [{agent,title,blurb,priceUsdc,field,label,input}]
+  let account = null, walletEth = null, mode = null, circleCtx = null;
+
+  const note = (m) => { $("#plan-note").textContent = m; };
+  const logEl = $("#crew-log");
+  const log = (msg, cls) => {
+    logEl.innerHTML += (cls ? `<span class="${cls}">` : "") + msg + (cls ? "</span>" : "") + "<br>";
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  function total() {
+    return plan.reduce((n, s) => n + Number(s.priceUsdc), 0);
+  }
+  function renderTotal() {
+    $("#crew-total").textContent = `${total().toFixed(2)} USDC`;
+  }
+
+  function render() {
+    $("#crew-list").innerHTML = plan.map((s, i) => `
+      <div class="crew-row" data-i="${i}">
+        <div class="crew-n">${i + 1}</div>
+        <div>
+          <div class="crew-name">${esc(s.title)}</div>
+          <div class="crew-blurb">${esc(s.blurb || "")}</div>
+          <input type="text" maxlength="300" autocomplete="off" data-in="${i}"
+                 placeholder="${esc(s.label || "job details")}" value="${esc(s.input || "")}">
+          <div class="crew-state s-wait" data-state="${i}">${s.input ? "ready" : "needs a detail"}</div>
+        </div>
+        <div class="crew-right">${s.priceUsdc} USDC<br><span style="color:var(--ink-soft)">${esc(s.eta || "")}</span>
+          <br><button type="button" class="crew-drop" data-drop="${i}" title="Take this agent off the crew">remove</button>
+        </div>
+      </div>`).join("");
+
+    $("#crew-list").querySelectorAll("input[data-in]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const i = Number(el.dataset.in);
+        plan[i].input = el.value;
+        setState(i, el.value.trim() ? "ready" : "needs a detail", "s-wait");
+      });
+    });
+    /* Nothing gets forced into a crew. The planner proposes and the request's own
+       words can add to it, so the buyer needs a way to say no before paying. */
+    $("#crew-list").querySelectorAll("button[data-drop]").forEach((b) => {
+      b.addEventListener("click", () => {
+        if (plan.length < 2) return log("✗ a crew needs at least one agent", "bad");
+        const dropped = plan.splice(Number(b.dataset.drop), 1)[0];
+        render();
+        note(`${plan.length} agent${plan.length > 1 ? "s" : ""} · ${total().toFixed(2)} USDC — ${dropped.title} removed.`);
+      });
+    });
+    renderTotal();
+    $("#crew-box").style.display = "";
+  }
+
+  function setState(i, text, cls) {
+    const el = $(`[data-state="${i}"]`);
+    if (el) { el.textContent = text; el.className = `crew-state ${cls}`; }
+  }
+
+  /* ————— assemble ————— */
+  const runPlan = async () => {
+    const text = $("#ask").value.trim();
+    if (text.length < 4) return note("Say a bit more than that.");
+    note("reading the request…");
+    $("#btn-plan").disabled = true;
+    try {
+      const r = await (await fetch("/api/plan", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text }),
+      })).json();
+      if (!r.ok) { note(r.reason); $("#crew-box").style.display = "none"; return; }
+      plan = r.steps;
+      $("#crew-why").textContent = r.why || `${r.count} agent${r.count > 1 ? "s" : ""} for this one.`;
+      note(`${r.count} agent${r.count > 1 ? "s" : ""} · ${r.totalUsdc} USDC — change anything before you pay.`);
+      logEl.innerHTML = "";
+      render();
+    } catch (e) {
+      note(e.message);
+    } finally {
+      $("#btn-plan").disabled = false;
+    }
+  };
+  $("#btn-plan").addEventListener("click", runPlan);
+  $("#ask").addEventListener("keydown", (e) => { if (e.key === "Enter") runPlan(); });
+
+  /* ————— wallets: same two doors as a single hire ————— */
+  $("#btn-connect").addEventListener("click", async () => {
+    try {
+      const w = await connectWallet(log);
+      account = w.addr; walletEth = w.eth; mode = "extension";
+      $("#btn-connect").textContent = fmt(account);
+      $("#btn-hire").disabled = false;
+      $("#btn-disconnect").style.display = "";
+    } catch (e) { log(`✗ ${e.message}`, "bad"); }
+  });
+
+  $("#btn-pin").addEventListener("click", async () => {
+    try {
+      log("opening your PIN wallet…");
+      const t = await postApi({ action: "token" });
+      if (t.error) throw new Error(t.error);
+      const w = await postApi({ action: "wallets", userToken: t.userToken });
+      const wallet = (w.wallets || []).find((x) => x.blockchain === "ARC-TESTNET");
+      if (!wallet) throw new Error("no Arc wallet found for this account — create one at /wallet");
+      account = wallet.address; mode = "circle";
+      circleCtx = { userToken: t.userToken, encryptionKey: t.encryptionKey, walletId: wallet.id, appId: t.appId };
+      $("#btn-pin").textContent = `PIN · ${fmt(account)}`;
+      $("#btn-hire").disabled = false;
+      log(`PIN wallet ready: ${account}`, "ok");
+      log(`each agent is its own order — expect ${plan.length} PIN prompt${plan.length > 1 ? "s" : ""}`);
+    } catch (e) { log(`✗ ${e.message}`, "bad"); }
+  });
+
+  $("#btn-disconnect").addEventListener("click", async () => {
+    if (walletEth) await disconnectWallet(walletEth);
+    account = null; walletEth = null; mode = null;
+    $("#btn-connect").textContent = "Connect wallet";
+    $("#btn-hire").disabled = true;
+    $("#btn-disconnect").style.display = "none";
+  });
+
+  /* ————— place one order ————— */
+  const crewId = () => Math.random().toString(36).slice(2, 10);
+
+  async function orderOne(step, i, meta) {
+    const a = cat.agents[step.agent];
+    const description = JSON.stringify({
+      v: 1, agent: step.agent, input: { [a.input.field]: step.input }, crew: meta,
+    });
+    const expiredAt = Math.floor(Date.now() / 1000) + ESCROW_DEADLINE_SEC;
+    const amount = BigInt(Math.round(Number(a.priceUsdc) * 1e6));
+    let jobId = null;
+
+    setState(i, "creating the order…", "s-go");
+
+    if (mode === "circle") {
+      const before = await postApi({ action: "findjob", client: account });
+      let ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
+        contractAddress: cat.contract, abiFunctionSignature: "createJob(address,address,uint256,string,address)",
+        abiParameters: [cat.providerWallet, cat.evaluatorWallet, String(expiredAt), description, "0x0000000000000000000000000000000000000000"] });
+      if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
+      await runChallenge(circleCtx, ch.challengeId);
+      for (let n = 0; n < 30 && !jobId; n++) {
+        await new Promise((r) => setTimeout(r, 4000));
+        const f = await postApi({ action: "findjob", client: account });
+        if (f.jobId && f.jobId !== before.jobId) jobId = f.jobId;
+      }
+      if (!jobId) throw new Error("order has not landed on-chain yet — nothing has been paid");
+    } else {
+      const prov = new ethers.BrowserProvider(walletEth);
+      const signer = await prov.getSigner();
+      const jobs = new ethers.Contract(cat.contract, IFACE_JOBS, signer);
+      const tx = await jobs.createJob(cat.providerWallet, cat.evaluatorWallet, expiredAt, description, ethers.ZeroAddress);
+      const rc = await tx.wait(1);
+      for (const lg of rc.logs) {
+        try { const p = jobs.interface.parseLog(lg); if (p?.name === "JobCreated") { jobId = p.args.jobId.toString(); break; } } catch { /* other contracts */ }
+      }
+      if (!jobId) throw new Error("job id not found in receipt");
+    }
+
+    /* Price it from the catalog server-side, same as a solo hire. */
+    setState(i, `#${jobId} · pricing…`, "s-go");
+    let quoted = false;
+    try {
+      const q = await (await fetch("/api/quote", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jobId }),
+      })).json();
+      quoted = !!q.ok;
+    } catch { /* fall through to the poll */ }
+    for (let n = 0; n < 20 && !quoted; n++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      quoted = (await api(`/api/job?id=${jobId}`)).hasBudget;
+    }
+    if (!quoted) throw new Error(`order #${jobId} has no price yet — your money has NOT moved`);
+
+    /* One standing allowance covers the whole crew, so this is asked at most once. */
+    const allowance = await readAllowance(cat, account);
+    if (allowance < amount) {
+      setState(i, "approving USDC (once)…", "s-go");
+      if (mode === "circle") {
+        const ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
+          contractAddress: cat.usdc, abiFunctionSignature: "approve(address,uint256)",
+          abiParameters: [cat.contract, STANDING_ALLOWANCE] });
+        if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
+        await runChallenge(circleCtx, ch.challengeId);
+      } else {
+        const prov = new ethers.BrowserProvider(walletEth);
+        const usdc = new ethers.Contract(cat.usdc, IFACE_USDC, await prov.getSigner());
+        await (await usdc.approve(cat.contract, STANDING_ALLOWANCE)).wait(1);
+      }
+      /* The PIN widget resolves when the user approves, not when the approval is
+         mined. Reading the allowance again too soon still sees zero, and the
+         next agent asks for a second approval nobody needs — so wait for it to
+         actually land before moving on. */
+      for (let n = 0; n < 15 && (await readAllowance(cat, account)) < amount; n++) {
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+      log("   approved once — the rest of the crew skips this step", "ok");
+    }
+
+    setState(i, `#${jobId} · funding escrow…`, "s-go");
+    if (mode === "circle") {
+      const ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
+        contractAddress: cat.contract, abiFunctionSignature: "fund(uint256,bytes)", abiParameters: [jobId, "0x"] });
+      if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
+      await runChallenge(circleCtx, ch.challengeId);
+    } else {
+      const prov = new ethers.BrowserProvider(walletEth);
+      const jobs = new ethers.Contract(cat.contract, IFACE_JOBS, await prov.getSigner());
+      await (await jobs.fund(jobId, "0x")).wait(1);
+    }
+
+    /* Start it now rather than waiting for a poll. Not awaited: the next agent
+       should be getting ordered while this one is already working. */
+    fetch("/api/settle", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jobId }),
+    }).catch(() => { /* the worker is the backstop */ });
+
+    setState(i, `#${jobId} · working…`, "s-go");
+    return jobId;
+  }
+
+  /* ————— watch them finish ————— */
+  const STAMP = { Completed: ["delivered · paid", "s-ok"], Rejected: ["failed · refunded", "s-bad"],
+                  Expired: ["expired · refunded", "s-bad"], Submitted: ["judging…", "s-go"] };
+  function watch(i, jobId) {
+    let n = 0;
+    const tick = async () => {
+      if (++n > 60) return;
+      try {
+        const j = await api(`/api/job?id=${jobId}`);
+        const s = STAMP[j.statusText];
+        if (s) setState(i, `#${jobId} · ${s[0]}`, s[1]);
+        if (["Completed", "Rejected", "Expired"].includes(j.statusText)) {
+          const el = $(`[data-state="${i}"]`);
+          if (el) el.innerHTML += ` · <a href="/job?id=${jobId}">open</a>`;
+          return;
+        }
+      } catch { /* keep polling */ }
+      setTimeout(tick, 5000);
+    };
+    setTimeout(tick, 4000);
+  }
+
+  /* ————— hire the whole crew ————— */
+  $("#btn-hire").addEventListener("click", async () => {
+    const missing = plan.findIndex((s) => !String(s.input || "").trim());
+    if (missing >= 0) {
+      setState(missing, "fill this in first", "s-bad");
+      return log(`✗ step ${missing + 1} still needs a detail`, "bad");
+    }
+    $("#btn-hire").disabled = true;
+    const meta = { id: crewId(), n: plan.length };
+    log(`hiring ${plan.length} agent${plan.length > 1 ? "s" : ""} — one order each, ${total().toFixed(2)} USDC total`);
+
+    let placed = 0;
+    for (let i = 0; i < plan.length; i++) {
+      try {
+        const jobId = await orderOne(plan[i], i, { ...meta, i: i + 1 });
+        log(`${i + 1}/${plan.length} ${plan[i].title} → order #${jobId} funded ✓`, "ok");
+        watch(i, jobId);
+        placed++;
+      } catch (e) {
+        setState(i, e.message.slice(0, 60), "s-bad");
+        log(`${i + 1}/${plan.length} ${plan[i].title} — ${e.message}`, "bad");
+        /* One agent failing to be ordered is not a reason to abandon the others:
+           the ones already funded are working, and the rest still can. */
+      }
+    }
+    log(placed === plan.length
+      ? "whole crew is on it — stamps land above as each one settles"
+      : `${placed} of ${plan.length} placed — the rest never took your money`, placed === plan.length ? "ok" : "bad");
+    $("#btn-hire").disabled = false;
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const page = document.body.dataset.page;
   if (page === "hire") initHire().catch((e) => { $("#carbon").textContent = e.message; });
   if (page === "job") initJob();
   if (page === "index") initIndex();
   if (page === "agents") initAgents().catch((e) => { $("#count").textContent = e.message; });
+  if (page === "crew") initCrew().catch((e) => { $("#plan-note").textContent = e.message; });
 });

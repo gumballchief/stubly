@@ -7,6 +7,9 @@
     "wallets": "node chain/make-wallets.js",
     "e2e:dry": "node chain/e2e.js --dry",
     "e2e": "node chain/e2e.js",
+    "crew:dry": "node chain/crew-e2e.js --dry",
+    "crew": "node chain/crew-e2e.js",
+    "site": "node site/dev-server.js",
     "work": "node worker/orchestrator.js --once",
     "watch": "node worker/orchestrator.js",
     "serve": "node worker/orchestrator.js"

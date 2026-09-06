@@ -54,6 +54,26 @@ async function feeOverrides(prov) {
   return { gasPrice: fd.gasPrice, type: 0 };
 }
 
+/**
+ * Turn "execution reverted (unknown custom error)" into the contract's own name
+ * for what went wrong. ERC-8183 reverts entirely through custom errors, so
+ * without this every failure looks identical and none of them say anything —
+ * WrongStatus() and ExpiryTooShort() are very different problems.
+ */
+function describeRevert(e, contract) {
+  const data = e?.data ?? e?.info?.error?.data ?? e?.error?.data;
+  if (typeof data === "string" && data.length >= 10) {
+    try {
+      const parsed = contract.interface.parseError(data);
+      if (parsed) {
+        const args = parsed.args.length ? `(${parsed.args.map(String).join(", ")})` : "()";
+        return `${parsed.name}${args}`;
+      }
+    } catch { /* not one of this contract's errors */ }
+  }
+  return e?.shortMessage || e?.message || String(e);
+}
+
 async function send(contract, method, args, label, attempt = 1) {
   await sleep(1200); // pacing: give the RPC a beat after the previous confirmation
   try {
@@ -64,11 +84,17 @@ async function send(contract, method, args, label, attempt = 1) {
     console.log(`  ${label}: ${CFG.EXPLORER}/tx/${rc.hash}`);
     return rc;
   } catch (e) {
-    if (attempt < 4) {
+    /* A named revert is the contract saying no on purpose. Retrying it three
+       more times just spends twelve seconds arriving at the same answer, so
+       only the RPC's own flakiness is worth another go. */
+    const named = describeRevert(e, contract);
+    const isRevert = named !== (e?.shortMessage || e?.message);
+    if (!isRevert && attempt < 4) {
       contract.runner?.reset?.(); // NonceManager: drop local nonce state before retrying
       await sleep(3000 * attempt);
       return send(contract, method, args, label, attempt + 1);
     }
+    if (isRevert) { e.revertName = named; e.shortMessage = `${label} reverted: ${named}`; }
     throw e;
   }
 }
@@ -121,6 +147,16 @@ async function reject(evaluatorSigner, jobId, reasonText) {
 }
 
 /**
+ * The client taking their own money back once the deadline passes. Nobody's
+ * permission is needed and nothing of ours is involved — which is the whole
+ * reason a crew is one escrow per agent rather than one for the lot.
+ */
+async function claimRefund(clientSigner, jobId) {
+  const { jobs } = await contracts(clientSigner);
+  await send(jobs, "claimRefund", [jobId], "claimRefund");
+}
+
+/**
  * Settle with an already-computed bytes32 — used to commit the judge-record
  * digest itself, rather than a hash of a label. Anyone can fetch the published
  * record, recompute its digest, and compare it to what is on-chain.
@@ -137,5 +173,5 @@ async function rejectRaw(evaluatorSigner, jobId, digest32) {
 
 module.exports = {
   contracts, contentHash, createJob, setBudget, fund, submit,
-  complete, reject, completeRaw, rejectRaw, withRetry, JOB_STATUS,
+  complete, reject, completeRaw, rejectRaw, claimRefund, withRetry, JOB_STATUS,
 };

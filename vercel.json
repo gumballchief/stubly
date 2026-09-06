@@ -8,6 +8,9 @@
       "maxDuration": 60
     }
   },
+  "rewrites": [
+    { "source": "/api/plan", "destination": "/api/quote?_route=plan" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
