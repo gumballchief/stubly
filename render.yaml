@@ -1,10 +1,16 @@
 # Settlement worker, hosted.
 #
 # It runs as a *web* service rather than a background worker because Render's
-# background workers are paid and their web tier is not. The process still does
-# the same polling loop; the HTTP endpoint exists so the free tier has something
-# to health-check, and so the GitHub schedule can ping it every five minutes and
-# stop it idling out.
+# background workers cost more. The process still does the same polling loop; the
+# HTTP endpoint exists so the host has something to health-check.
+#
+# The plan is "starter", not "free", deliberately. Free web services sleep after
+# fifteen minutes idle, and the thing meant to wake this one was a GitHub cron on
+# a "*/5" schedule that GitHub actually runs every three to four hours. An escrow
+# deadline is ten minutes, so a sleeping worker cannot settle anything in time —
+# order #184451 expired undelivered and had to be refunded by hand. If you do move
+# this back to free, the worker is decorative unless something external pings it
+# every few minutes.
 #
 # Secrets are marked sync:false — they are set once in Render's dashboard and
 # never live in this file.
@@ -13,7 +19,7 @@ services:
   - type: web
     name: stubly-worker
     runtime: node
-    plan: free
+    plan: starter
     region: oregon
     branch: master
     buildCommand: npm ci --omit=dev --ignore-scripts
@@ -46,4 +52,9 @@ services:
       - key: PROVIDER_KEYSTORE_B64
         sync: false
       - key: EVALUATOR_KEYSTORE_B64
+        sync: false
+      # Cold address that earnings above the working float are swept to. The
+      # provider key both signs payouts and receives them, and it now lives in a
+      # fourth place. This caps what a leak costs to the float. Unset = no sweep.
+      - key: SWEEP_TO
         sync: false
