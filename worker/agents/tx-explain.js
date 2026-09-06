@@ -19,7 +19,7 @@ async function run(input) {
     C.get(`/transactions/${hash}/token-transfers`),
     C.get(`/transactions/${hash}/logs`),
   ]);
-  if (!tx) throw new Error("transaction not found on Arc testnet");
+  if (!tx) throw new Error(`transaction not found on ${C.CHAIN_LABEL}`);
 
   const moves = (transfers?.items || []).map((t) => {
     const d = Number(t.token?.decimals || 0);

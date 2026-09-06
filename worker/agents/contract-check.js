@@ -2,13 +2,14 @@
 
 /**
  * House agent #3 — Contract Check.
- * Input:  { address: string }  (an Arc testnet contract or token address)
+ * Input:  { address: string }  (a contract or token address on the configured chain)
  * Output: markdown safety report — verification status, proxy shape, owner powers,
  * age/activity from Blockscout (free), plus a short LLM read of the risks.
  */
 
 const { generate } = require("../llm");
 const EXPLORER_API = process.env.EXPLORER_API || "https://testnet.arcscan.app/api/v2";
+const { CHAIN_LABEL } = require("./_chain");
 
 const mark = (ok) => (ok ? "✅" : "⚠️");
 
@@ -26,7 +27,7 @@ async function run(input) {
     grab(`/addresses/${address}`),
     grab(`/smart-contracts/${address}`),
   ]);
-  if (!info) throw new Error("address not found on Arc testnet explorer");
+  if (!info) throw new Error(`address not found on the ${CHAIN_LABEL} explorer`);
 
   const isContract = info.is_contract === true;
   const verified = contract?.is_verified === true || Boolean(contract?.abi);
@@ -61,7 +62,7 @@ privileged_functions: ${ownerFns.slice(0, 20).join(", ") || "none visible"}`;
 
   const content = `# Contract Check: ${name}
 
-\`${address}\` on Arc testnet
+\`${address}\` on ${CHAIN_LABEL}
 
 ## Mechanical findings
 - ${mark(isContract)} Is a contract: ${isContract ? "yes" : "NO — this is a regular wallet address"}

@@ -21,7 +21,7 @@ async function run(input) {
     C.get(`/addresses/${address}/token-balances`),
     C.get(`/addresses/${address}/transactions`),
   ]);
-  if (!info) throw new Error("address not found on Arc testnet");
+  if (!info) throw new Error(`address not found on ${C.CHAIN_LABEL}`);
 
   const items = txs?.items || [];
   const out = items.filter((t) => t.from?.hash?.toLowerCase() === address.toLowerCase());

@@ -8,6 +8,12 @@
 const EXPLORER_API = process.env.EXPLORER_API || "https://testnet.arcscan.app/api/v2";
 const EXPLORER = process.env.EXPLORER || "https://testnet.arcscan.app";
 
+/* What these agents call the chain in the report a buyer reads. Deriving it from
+   CHAIN_ID means a deliverable can never claim to be about testnet while the job
+   that paid for it settled on mainnet. */
+const CHAIN_LABEL =
+  process.env.CHAIN_LABEL || (Number(process.env.CHAIN_ID || 5042002) === 5042 ? "Arc" : "Arc testnet");
+
 async function get(path, { timeout = 12_000 } = {}) {
   const r = await fetch(`${EXPLORER_API}${path}`, { signal: AbortSignal.timeout(timeout) });
   if (!r.ok) return null;
@@ -40,4 +46,4 @@ function ago(iso) {
 
 const short = (a) => (a ? `${a.slice(0, 8)}…${a.slice(-6)}` : "—");
 
-module.exports = { get, isAddress, isTxHash, nat, amt, ago, short, EXPLORER, EXPLORER_API };
+module.exports = { get, isAddress, isTxHash, nat, amt, ago, short, EXPLORER, EXPLORER_API, CHAIN_LABEL };

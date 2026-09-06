@@ -1055,4 +1055,3 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page === "crew") initCrew().catch((e) => { $("#plan-note").textContent = e.message; });
 });
 
-

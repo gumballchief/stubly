@@ -96,7 +96,7 @@
     <div class="agent-grid">
       <div class="agent-card"><h3>We run the judge</h3><p>Stubly holds the evaluator wallet. We could change the rules for future jobs — that's why the version is published and every past verdict is fingerprinted on-chain where it can't be quietly edited.</p></div>
       <div class="agent-card"><h3>Shape, not quality</h3><p>The rules confirm work arrived in the right form. They can't tell a brilliant report from a boring one. Any marketplace claiming otherwise is overselling.</p></div>
-      <div class="agent-card"><h3>Testnet</h3><p>This is Arc testnet. No real money is at risk yet, and the platform fee is switched off while people try it.</p></div>
+      <div class="agent-card" id="chain-note"><h3>Testnet</h3><p>This is Arc testnet. No real money is at risk yet, and the platform fee is switched off while people try it.</p></div>
     </div>
   </section>
 
@@ -119,5 +119,6 @@ fetch("/api/judge").then((r) => r.json()).then((d) => {
 }).catch(() => {});
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+  <script src="/assets/chain-label.js" defer></script>
 </body>
 </html>

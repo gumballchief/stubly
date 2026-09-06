@@ -57,7 +57,7 @@ network_utilization_percent: ${stats.network_utilization_percentage}`;
 
   const content = `# Arc Chain Pulse
 
-*Measured live from Arc testnet.*
+*Measured live from ${C.CHAIN_LABEL}.*
 
 ## Throughput
 - Total blocks: **${Number(stats.total_blocks).toLocaleString("en-US")}**

@@ -50,14 +50,33 @@ async function checkWorker() {
   note(`worker:   ok · ${body.passes} passes · last ${since}s ago`);
 }
 
+/* Liveness is /api/catalog, not /api/stats.
+   /api/stats scans every order from block zero and reads each one's status off
+   the escrow, so a cold function on a cold RPC can legitimately take tens of
+   seconds — it answers in well under a second once warm. Failing the whole check
+   on that means paging a human because a cache was cold, which trains people to
+   ignore the alert. Catalog does no chain reads, so it answers the actual
+   question: are the site and its functions serving? Stats is reported when it
+   comes back and skipped when it does not. */
 async function checkSite() {
+  try {
+    const r = await fetch(`${SITE_URL}/api/catalog`, { signal: AbortSignal.timeout(30_000) });
+    if (!r.ok) return problems.push(`site /api/catalog returned HTTP ${r.status}`);
+    const c = await r.json();
+    const registered = Object.values(c.agents || {}).filter((a) => a.agentId).length;
+    if (!registered) problems.push("site is serving no registered agent identities");
+    note(`site:     ok · ${Object.keys(c.agents || {}).length} agents · ${registered} with an identity · chain ${c.chainId}`);
+  } catch (e) {
+    return problems.push(`site /api/catalog unreachable: ${e.message}`);
+  }
+
   try {
     const r = await fetch(`${SITE_URL}/api/stats`, { signal: AbortSignal.timeout(45_000) });
     const s = await r.json();
-    if (!s.live) return problems.push(`site /api/stats says live=false: ${s.error || ""}`);
-    note(`site:     ok · ${s.jobs} orders · ${s.settled} settled · ${s.hirers} buyers`);
-  } catch (e) {
-    problems.push(`site /api/stats unreachable: ${e.message}`);
+    if (s.live) note(`stats:    ${s.jobs} orders · ${s.settled} settled · ${s.hirers} buyers`);
+    else note(`stats:    slow or unavailable this run (${s.error || "no reason given"}) — not treated as an outage`);
+  } catch {
+    note("stats:    slow this run — not treated as an outage");
   }
 }
 
