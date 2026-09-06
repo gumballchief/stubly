@@ -18,6 +18,17 @@ const CFG = {
   USDC: process.env.USDC_ADDRESS || "0x3600000000000000000000000000000000000000",
   EXPLORER_API: process.env.EXPLORER_API || "https://testnet.arcscan.app/api/v2",
   EXPLORER: process.env.EXPLORER || "https://testnet.arcscan.app",
+  /* Which keystore each role signs with. Mainnet gets its own, because a key
+     that has lived on a laptop and in CI does not get to sign for real money —
+     and because asking for "provider" by name regardless of chain would quietly
+     load the testnet key on mainnet. loadWallet turns these into the matching
+     <NAME>_KEYSTORE_B64 env var on a host. */
+  PROVIDER_KEY: process.env.PROVIDER_KEY ||
+    (Number(process.env.CHAIN_ID || 5042002) === 5042 ? "provider_mainnet" : "provider"),
+  EVALUATOR_KEY: process.env.EVALUATOR_KEY ||
+    (Number(process.env.CHAIN_ID || 5042002) === 5042 ? "evaluator_mainnet" : "evaluator"),
+  CLIENT_KEY: process.env.CLIENT_KEY ||
+    (Number(process.env.CHAIN_ID || 5042002) === 5042 ? "client_mainnet" : "client"),
   /* Circle deployed the ERC-8004 registries. Env-overridable so mainnet is a
      configuration change, and so a mismatched pair fails loudly rather than
      minting identities into the wrong registry. */

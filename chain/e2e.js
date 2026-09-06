@@ -27,9 +27,9 @@ async function main() {
   if (code === "0x") throw new Error(`no contract code at ERC-8183 address ${CFG.ERC8183}`);
   console.log(`ERC-8183 code present at ${CFG.ERC8183} (${(code.length - 2) / 2} bytes)`);
 
-  const client = loadWallet("client", prov);
-  const providerW = loadWallet("provider", prov);
-  const evaluator = loadWallet("evaluator", prov);
+  const client = loadWallet(CFG.CLIENT_KEY, prov);
+  const providerW = loadWallet(CFG.PROVIDER_KEY, prov);
+  const evaluator = loadWallet(CFG.EVALUATOR_KEY, prov);
 
   const { usdc } = await jobsLib.contracts(prov);
   const decimals = await usdc.decimals();
