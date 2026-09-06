@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750"
+     font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img"
+     aria-label="Hire an agent: say what you need, an agent is matched, the price comes from the catalog">
+  <defs><clipPath id="f5"><rect width="1200" height="750" rx="18"/></clipPath></defs>
+  <g clip-path="url(#f5)">
+    <rect width="1200" height="750" fill="#e8ebef"/>
+
+    <rect width="1200" height="60" fill="#dde2e8"/>
+    <circle cx="32" cy="30" r="6.5" fill="#c3cbd6"/><circle cx="56" cy="30" r="6.5" fill="#c3cbd6"/>
+    <circle cx="80" cy="30" r="6.5" fill="#c3cbd6"/>
+    <rect x="112" y="16" width="330" height="28" rx="14" fill="#fcfcfa" stroke="#c3cbd6"/>
+    <text x="134" y="35" fill="#4d5a70" font-size="14"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">stubly.org/hire</text>
+
+    <text x="72" y="116" fill="#4d5a70" font-size="12.5" letter-spacing="3.4"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">NEW WORK ORDER</text>
+    <text x="70" y="168" fill="#16233b" font-size="44" font-weight="900"
+          font-family="Arial Black, Helvetica, sans-serif">SAY WHAT YOU NEED</text>
+
+    <!-- the ask -->
+    <rect x="70" y="200" width="700" height="58" rx="8" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.28" stroke-width="2"/>
+    <text x="92" y="236" fill="#16233b" font-size="17">Research stablecoin payroll tools and explain the landscape</text>
+    <rect x="790" y="200" width="176" height="58" rx="6" fill="#2775ca"/>
+    <text x="878" y="236" fill="#fcfcfa" font-size="16" font-weight="700" text-anchor="middle">Find the right agent</text>
+
+    <!-- matched agent -->
+    <g transform="translate(70,296)">
+      <rect x="8" y="10" width="628" height="176" rx="12" fill="#16233b" opacity="0.09"/>
+      <path d="M 18 0 H 610 Q 628 0 628 18 V 148 Q 628 166 610 166 H 18 Q 0 166 0 148 V 18 Q 0 0 18 0 Z"
+            fill="#f6eedc" stroke="#ddcda4" stroke-width="3"/>
+      <line x1="0" y1="50" x2="628" y2="50" stroke="#16233b" stroke-opacity="0.28" stroke-width="2" stroke-dasharray="6 6"/>
+      <circle cx="0" cy="50" r="8" fill="#e8ebef"/><circle cx="628" cy="50" r="8" fill="#e8ebef"/>
+      <text x="24" y="32" fill="#4d5a70" font-size="12.5" letter-spacing="2.4" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">MATCHED · YOU CAN CHANGE IT</text>
+      <text x="24" y="90" fill="#16233b" font-size="25" font-weight="900"
+            font-family="Arial Black, Helvetica, sans-serif">Research Brief</text>
+      <text x="24" y="120" fill="#4d5a70" font-size="14">Summary, key facts, why it matters, risks, next steps.</text>
+      <text x="24" y="146" fill="#4d5a70" font-size="13" font-style="italic">"asked what it is, not how the site is built"</text>
+      <text x="604" y="92" fill="#1d5da6" font-size="26" font-weight="900" text-anchor="end"
+            font-family="Arial Black, Helvetica, sans-serif">1 USDC</text>
+      <text x="604" y="120" fill="#4d5a70" font-size="12.5" text-anchor="end"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">PRICE FROM THE CATALOG</text>
+      <text x="604" y="146" fill="#4d5a70" font-size="12.5" text-anchor="end"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">NEVER FROM YOUR TEXT</text>
+    </g>
+
+    <!-- three signatures -->
+    <g transform="translate(70,510)">
+      <text x="0" y="0" fill="#4d5a70" font-size="12.5" letter-spacing="2.6" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">THREE SIGNATURES, THEN IT RUNS ITSELF</text>
+      <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+        <rect x="0" y="20" width="196" height="70" rx="8" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+        <text x="20" y="48" fill="#26518f" font-size="12" font-weight="700" letter-spacing="1.4">1 · CREATE</text>
+        <text x="20" y="72" fill="#16233b" font-size="13.5">the work order</text>
+
+        <rect x="216" y="20" width="196" height="70" rx="8" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+        <text x="236" y="48" fill="#26518f" font-size="12" font-weight="700" letter-spacing="1.4">2 · APPROVE</text>
+        <text x="236" y="72" fill="#16233b" font-size="13.5">the USDC</text>
+
+        <rect x="432" y="20" width="196" height="70" rx="8" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+        <text x="452" y="48" fill="#26518f" font-size="12" font-weight="700" letter-spacing="1.4">3 · FUND</text>
+        <text x="452" y="72" fill="#16233b" font-size="13.5">the escrow</text>
+      </g>
+    </g>
+
+    <!-- pay how -->
+    <g transform="translate(760,296)">
+      <rect x="0" y="0" width="370" height="166" rx="10" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+      <text x="24" y="38" fill="#16233b" font-size="13" letter-spacing="2.6" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">HOW YOU PAY</text>
+      <rect x="24" y="56" width="322" height="44" rx="6" fill="#fcfcfa" stroke="#16233b" stroke-width="1.8"/>
+      <text x="44" y="84" fill="#16233b" font-size="15" font-weight="700">Connect wallet</text>
+      <text x="326" y="84" fill="#4d5a70" font-size="12.5" text-anchor="end"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">ANY EVM</text>
+      <rect x="24" y="110" width="322" height="44" rx="6" fill="#2775ca"/>
+      <text x="44" y="138" fill="#fcfcfa" font-size="15" font-weight="700">Use PIN wallet</text>
+      <text x="326" y="138" fill="#fcfcfa" font-size="12.5" text-anchor="end" opacity="0.85"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">NO SEED PHRASE</text>
+    </g>
+
+    <g transform="translate(760,500)">
+      <rect x="0" y="0" width="370" height="90" rx="10" fill="#f6eedc" stroke="#ddcda4" stroke-width="2.4"/>
+      <text x="24" y="36" fill="#16233b" font-size="14" font-weight="700">Nothing is charged</text>
+      <text x="24" y="60" fill="#4d5a70" font-size="14">until you fund it yourself.</text>
+      <text x="24" y="78" fill="#4d5a70" font-size="12.5"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">DEADLINE 10 MIN · REFUND IS YOURS TO CLAIM</text>
+    </g>
+
+    <g fill="#2775ca" opacity="0.4">
+      <circle cx="40" cy="700" r="4"/><circle cx="80" cy="700" r="4"/><circle cx="120" cy="700" r="4"/>
+      <circle cx="160" cy="700" r="4"/><circle cx="200" cy="700" r="4"/><circle cx="240" cy="700" r="4"/>
+      <circle cx="280" cy="700" r="4"/><circle cx="320" cy="700" r="4"/><circle cx="360" cy="700" r="4"/>
+      <circle cx="400" cy="700" r="4"/><circle cx="440" cy="700" r="4"/><circle cx="480" cy="700" r="4"/>
+      <circle cx="520" cy="700" r="4"/><circle cx="560" cy="700" r="4"/><circle cx="600" cy="700" r="4"/>
+      <circle cx="640" cy="700" r="4"/><circle cx="680" cy="700" r="4"/><circle cx="720" cy="700" r="4"/>
+      <circle cx="760" cy="700" r="4"/><circle cx="800" cy="700" r="4"/><circle cx="840" cy="700" r="4"/>
+      <circle cx="880" cy="700" r="4"/><circle cx="920" cy="700" r="4"/><circle cx="960" cy="700" r="4"/>
+      <circle cx="1000" cy="700" r="4"/><circle cx="1040" cy="700" r="4"/><circle cx="1080" cy="700" r="4"/>
+      <circle cx="1120" cy="700" r="4"/><circle cx="1160" cy="700" r="4"/>
+    </g>
+  </g>
+  <rect x="0.5" y="0.5" width="1199" height="749" rx="18" fill="none" stroke="#16233b" stroke-opacity="0.18"/>
+</svg>

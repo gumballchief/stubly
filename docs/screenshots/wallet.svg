@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750"
+     font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img"
+     aria-label="A wallet with just a PIN: no extension, no seed phrase, pay in three taps">
+  <defs><clipPath id="f7"><rect width="1200" height="750" rx="18"/></clipPath></defs>
+  <g clip-path="url(#f7)">
+    <rect width="1200" height="750" fill="#e8ebef"/>
+
+    <rect width="1200" height="60" fill="#dde2e8"/>
+    <circle cx="32" cy="30" r="6.5" fill="#c3cbd6"/><circle cx="56" cy="30" r="6.5" fill="#c3cbd6"/>
+    <circle cx="80" cy="30" r="6.5" fill="#c3cbd6"/>
+    <rect x="112" y="16" width="330" height="28" rx="14" fill="#fcfcfa" stroke="#c3cbd6"/>
+    <text x="134" y="35" fill="#4d5a70" font-size="14"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">stubly.org/wallet</text>
+
+    <text x="72" y="116" fill="#4d5a70" font-size="12.5" letter-spacing="3.4"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">NO EXTENSION NEEDED</text>
+    <text x="70" y="172" fill="#16233b" font-size="46" font-weight="900"
+          font-family="Arial Black, Helvetica, sans-serif">A WALLET WITH</text>
+    <text x="70" y="226" fill="#16233b" font-size="46" font-weight="900"
+          font-family="Arial Black, Helvetica, sans-serif">JUST A <tspan fill="#2775ca">PIN</tspan>.</text>
+
+    <text x="72" y="278" fill="#4d5a70" font-size="17">Circle's user-controlled wallets. No browser extension,</text>
+    <text x="72" y="304" fill="#4d5a70" font-size="17">no seed phrase to lose, and we never hold the keys.</text>
+
+    <!-- pin pad -->
+    <g transform="translate(72,344)">
+      <rect x="0" y="0" width="424" height="300" rx="14" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+      <text x="32" y="44" fill="#4d5a70" font-size="12.5" letter-spacing="2.4" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">ENTER YOUR PIN</text>
+
+      <g fill="#16233b">
+        <circle cx="118" cy="80" r="9"/><circle cx="158" cy="80" r="9"/><circle cx="198" cy="80" r="9"/>
+        <circle cx="238" cy="80" r="9"/>
+        <circle cx="278" cy="80" r="9" fill="none" stroke="#16233b" stroke-opacity="0.3" stroke-width="2"/>
+        <circle cx="318" cy="80" r="9" fill="none" stroke="#16233b" stroke-opacity="0.3" stroke-width="2"/>
+      </g>
+
+      <g font-family="Arial Black, Helvetica, sans-serif" font-size="22" fill="#16233b" text-anchor="middle">
+        <rect x="64" y="112" width="88" height="52" rx="8" fill="#f6eedc" stroke="#ddcda4" stroke-width="2"/><text x="108" y="146">1</text>
+        <rect x="168" y="112" width="88" height="52" rx="8" fill="#f6eedc" stroke="#ddcda4" stroke-width="2"/><text x="212" y="146">2</text>
+        <rect x="272" y="112" width="88" height="52" rx="8" fill="#f6eedc" stroke="#ddcda4" stroke-width="2"/><text x="316" y="146">3</text>
+        <rect x="64" y="176" width="88" height="52" rx="8" fill="#f6eedc" stroke="#ddcda4" stroke-width="2"/><text x="108" y="210">4</text>
+        <rect x="168" y="176" width="88" height="52" rx="8" fill="#f6eedc" stroke="#ddcda4" stroke-width="2"/><text x="212" y="210">5</text>
+        <rect x="272" y="176" width="88" height="52" rx="8" fill="#f6eedc" stroke="#ddcda4" stroke-width="2"/><text x="316" y="210">6</text>
+      </g>
+
+      <rect x="64" y="242" width="296" height="42" rx="6" fill="#2775ca"/>
+      <text x="212" y="269" fill="#fcfcfa" font-size="15" font-weight="700" text-anchor="middle">Create my wallet</text>
+    </g>
+
+    <!-- what it is / isn't -->
+    <g transform="translate(548,344)">
+      <rect x="0" y="0" width="580" height="140" rx="10" fill="#f6eedc" stroke="#ddcda4" stroke-width="2.4"/>
+      <text x="28" y="38" fill="#16233b" font-size="13" letter-spacing="2.4" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">BE CLEAR ABOUT THIS</text>
+      <text x="28" y="72" fill="#16233b" font-size="15">The PIN unlocks a key only you can use. Circle holds the</text>
+      <text x="28" y="96" fill="#16233b" font-size="15">infrastructure; we hold neither. Lose the PIN and the</text>
+      <text x="28" y="120" fill="#16233b" font-size="15">Account ID, and nobody can recover it for you.</text>
+    </g>
+
+    <g transform="translate(548,506)">
+      <rect x="0" y="0" width="580" height="138" rx="10" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+      <text x="28" y="38" fill="#4d5a70" font-size="12.5" letter-spacing="2.4" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">KEEPING IT · SAVE THIS OR YOU LOSE THE WALLET</text>
+      <rect x="28" y="56" width="524" height="42" rx="6" fill="#e8ebef" stroke="#c3cbd6"/>
+      <text x="48" y="83" fill="#16233b" font-size="14.5"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">acct_7f3a…9c21</text>
+      <text x="532" y="83" fill="#1d5da6" font-size="13" text-anchor="end" font-weight="700">Copy</text>
+      <text x="28" y="120" fill="#4d5a70" font-size="13.5">Paste it on another browser to come back to the same wallet.</text>
+    </g>
+
+    <g fill="#2775ca" opacity="0.4">
+      <circle cx="40" cy="700" r="4"/><circle cx="80" cy="700" r="4"/><circle cx="120" cy="700" r="4"/>
+      <circle cx="160" cy="700" r="4"/><circle cx="200" cy="700" r="4"/><circle cx="240" cy="700" r="4"/>
+      <circle cx="280" cy="700" r="4"/><circle cx="320" cy="700" r="4"/><circle cx="360" cy="700" r="4"/>
+      <circle cx="400" cy="700" r="4"/><circle cx="440" cy="700" r="4"/><circle cx="480" cy="700" r="4"/>
+      <circle cx="520" cy="700" r="4"/><circle cx="560" cy="700" r="4"/><circle cx="600" cy="700" r="4"/>
+      <circle cx="640" cy="700" r="4"/><circle cx="680" cy="700" r="4"/><circle cx="720" cy="700" r="4"/>
+      <circle cx="760" cy="700" r="4"/><circle cx="800" cy="700" r="4"/><circle cx="840" cy="700" r="4"/>
+      <circle cx="880" cy="700" r="4"/><circle cx="920" cy="700" r="4"/><circle cx="960" cy="700" r="4"/>
+      <circle cx="1000" cy="700" r="4"/><circle cx="1040" cy="700" r="4"/><circle cx="1080" cy="700" r="4"/>
+      <circle cx="1120" cy="700" r="4"/><circle cx="1160" cy="700" r="4"/>
+    </g>
+  </g>
+  <rect x="0.5" y="0.5" width="1199" height="749" rx="18" fill="none" stroke="#16233b" stroke-opacity="0.18"/>
+</svg>
