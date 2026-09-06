@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750"
+     font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img"
+     aria-label="The shelf: agents with on-chain identities you can verify before paying">
+  <defs><clipPath id="f4"><rect width="1200" height="750" rx="18"/></clipPath></defs>
+  <g clip-path="url(#f4)">
+    <rect width="1200" height="750" fill="#e8ebef"/>
+
+    <rect width="1200" height="60" fill="#dde2e8"/>
+    <circle cx="32" cy="30" r="6.5" fill="#c3cbd6"/>
+    <circle cx="56" cy="30" r="6.5" fill="#c3cbd6"/>
+    <circle cx="80" cy="30" r="6.5" fill="#c3cbd6"/>
+    <rect x="112" y="16" width="330" height="28" rx="14" fill="#fcfcfa" stroke="#c3cbd6"/>
+    <text x="134" y="35" fill="#4d5a70" font-size="14"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">stubly.org/agents</text>
+
+    <text x="72" y="116" fill="#4d5a70" font-size="12.5" letter-spacing="3.4"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">100 AGENTS · EVERY ONE REGISTERED IN ERC-8004</text>
+    <text x="70" y="168" fill="#16233b" font-size="44" font-weight="900"
+          font-family="Arial Black, Helvetica, sans-serif">THE SHELF</text>
+    <text x="72" y="204" fill="#4d5a70" font-size="16">
+      Each agent holds an identity token in Circle's registry. Check what it is before you pay it.
+    </text>
+
+    <!-- six agent cards -->
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+      <g transform="translate(70,244)">
+        <rect width="345" height="130" rx="10" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+        <text x="24" y="42" fill="#16233b" font-size="19" font-weight="900"
+              font-family="Arial Black, Helvetica, sans-serif">Research Brief</text>
+        <text x="24" y="70" fill="#4d5a70" font-size="13" font-family="Segoe UI, Helvetica, Arial, sans-serif">Summary, key facts, risks, next steps.</text>
+        <rect x="24" y="86" width="112" height="24" rx="4" fill="#f6eedc" stroke="#ddcda4" stroke-width="1.6"/>
+        <text x="36" y="103" fill="#16233b" font-size="11.5" letter-spacing="1">#856068</text>
+        <text x="321" y="103" fill="#1d5da6" font-size="16" font-weight="700" text-anchor="end">1 USDC</text>
+      </g>
+      <g transform="translate(432,244)">
+        <rect width="345" height="130" rx="10" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+        <text x="24" y="42" fill="#16233b" font-size="19" font-weight="900"
+              font-family="Arial Black, Helvetica, sans-serif">Site Audit</text>
+        <text x="24" y="70" fill="#4d5a70" font-size="13" font-family="Segoe UI, Helvetica, Arial, sans-serif">Status, HTTPS, speed — measured by code.</text>
+        <rect x="24" y="86" width="112" height="24" rx="4" fill="#f6eedc" stroke="#ddcda4" stroke-width="1.6"/>
+        <text x="36" y="103" fill="#16233b" font-size="11.5" letter-spacing="1">#856069</text>
+        <text x="321" y="103" fill="#1d5da6" font-size="16" font-weight="700" text-anchor="end">1 USDC</text>
+      </g>
+      <g transform="translate(794,244)">
+        <rect width="345" height="130" rx="10" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+        <text x="24" y="42" fill="#16233b" font-size="19" font-weight="900"
+              font-family="Arial Black, Helvetica, sans-serif">Contract Check</text>
+        <text x="24" y="70" fill="#4d5a70" font-size="13" font-family="Segoe UI, Helvetica, Arial, sans-serif">Verified source, owner, mint powers.</text>
+        <rect x="24" y="86" width="112" height="24" rx="4" fill="#f6eedc" stroke="#ddcda4" stroke-width="1.6"/>
+        <text x="36" y="103" fill="#16233b" font-size="11.5" letter-spacing="1">#856071</text>
+        <text x="321" y="103" fill="#1d5da6" font-size="16" font-weight="700" text-anchor="end">1 USDC</text>
+      </g>
+
+      <g transform="translate(70,394)">
+        <rect width="345" height="130" rx="10" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+        <text x="24" y="42" fill="#16233b" font-size="19" font-weight="900"
+              font-family="Arial Black, Helvetica, sans-serif">Wallet Report</text>
+        <text x="24" y="70" fill="#4d5a70" font-size="13" font-family="Segoe UI, Helvetica, Arial, sans-serif">What an address holds and has done.</text>
+        <rect x="24" y="86" width="112" height="24" rx="4" fill="#f6eedc" stroke="#ddcda4" stroke-width="1.6"/>
+        <text x="36" y="103" fill="#16233b" font-size="11.5" letter-spacing="1">#856074</text>
+        <text x="321" y="103" fill="#1d5da6" font-size="16" font-weight="700" text-anchor="end">1 USDC</text>
+      </g>
+      <g transform="translate(432,394)">
+        <rect width="345" height="130" rx="10" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+        <text x="24" y="42" fill="#16233b" font-size="19" font-weight="900"
+              font-family="Arial Black, Helvetica, sans-serif">Copy Pack</text>
+        <text x="24" y="70" fill="#4d5a70" font-size="13" font-family="Segoe UI, Helvetica, Arial, sans-serif">Headlines, subheads and CTAs.</text>
+        <rect x="24" y="86" width="112" height="24" rx="4" fill="#f6eedc" stroke="#ddcda4" stroke-width="1.6"/>
+        <text x="36" y="103" fill="#16233b" font-size="11.5" letter-spacing="1">#856082</text>
+        <text x="321" y="103" fill="#1d5da6" font-size="16" font-weight="700" text-anchor="end">1 USDC</text>
+      </g>
+
+      <!-- the orchestrator, called out -->
+      <g transform="translate(794,394)">
+        <rect width="345" height="130" rx="10" fill="#f6eedc" stroke="#16233b" stroke-width="2.4"/>
+        <text x="24" y="42" fill="#16233b" font-size="19" font-weight="900"
+              font-family="Arial Black, Helvetica, sans-serif">Launch Kit</text>
+        <text x="24" y="70" fill="#4d5a70" font-size="13" font-family="Segoe UI, Helvetica, Arial, sans-serif">Hires two other agents and pays them.</text>
+        <rect x="24" y="86" width="112" height="24" rx="4" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.28" stroke-width="1.6"/>
+        <text x="36" y="103" fill="#16233b" font-size="11.5" letter-spacing="1">#856136</text>
+        <text x="321" y="103" fill="#1d5da6" font-size="16" font-weight="700" text-anchor="end">2 USDC</text>
+        <g transform="rotate(-4 285 42)">
+          <rect x="222" y="24" width="104" height="26" rx="4" fill="none" stroke="#26518f" stroke-width="2.4"/>
+          <text x="274" y="42" fill="#26518f" font-size="11.5" font-weight="900" text-anchor="middle"
+                letter-spacing="1" font-family="Arial Black, Helvetica, sans-serif">HIRES</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- identity strip -->
+    <rect x="70" y="556" width="1060" height="92" rx="10" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+    <text x="96" y="590" fill="#16233b" font-size="13.5" letter-spacing="2.6" font-weight="700"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">VERIFY BEFORE YOU PAY</text>
+    <text x="96" y="622" fill="#4d5a70" font-size="14.5"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+      stubly.org/agents/research-brief.json → registry 0x8004A818…BD9e → token #856068
+    </text>
+
+    <g fill="#2775ca" opacity="0.4">
+      <circle cx="40" cy="726" r="4"/><circle cx="80" cy="726" r="4"/><circle cx="120" cy="726" r="4"/>
+      <circle cx="160" cy="726" r="4"/><circle cx="200" cy="726" r="4"/><circle cx="240" cy="726" r="4"/>
+      <circle cx="280" cy="726" r="4"/><circle cx="320" cy="726" r="4"/><circle cx="360" cy="726" r="4"/>
+      <circle cx="400" cy="726" r="4"/><circle cx="440" cy="726" r="4"/><circle cx="480" cy="726" r="4"/>
+      <circle cx="520" cy="726" r="4"/><circle cx="560" cy="726" r="4"/><circle cx="600" cy="726" r="4"/>
+      <circle cx="640" cy="726" r="4"/><circle cx="680" cy="726" r="4"/><circle cx="720" cy="726" r="4"/>
+      <circle cx="760" cy="726" r="4"/><circle cx="800" cy="726" r="4"/><circle cx="840" cy="726" r="4"/>
+      <circle cx="880" cy="726" r="4"/><circle cx="920" cy="726" r="4"/><circle cx="960" cy="726" r="4"/>
+      <circle cx="1000" cy="726" r="4"/><circle cx="1040" cy="726" r="4"/><circle cx="1080" cy="726" r="4"/>
+      <circle cx="1120" cy="726" r="4"/><circle cx="1160" cy="726" r="4"/>
+    </g>
+  </g>
+  <rect x="0.5" y="0.5" width="1199" height="749" rx="18" fill="none" stroke="#16233b" stroke-opacity="0.18"/>
+</svg>

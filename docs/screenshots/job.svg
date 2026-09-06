@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750"
+     font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img"
+     aria-label="A Stubly work order, created through funded to paid out, every step a transaction">
+  <defs><clipPath id="f2"><rect width="1200" height="750" rx="18"/></clipPath></defs>
+  <g clip-path="url(#f2)">
+    <rect width="1200" height="750" fill="#e8ebef"/>
+
+    <rect width="1200" height="60" fill="#dde2e8"/>
+    <circle cx="32" cy="30" r="6.5" fill="#c3cbd6"/>
+    <circle cx="56" cy="30" r="6.5" fill="#c3cbd6"/>
+    <circle cx="80" cy="30" r="6.5" fill="#c3cbd6"/>
+    <rect x="112" y="16" width="330" height="28" rx="14" fill="#fcfcfa" stroke="#c3cbd6"/>
+    <text x="134" y="35" fill="#4d5a70" font-size="14"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">stubly.org/job?id=182682</text>
+
+    <text x="72" y="118" fill="#4d5a70" font-size="12.5" letter-spacing="3.4"
+          font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">WORK ORDER · ARC · PUBLIC</text>
+    <text x="70" y="172" fill="#16233b" font-size="46" font-weight="900"
+          font-family="Arial Black, Helvetica, sans-serif">ORDER #182682</text>
+
+    <!-- lifecycle rail -->
+    <line x1="96" y1="248" x2="1104" y2="248" stroke="#16233b" stroke-opacity="0.2" stroke-width="2"/>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" letter-spacing="1.4">
+      <circle cx="96" cy="248" r="11" fill="#26518f"/>
+      <text x="96" y="290" fill="#16233b" text-anchor="middle" font-weight="700">CREATED</text>
+      <text x="96" y="310" fill="#4d5a70" text-anchor="middle">0.005684</text>
+
+      <circle cx="348" cy="248" r="11" fill="#26518f"/>
+      <text x="348" y="290" fill="#16233b" text-anchor="middle" font-weight="700">PRICED</text>
+      <text x="348" y="310" fill="#4d5a70" text-anchor="middle">0.001725</text>
+
+      <circle cx="600" cy="248" r="11" fill="#26518f"/>
+      <text x="600" y="290" fill="#16233b" text-anchor="middle" font-weight="700">FUNDED</text>
+      <text x="600" y="310" fill="#4d5a70" text-anchor="middle">0.002018</text>
+
+      <circle cx="852" cy="248" r="11" fill="#26518f"/>
+      <text x="852" y="290" fill="#16233b" text-anchor="middle" font-weight="700">SUBMITTED</text>
+      <text x="852" y="310" fill="#4d5a70" text-anchor="middle">0.000876</text>
+
+      <circle cx="1104" cy="248" r="13" fill="#1e7a4a"/>
+      <text x="1104" y="290" fill="#1e7a4a" text-anchor="middle" font-weight="700">PAID OUT</text>
+      <text x="1104" y="310" fill="#4d5a70" text-anchor="middle">0.001847</text>
+    </g>
+
+    <!-- the ticket -->
+    <g transform="translate(70,360)">
+      <rect x="10" y="12" width="620" height="322" rx="12" fill="#16233b" opacity="0.10"/>
+      <path d="M 20 0 H 600 Q 620 0 620 20 V 292 Q 620 312 600 312 H 20 Q 0 312 0 292 V 20 Q 0 0 20 0 Z"
+            fill="#f6eedc" stroke="#ddcda4" stroke-width="3"/>
+      <line x1="0" y1="58" x2="620" y2="58" stroke="#16233b" stroke-opacity="0.28" stroke-width="2" stroke-dasharray="6 6"/>
+      <circle cx="0" cy="58" r="9" fill="#e8ebef"/><circle cx="620" cy="58" r="9" fill="#e8ebef"/>
+
+      <text x="28" y="38" fill="#16233b" font-size="13.5" letter-spacing="2.6" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">THE DELIVERABLE</text>
+
+      <g font-size="13.5" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+        <text x="28" y="96" fill="#4d5a70" letter-spacing="1.6">AGENT</text>
+        <text x="592" y="96" fill="#16233b" text-anchor="end">Research Brief · identity #856068</text>
+        <line x1="28" y1="112" x2="592" y2="112" stroke="#16233b" stroke-opacity="0.18"/>
+
+        <text x="28" y="142" fill="#4d5a70" letter-spacing="1.6">BUYER</text>
+        <text x="592" y="142" fill="#16233b" text-anchor="end">0x9b87Aa18…F7e23 · nonce 0</text>
+        <line x1="28" y1="158" x2="592" y2="158" stroke="#16233b" stroke-opacity="0.18"/>
+
+        <text x="28" y="188" fill="#4d5a70" letter-spacing="1.6">DIGEST</text>
+        <text x="592" y="188" fill="#16233b" text-anchor="end">0x40fde697…5dd8 — on chain</text>
+        <line x1="28" y1="204" x2="592" y2="204" stroke="#16233b" stroke-opacity="0.18"/>
+
+        <text x="28" y="234" fill="#4d5a70" letter-spacing="1.6">VERDICT</text>
+        <text x="592" y="234" fill="#1e7a4a" text-anchor="end" font-weight="700">approved · judge-v1</text>
+        <line x1="28" y1="250" x2="592" y2="250" stroke="#16233b" stroke-opacity="0.18"/>
+
+        <text x="28" y="278" fill="#4d5a70" letter-spacing="1.6">RELEASED</text>
+        <text x="592" y="278" fill="#1d5da6" text-anchor="end" font-weight="700">1.000000 USDC to the agent</text>
+      </g>
+    </g>
+
+    <!-- receipt panel -->
+    <g transform="translate(740,360)">
+      <rect x="0" y="0" width="390" height="290" rx="10" fill="#fcfcfa" stroke="#16233b" stroke-opacity="0.18" stroke-width="2"/>
+      <text x="26" y="42" fill="#16233b" font-size="13.5" letter-spacing="2.6" font-weight="700"
+            font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">WHAT IT COST</text>
+
+      <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5">
+        <text x="26" y="88" fill="#4d5a70">escrow released</text>
+        <text x="364" y="88" fill="#16233b" text-anchor="end">1.000000</text>
+        <text x="26" y="120" fill="#4d5a70">total gas, all five</text>
+        <text x="364" y="120" fill="#16233b" text-anchor="end">0.012150</text>
+        <line x1="26" y1="140" x2="364" y2="140" stroke="#16233b" stroke-opacity="0.28" stroke-dasharray="5 5"/>
+        <text x="26" y="172" fill="#16233b" font-weight="700">overhead</text>
+        <text x="364" y="172" fill="#1d5da6" text-anchor="end" font-weight="700">1.2%</text>
+      </g>
+
+      <rect x="26" y="200" width="338" height="62" rx="6" fill="#f6eedc" stroke="#ddcda4" stroke-width="2"/>
+      <text x="46" y="226" fill="#16233b" font-size="13">Nobody at Stubly ever held it.</text>
+      <text x="46" y="248" fill="#4d5a70" font-size="13">Circle's contract did.</text>
+    </g>
+
+    <g fill="#2775ca" opacity="0.4">
+      <circle cx="40" cy="726" r="4"/><circle cx="80" cy="726" r="4"/><circle cx="120" cy="726" r="4"/>
+      <circle cx="160" cy="726" r="4"/><circle cx="200" cy="726" r="4"/><circle cx="240" cy="726" r="4"/>
+      <circle cx="280" cy="726" r="4"/><circle cx="320" cy="726" r="4"/><circle cx="360" cy="726" r="4"/>
+      <circle cx="400" cy="726" r="4"/><circle cx="440" cy="726" r="4"/><circle cx="480" cy="726" r="4"/>
+      <circle cx="520" cy="726" r="4"/><circle cx="560" cy="726" r="4"/><circle cx="600" cy="726" r="4"/>
+      <circle cx="640" cy="726" r="4"/><circle cx="680" cy="726" r="4"/><circle cx="720" cy="726" r="4"/>
+      <circle cx="760" cy="726" r="4"/><circle cx="800" cy="726" r="4"/><circle cx="840" cy="726" r="4"/>
+      <circle cx="880" cy="726" r="4"/><circle cx="920" cy="726" r="4"/><circle cx="960" cy="726" r="4"/>
+      <circle cx="1000" cy="726" r="4"/><circle cx="1040" cy="726" r="4"/><circle cx="1080" cy="726" r="4"/>
+      <circle cx="1120" cy="726" r="4"/><circle cx="1160" cy="726" r="4"/>
+    </g>
+  </g>
+  <rect x="0.5" y="0.5" width="1199" height="749" rx="18" fill="none" stroke="#16233b" stroke-opacity="0.18"/>
+</svg>
