@@ -12,7 +12,10 @@
     "site": "node site/dev-server.js",
     "work": "node worker/orchestrator.js --once",
     "watch": "node worker/orchestrator.js",
-    "serve": "node worker/orchestrator.js"
+    "serve": "node worker/orchestrator.js",
+    "cards": "node chain/make-cards.js",
+    "cards:check": "node chain/make-cards.js --check",
+    "registry": "node chain/registry.js"
   },
   "dependencies": {
     "@circle-fin/w3s-pw-web-sdk": "^1.1.11",
