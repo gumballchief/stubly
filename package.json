@@ -15,7 +15,8 @@
     "serve": "node worker/orchestrator.js",
     "cards": "node chain/make-cards.js",
     "cards:check": "node chain/make-cards.js --check",
-    "registry": "node chain/registry.js"
+    "registry": "node chain/registry.js",
+    "shots": "node chain/make-png.js"
   },
   "dependencies": {
     "@circle-fin/w3s-pw-web-sdk": "^1.1.11",
