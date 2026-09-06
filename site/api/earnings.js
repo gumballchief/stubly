@@ -14,22 +14,20 @@
  */
 
 const { Interface, zeroPadValue, formatUnits } = require("ethers");
-const { CFG, JOB_STATUS, sendJson, provider, jobsContract } = require("./_shared");
+const { cfg, JOB_STATUS, sendJson, provider, jobsContract } = require("./_shared");
 
 const IFACE = new Interface([
   "event JobCreated(uint256 indexed jobId, address indexed client, address indexed provider, address evaluator, uint256 expiredAt, address hook)",
 ]);
 
-const EXPLORER_LOGS = "https://testnet.arcscan.app/api";
-
 /** Pull JobCreated logs where `address` sits in the given indexed position. */
-async function logsFor(address, position, latest) {
+async function logsFor(C, address, position, latest) {
   const topic0 = IFACE.getEvent("JobCreated").topicHash;
   const topicN = zeroPadValue(address, 32);
   const from = Math.max(0, latest - 400_000);
   const url =
-    `${EXPLORER_LOGS}?module=logs&action=getLogs&fromBlock=${from}&toBlock=latest` +
-    `&address=${CFG.ERC8183}&topic0=${topic0}&topic${position}=${topicN}&topic0_${position}_opr=and`;
+    `${C.EXPLORER_API}?module=logs&action=getLogs&fromBlock=${from}&toBlock=latest` +
+    `&address=${C.ERC8183}&topic0=${topic0}&topic${position}=${topicN}&topic0_${position}_opr=and`;
   const r = await fetch(url, { signal: AbortSignal.timeout(14_000) });
   const data = await r.json().catch(() => ({}));
   return Array.isArray(data.result) ? data.result : [];
@@ -45,10 +43,11 @@ module.exports = async (req, res) => {
       return sendJson(res, 400, { error: "pass ?address=0x… (40 hex characters)" });
     }
 
-    const latest = await provider().getBlockNumber();
+    const C = cfg(req);
+    const latest = await provider(C).getBlockNumber();
     const [asProvider, asClient] = await Promise.all([
-      logsFor(address, 3, latest), // topic3 = provider
-      logsFor(address, 2, latest), // topic2 = client
+      logsFor(C, address, 3, latest), // topic3 = provider
+      logsFor(C, address, 2, latest), // topic2 = client
     ]);
 
     const ids = [
@@ -56,7 +55,7 @@ module.exports = async (req, res) => {
       ...asClient.map((l) => ({ id: jobIdOf(l), side: "spent" })),
     ];
 
-    const jobs = jobsContract();
+    const jobs = jobsContract(C);
     const rows = [];
     for (const { id, side } of ids) {
       try {

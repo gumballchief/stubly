@@ -16,7 +16,7 @@
  */
 
 const { Contract, parseUnits } = require("ethers");
-const { CFG, CATALOG, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
+const { cfg, CATALOG, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
 const { loadWallet } = require("../../chain/config");
 
 const SET_BUDGET_ABI = ["function setBudget(uint256 jobId, uint256 amount, bytes optParams)"];
@@ -35,15 +35,15 @@ async function readBody(req) {
    filesystem. Reading the env var directly here meant quoting worked in
    production and refused everywhere else, so nothing could be run end to end
    locally without deploying it first. */
-let _signer = null;
-async function providerSigner() {
+const _signers = {};
+async function providerSigner(C) {
   /* loadWallet with no provider hands back a plain Wallet. That matters: given
      one it returns a NonceManager, which keeps its own idea of the next nonce —
      and this key is also used by /api/settle and the worker, so a second cached
      counter produces "nonce has already been used" the moment two of them are
      in flight. Let the RPC assign nonces and there is nothing to disagree with. */
-  if (!_signer) _signer = loadWallet("provider").connect(provider());
-  return _signer;
+  if (!_signers[C.KEY]) _signers[C.KEY] = loadWallet(C.PROVIDER_KEY).connect(provider(C));
+  return _signers[C.KEY];
 }
 
 /* One function, two doors. Vercel's Hobby plan allows 12 serverless functions and
@@ -61,12 +61,13 @@ module.exports = async (req, res) => {
     const { jobId } = await readBody(req);
     if (!/^\d+$/.test(String(jobId || ""))) return sendJson(res, 400, { error: "numeric jobId required" });
 
-    const jobs = jobsContract();
+    const C = cfg(req);
+    const jobs = jobsContract(C);
     const j = await jobs.getJob(BigInt(jobId));
 
     if (j.client === "0x0000000000000000000000000000000000000000") return sendJson(res, 404, { error: "no such job" });
     // Only ever quote our own shelf.
-    if (j.provider.toLowerCase() !== CFG.PROVIDER_WALLET.toLowerCase()) {
+    if (j.provider.toLowerCase() !== C.PROVIDER_WALLET.toLowerCase()) {
       return sendJson(res, 200, { ok: false, reason: "not one of ours" });
     }
     if (await jobs.jobHasBudget(BigInt(jobId))) {
@@ -83,8 +84,8 @@ module.exports = async (req, res) => {
     const price = agent && CATALOG[agent]?.priceUsdc;
     if (!price) return sendJson(res, 200, { ok: false, reason: "unknown agent" });
 
-    const signer = await providerSigner();
-    const c = new Contract(CFG.ERC8183, SET_BUDGET_ABI, signer);
+    const signer = await providerSigner(C);
+    const c = new Contract(C.ERC8183, SET_BUDGET_ABI, signer);
     const amount = parseUnits(String(price), 6);
 
     await c.setBudget.staticCall(jobId, amount, "0x"); // fail before spending gas

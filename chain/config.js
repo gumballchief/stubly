@@ -17,7 +17,7 @@ const CFG = {
   ERC8183: process.env.ERC8183_ADDRESS || "0x0747EEf0706327138c69792bF28Cd525089e4583",
   USDC: process.env.USDC_ADDRESS || "0x3600000000000000000000000000000000000000",
   EXPLORER_API: process.env.EXPLORER_API || "https://testnet.arcscan.app/api/v2",
-  EXPLORER: "https://testnet.arcscan.app",
+  EXPLORER: process.env.EXPLORER || "https://testnet.arcscan.app",
 };
 
 // Minimal ABI from Circle's ERC-8183 quickstart. The verified on-chain ABI

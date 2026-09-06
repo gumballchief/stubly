@@ -6,12 +6,12 @@
  * short-lived user tokens and challenge ids. Actions:
  *
  *   POST /api/circle  {action:"start", userId?}   → create user (if new) + user token
- *                                                    + initialize ARC-TESTNET wallet challenge
+ *                                                    + initialize the wallet challenge on the selected chain
  *   POST /api/circle  {action:"token", userId}    → fresh user token for an existing user
  *   POST /api/circle  {action:"wallets", userToken} → list the user's wallets
  */
 
-const { sendJson, CFG } = require("./_shared");
+const { sendJson, cfg } = require("./_shared");
 
 const BASE = "https://api.circle.com/v1/w3s";
 
@@ -55,7 +55,7 @@ module.exports = async (req, res) => {
           authorization: `Bearer ${process.env.CIRCLE_API_KEY}`,
           "X-User-Token": tok.userToken,
         },
-        body: JSON.stringify({ idempotencyKey: crypto.randomUUID(), blockchains: ["ARC-TESTNET"] }),
+        body: JSON.stringify({ idempotencyKey: crypto.randomUUID(), blockchains: [cfg(req).CIRCLE_CHAIN] }),
         signal: AbortSignal.timeout(15_000),
       });
       const initData = await initRes.json().catch(() => ({}));
@@ -116,12 +116,13 @@ module.exports = async (req, res) => {
       const topic0 = iface.getEvent("JobCreated").topicHash;
       // ~4 blocks/sec on Arc: 200k blocks ≈ the last ~14 hours, plenty for a hire session
       const { provider } = require("./_shared");
-      const latest = await provider().getBlockNumber();
-      const url = `https://testnet.arcscan.app/api?module=logs&action=getLogs&fromBlock=${Math.max(0, latest - 200_000)}&toBlock=latest` +
-        `&address=${CFG.ERC8183}&topic0=${topic0}&topic2=${zeroPadValue(client, 32)}&topic0_2_opr=and`;
+      const C = cfg(req);
+      const latest = await provider(C).getBlockNumber();
+      const url = `${C.EXPLORER_API}?module=logs&action=getLogs&fromBlock=${Math.max(0, latest - 200_000)}&toBlock=latest` +
+        `&address=${C.ERC8183}&topic0=${topic0}&topic2=${zeroPadValue(client, 32)}&topic0_2_opr=and`;
       const r = await fetch(url, { signal: AbortSignal.timeout(12_000) });
       const data = await r.json().catch(() => ({}));
-      const providerTopic = zeroPadValue(CFG.PROVIDER_WALLET, 32).toLowerCase();
+      const providerTopic = zeroPadValue(C.PROVIDER_WALLET, 32).toLowerCase();
       const ours = (Array.isArray(data.result) ? data.result : [])
         .filter((l) => (l.topics?.[3] || "").toLowerCase() === providerTopic);
       if (!ours.length) return sendJson(res, 200, { jobId: null });

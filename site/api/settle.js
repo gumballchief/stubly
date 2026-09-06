@@ -19,7 +19,7 @@
  * a different agent or a different price than the catalog says.
  */
 
-const { CFG, CATALOG, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
+const { cfg, CATALOG, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
 const { loadWallet } = require("../../chain/config");
 const jobsLib = require("../../chain/jobs");
 const { judge } = require("../../worker/judge");
@@ -63,9 +63,10 @@ module.exports = async (req, res) => {
     const { jobId } = await readBody(req);
     if (!/^\d+$/.test(String(jobId || ""))) return sendJson(res, 400, { error: "numeric jobId required" });
 
-    const j = await jobsContract().getJob(BigInt(jobId));
+    const C = cfg(req);
+    const j = await jobsContract(C).getJob(BigInt(jobId));
     if (j.client === "0x0000000000000000000000000000000000000000") return sendJson(res, 404, { error: "no such job" });
-    if (j.provider.toLowerCase() !== CFG.PROVIDER_WALLET.toLowerCase()) {
+    if (j.provider.toLowerCase() !== C.PROVIDER_WALLET.toLowerCase()) {
       return sendJson(res, 200, { ok: false, reason: "not one of ours" });
     }
 
@@ -86,9 +87,9 @@ module.exports = async (req, res) => {
     const agent = agentKey && AGENTS[agentKey];
     if (!agent || !CATALOG[agentKey]) return sendJson(res, 200, { ok: false, reason: "unknown agent" });
 
-    const prov = provider();
-    const providerSigner = loadWallet("provider", prov);
-    const evaluatorSigner = loadWallet("evaluator", prov);
+    const prov = provider(C);
+    const providerSigner = loadWallet(C.PROVIDER_KEY, prov);
+    const evaluatorSigner = loadWallet(C.EVALUATOR_KEY, prov);
 
     /* Funded → do the work and submit it. */
     let content = null;

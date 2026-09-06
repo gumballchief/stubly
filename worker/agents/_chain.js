@@ -6,7 +6,7 @@
  */
 
 const EXPLORER_API = process.env.EXPLORER_API || "https://testnet.arcscan.app/api/v2";
-const EXPLORER = "https://testnet.arcscan.app";
+const EXPLORER = process.env.EXPLORER || "https://testnet.arcscan.app";
 
 async function get(path, { timeout = 12_000 } = {}) {
   const r = await fetch(`${EXPLORER_API}${path}`, { signal: AbortSignal.timeout(timeout) });

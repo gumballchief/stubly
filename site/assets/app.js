@@ -5,7 +5,11 @@
    browser wallet. All addresses here are public constants. */
 
 /* EXACTLY the keys wallet_addEthereumChain accepts — extra keys make MetaMask
-   reject the whole request ("unsupported keys"), so never decorate this object. */
+   reject the whole request ("unsupported keys"), so never decorate this object.
+
+   The values are filled in from /api/catalog so the page always follows whichever
+   chain the server is serving. What is written here is the testnet fallback for
+   the moment before that first response lands — and for if it never does. */
 const ARC = {
   chainId: "0x4cef52", // 5042002
   chainName: "Arc Testnet",
@@ -13,6 +17,27 @@ const ARC = {
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
   blockExplorerUrls: ["https://testnet.arcscan.app"],
 };
+
+/** Circle Wallets names the network separately from the EVM chain id. */
+let CIRCLE_CHAIN = "ARC-TESTNET";
+
+
+/* Hydrate the two above from the server. Safe to call anywhere, any number of
+   times: it fetches once and every later caller awaits the same promise. A
+   failed fetch leaves the fallback in place rather than blocking a hire. */
+let _chainReady = null;
+function chainReady() {
+  if (!_chainReady) {
+    _chainReady = api("/api/catalog").then((cat) => {
+      if (cat && cat.chain) {
+        if (cat.chain.addChain) Object.assign(ARC, cat.chain.addChain);
+        if (cat.chain.circleChain) CIRCLE_CHAIN = cat.chain.circleChain;
+      }
+      return ARC;
+    }).catch(() => ARC);
+  }
+  return _chainReady;
+}
 
 const IFACE_JOBS = [
   "function createJob(address provider, address evaluator, uint256 expiredAt, string description, address hook) returns (uint256)",
@@ -42,7 +67,7 @@ const STANDING_ALLOWANCE = String(100 * 1e6);
 /** Current USDC allowance the escrow holds for this wallet, read from chain. */
 async function readAllowance(cat, owner) {
   try {
-    const p = new ethers.JsonRpcProvider(ARC.rpcUrls[0]);
+    const p = new ethers.JsonRpcProvider((cat.chain && cat.chain.addChain.rpcUrls[0]) || ARC.rpcUrls[0]);
     const usdc = new ethers.Contract(cat.usdc, IFACE_USDC, p);
     return await usdc.allowance(owner, cat.contract);
   } catch { return 0n; }
@@ -133,6 +158,7 @@ async function connectWallet(log) {
   const eth = chosen.provider;
   log(`using ${chosen.info.name}…`);
   const [addr] = await eth.request({ method: "eth_requestAccounts" });
+  await chainReady();
   const current = await eth.request({ method: "eth_chainId" });
   if (current.toLowerCase() !== ARC.chainId) {
     log(`switching ${chosen.info.name} to ${ARC.chainName}…`);
@@ -254,7 +280,8 @@ async function initHire() {
       const t = await postApi({ action: "token", userId });
       if (t.error) throw new Error(t.error);
       const w = await postApi({ action: "wallets", userToken: t.userToken });
-      const wallet = (w.wallets || []).find((x) => x.blockchain === "ARC-TESTNET");
+      await chainReady();
+      const wallet = (w.wallets || []).find((x) => x.blockchain === CIRCLE_CHAIN);
       if (!wallet) throw new Error("no Arc wallet found for this account — create one at /wallet");
       account = wallet.address; mode = "circle";
       circleCtx = { userToken: t.userToken, encryptionKey: t.encryptionKey, walletId: wallet.id, appId: t.appId };
@@ -459,7 +486,7 @@ async function initJob() {
   const id = new URLSearchParams(location.search).get("id");
   if (!id) { $("#job-main").innerHTML = "<p>No job number in the address. Open a work order like <code>/job?id=161321</code>.</p>"; return; }
   $("#t-no").textContent = `#${id}`;
-  const bc = $("#barcode"); if (bc) { renderBarcode(bc, id); $("#barcode-label").textContent = `ARC·5042002·JOB·${id}`; }
+  const bc = $("#barcode"); if (bc) { renderBarcode(bc, id); $("#barcode-label").textContent = `ARC·${parseInt(ARC.chainId, 16)}·JOB·${id}`; }
   let lastStatus = -1;
 
   let catalogCache = null;
@@ -844,7 +871,8 @@ async function initCrew() {
       const t = await postApi({ action: "token" });
       if (t.error) throw new Error(t.error);
       const w = await postApi({ action: "wallets", userToken: t.userToken });
-      const wallet = (w.wallets || []).find((x) => x.blockchain === "ARC-TESTNET");
+      await chainReady();
+      const wallet = (w.wallets || []).find((x) => x.blockchain === CIRCLE_CHAIN);
       if (!wallet) throw new Error("no Arc wallet found for this account — create one at /wallet");
       account = wallet.address; mode = "circle";
       circleCtx = { userToken: t.userToken, encryptionKey: t.encryptionKey, walletId: wallet.id, appId: t.appId };
@@ -1026,3 +1054,5 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page === "agents") initAgents().catch((e) => { $("#count").textContent = e.message; });
   if (page === "crew") initCrew().catch((e) => { $("#plan-note").textContent = e.message; });
 });
+
+
