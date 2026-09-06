@@ -68,12 +68,12 @@ async function main() {
   if (DRY) return console.log("\ndry run: stopping before any chain write.\n");
 
   const prov = provider();
-  const client = loadWallet("client", prov);
+  const client = loadWallet(CFG.CLIENT_KEY, prov);
   /* chain/config's CFG holds chain constants only — the marketplace wallet
      addresses come from the keystores, not from it. Reading them off CFG gives
      undefined, which ethers reports as "unsupported addressable value". */
-  const providerAddr = loadWallet("provider", prov).address;
-  const evaluatorAddr = loadWallet("evaluator", prov).address;
+  const providerAddr = loadWallet(CFG.PROVIDER_KEY, prov).address;
+  const evaluatorAddr = loadWallet(CFG.EVALUATOR_KEY, prov).address;
   const { usdc } = await jobsLib.contracts(prov);
   const dec = await jobsLib.withRetry(() => usdc.decimals());
   const before = await jobsLib.withRetry(() => usdc.balanceOf(client.address));

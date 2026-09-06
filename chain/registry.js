@@ -80,7 +80,7 @@ async function assertChainMatches(prov, ids) {
 async function main() {
   const doRegister = process.argv.includes("--register");
   const prov = provider();
-  const signer = loadWallet("provider", prov);
+  const signer = loadWallet(CFG.PROVIDER_KEY, prov);
   const identity = new Contract(REGISTRY.identity, IDENTITY_ABI, signer);
 
   const ids = loadIds();

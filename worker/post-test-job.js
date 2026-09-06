@@ -9,7 +9,7 @@
  */
 
 const { parseUnits } = require("ethers");
-const { provider, loadWallet } = require("../chain/config");
+const { CFG, provider, loadWallet } = require("../chain/config");
 const jobsLib = require("../chain/jobs");
 const CATALOG = require("./catalog");
 
@@ -22,9 +22,9 @@ async function main() {
   const input = { [CATALOG[agent].input.field]: arg };
 
   const prov = provider();
-  const client = loadWallet("client", prov);
-  const providerW = loadWallet("provider");   // address only, no signing
-  const evaluator = loadWallet("evaluator");  // address only, no signing
+  const client = loadWallet(CFG.CLIENT_KEY, prov);
+  const providerW = loadWallet(CFG.PROVIDER_KEY);   // address only, no signing
+  const evaluator = loadWallet(CFG.EVALUATOR_KEY);  // address only, no signing
 
   const { usdc } = await jobsLib.contracts(prov);
   const decimals = await jobsLib.withRetry(() => usdc.decimals());
@@ -38,7 +38,7 @@ async function main() {
   });
   console.log(`jobId=${jobId}`);
 
-  const providerSigner = loadWallet("provider", prov);
+  const providerSigner = loadWallet(CFG.PROVIDER_KEY, prov);
   await jobsLib.setBudget(providerSigner, jobId, budget);
   await jobsLib.fund(client, jobId, budget);
   console.log(`job ${jobId} funded — run: node worker/orchestrator.js --once`);

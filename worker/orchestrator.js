@@ -194,8 +194,8 @@ async function processJob(jobId, ctx) {
 
 async function pass() {
   const prov = provider();
-  const providerSigner = loadWallet("provider", prov);
-  const evaluatorSigner = loadWallet("evaluator", prov);
+  const providerSigner = loadWallet(CFG.PROVIDER_KEY, prov);
+  const evaluatorSigner = loadWallet(CFG.EVALUATOR_KEY, prov);
   const { jobs } = await jobsLib.contracts(prov);
   const state = loadState();
 

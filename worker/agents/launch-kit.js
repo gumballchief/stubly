@@ -55,7 +55,7 @@ async function run(input) {
   if (product.length < 10 || product.length > 500) throw new Error("describe the product in 10–500 chars");
 
   const prov = provider();
-  const wallets = { agentWallet: loadWallet("provider", prov), evaluator: loadWallet("evaluator", prov) };
+  const wallets = { agentWallet: loadWallet(CFG.PROVIDER_KEY, prov), evaluator: loadWallet(CFG.EVALUATOR_KEY, prov) };
   const { usdc } = await jobsLib.contracts(prov);
   const decimals = await jobsLib.withRetry(() => usdc.decimals());
   const budget = parseUnits(SUB_BUDGET, decimals);
