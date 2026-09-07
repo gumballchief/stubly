@@ -229,20 +229,37 @@ async function pass() {
 let lastPassAt = null;
 let lastPassError = null;
 let passes = 0;
+let passStartedAt = null;   // non-null only while a pass is actually in flight
+
+/* A pass that is doing something is not a stalled pass.
+   Health used to mean "finished a pass in the last 40 seconds". But a pass runs
+   the agents inline — the model alone is allowed 240s, and every on-chain step
+   waits for a confirmation — so the worker reported 503 exactly while it was
+   busy, and the host health-check restarted it mid-job. The busier it got, the
+   more often it happened. Health now means: either a pass is in flight and has
+   not been running absurdly long, or one finished recently. A pass past the busy
+   limit is a genuine wedge and still fails. */
+const IDLE_LIMIT_MS = Math.max(POLL_MS * 6, 120_000);
+const BUSY_LIMIT_MS = 15 * 60_000;
 
 function serveHealth() {
   const port = Number(process.env.PORT || 0);
   if (!port) return;
   require("http")
     .createServer((req, res) => {
-      const age = lastPassAt ? Math.round((Date.now() - lastPassAt) / 1000) : null;
-      const healthy = age !== null && age < (POLL_MS / 1000) * 4;
-      res.writeHead(healthy || passes === 0 ? 200 : 503, { "content-type": "application/json" });
+      const now = Date.now();
+      const age = lastPassAt ? Math.round((now - lastPassAt) / 1000) : null;
+      const busyMs = passStartedAt ? now - passStartedAt : null;
+      const healthy = passes === 0 ? true
+        : busyMs !== null ? busyMs < BUSY_LIMIT_MS
+        : age !== null && age * 1000 < IDLE_LIMIT_MS;
+      res.writeHead(healthy ? 200 : 503, { "content-type": "application/json" });
       res.end(JSON.stringify({
         ok: healthy || passes === 0,
         chainId: CFG.CHAIN_ID,
         passes,
         secondsSinceLastPass: age,
+        busySeconds: busyMs === null ? null : Math.round(busyMs / 1000),
         pollSeconds: POLL_MS / 1000,
         lastError: lastPassError,
       }));
@@ -257,6 +274,7 @@ async function main() {
   console.log(`orchestrator ${DRY ? "(dry) " : ""}watching provider jobs on chain ${CFG.CHAIN_ID}`);
   serveHealth();
   do {
+    passStartedAt = Date.now();
     try {
       await pass();
       lastPassError = null;
@@ -265,6 +283,7 @@ async function main() {
       lastPassError = e.shortMessage || e.message;
       console.log(`[pass failed] ${lastPassError}`);
     }
+    passStartedAt = null;
     lastPassAt = Date.now();
     passes++;
     if (!ONCE) await new Promise((r) => setTimeout(r, POLL_MS));

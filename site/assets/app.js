@@ -73,6 +73,51 @@ async function readAllowance(cat, owner) {
   } catch { return 0n; }
 }
 
+/* Closing the tab.
+   The standing allowance is what lets a second order skip its approval, and it
+   outlives the visit — so there has to be a way to put it back to zero without
+   leaving the site. Escrow answers where the money sits; this answers what is
+   still allowed to move afterwards. The control only exists while there is
+   something to revoke, so a first-time buyer never sees it. */
+function wireRevoke(cat, get, log) {
+  const b = $("#btn-revoke");
+  if (!b) return;
+  const paint = async () => {
+    const { account } = get();
+    if (!account) { b.style.display = "none"; return; }
+    const a = await readAllowance(cat, account);
+    b.style.display = a > 0n ? "inline-block" : "none";
+    b.textContent = `Revoke ${(Number(a) / 1e6).toFixed(0)} USDC permission`;
+  };
+  b.addEventListener("click", async () => {
+    const { account, mode, walletEth, circleCtx } = get();
+    if (!account) return;
+    b.disabled = true;
+    try {
+      log("revoking the spending permission…");
+      if (mode === "circle") {
+        const ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
+          contractAddress: cat.usdc, abiFunctionSignature: "approve(address,uint256)", abiParameters: [cat.contract, "0"] });
+        if (ch.error || !ch.challengeId) throw new Error(ch.error || "no challenge returned");
+        await runChallenge(circleCtx, ch.challengeId);
+      } else {
+        const prov = new ethers.BrowserProvider(walletEth);
+        const usdc = new ethers.Contract(cat.usdc, IFACE_USDC, await prov.getSigner());
+        await (await usdc.approve(cat.contract, 0)).wait(1);
+      }
+      /* The PIN widget resolves on approval, not on the block — same wait the
+         approve path needs, for the same reason. */
+      for (let n = 0; n < 15 && (await readAllowance(cat, account)) > 0n; n++) {
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+      log("permission revoked — the next order will ask for it again", "ok");
+    } catch (e) { log(`✗ ${e.message}`, "bad"); }
+    finally { b.disabled = false; paint(); }
+  });
+  paint();
+  setInterval(paint, 15000);
+}
+
 const $ = (sel) => document.querySelector(sel);
 const fmt = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
@@ -260,6 +305,8 @@ async function initHire() {
     $("#ask").addEventListener("keydown", (e) => { if (e.key === "Enter") runAsk(); });
   }
 
+  wireRevoke(cat, () => ({ account, mode, walletEth, circleCtx }), log);
+
   $("#btn-connect").addEventListener("click", async () => {
     try {
       const w = await connectWallet(log);
@@ -300,6 +347,7 @@ async function initHire() {
     $("#btn-connect").textContent = "Connect wallet";
     $("#btn-create").disabled = true;
     $("#btn-disconnect").style.display = "none";
+    const rb = $("#btn-revoke"); if (rb) rb.style.display = "none";
     log("disconnected — pick any wallet to reconnect", "ok");
   });
 
@@ -855,6 +903,8 @@ async function initCrew() {
   $("#ask").addEventListener("keydown", (e) => { if (e.key === "Enter") runPlan(); });
 
   /* ————— wallets: same two doors as a single hire ————— */
+  wireRevoke(cat, () => ({ account, mode, walletEth, circleCtx }), log);
+
   $("#btn-connect").addEventListener("click", async () => {
     try {
       const w = await connectWallet(log);
@@ -867,8 +917,10 @@ async function initCrew() {
 
   $("#btn-pin").addEventListener("click", async () => {
     try {
+      const userId = localStorage.getItem("am_circle_user");
+      if (!userId) { log("no PIN wallet on this browser yet — create one first at /wallet", "bad"); return; }
       log("opening your PIN wallet…");
-      const t = await postApi({ action: "token" });
+      const t = await postApi({ action: "token", userId });
       if (t.error) throw new Error(t.error);
       const w = await postApi({ action: "wallets", userToken: t.userToken });
       await chainReady();
@@ -889,6 +941,7 @@ async function initCrew() {
     $("#btn-connect").textContent = "Connect wallet";
     $("#btn-hire").disabled = true;
     $("#btn-disconnect").style.display = "none";
+    const rb = $("#btn-revoke"); if (rb) rb.style.display = "none";
   });
 
   /* ————— place one order ————— */
@@ -992,6 +1045,37 @@ async function initCrew() {
     return jobId;
   }
 
+  /* ————— the work itself, in the row that ordered it —————
+     A crew can be five reports, so they arrive folded and the first one opens
+     itself: something to read straight away without five clicks. The order page
+     is still one click off for the on-chain proof. The worker publishes the file
+     a moment after the escrow settles, so this waits for it rather than assuming. */
+  async function showResult(i, jobId) {
+    const row = $(`.crew-row[data-i="${i}"]`);
+    if (!row || row.querySelector(".crew-result")) return;
+    let md = null;
+    for (let n = 0; n < 12 && md === null; n++) {
+      try {
+        const r = await fetch(`/api/deliverable?id=${jobId}`);
+        if (r.ok && r.headers.get("content-type")?.includes("markdown")) { md = await r.text(); break; }
+      } catch { /* keep waiting */ }
+      await new Promise((s) => setTimeout(s, 5000));
+    }
+    if (!md) return;
+    const first = !$(".crew-result");
+    const wrap = document.createElement("div");
+    wrap.className = "crew-result";
+    wrap.innerHTML = `<button type="button" class="crew-toggle"></button><div class="paper-doc crew-doc"></div>`;
+    const doc = wrap.querySelector(".crew-doc");
+    const btn = wrap.querySelector(".crew-toggle");
+    doc.innerHTML = mdToHtml(md);
+    const paint = () => { btn.textContent = doc.hidden ? "read the result" : "hide the result"; };
+    doc.hidden = !first;
+    paint();
+    btn.addEventListener("click", () => { doc.hidden = !doc.hidden; paint(); });
+    row.querySelector(".crew-state").insertAdjacentElement("afterend", wrap);
+  }
+
   /* ————— watch them finish ————— */
   const STAMP = { Completed: ["delivered · paid", "s-ok"], Rejected: ["failed · refunded", "s-bad"],
                   Expired: ["expired · refunded", "s-bad"], Submitted: ["judging…", "s-go"] };
@@ -1006,6 +1090,7 @@ async function initCrew() {
         if (["Completed", "Rejected", "Expired"].includes(j.statusText)) {
           const el = $(`[data-state="${i}"]`);
           if (el) el.innerHTML += ` · <a href="/job?id=${jobId}">open</a>`;
+          if (j.statusText === "Completed") showResult(i, jobId);
           return;
         }
       } catch { /* keep polling */ }
