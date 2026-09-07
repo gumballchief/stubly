@@ -24,6 +24,8 @@ const SITE_URL = process.env.SITE_URL || "https://stubly.org";
 
 /* A pass every 10s means anything past a couple of minutes is a stall, not a blip. */
 const STALE_PASS_SECONDS = 180;
+/* A single pass past this is wedged, not working. */
+const BUSY_LIMIT_SECONDS = 900;
 
 const problems = [];
 const note = (s) => console.log(s);
@@ -43,11 +45,19 @@ async function checkWorker() {
   if (Number(body.chainId) !== CFG.CHAIN_ID) {
     problems.push(`worker is on chain ${body.chainId}, expected ${CFG.CHAIN_ID}`);
   }
+  /* Mid-pass is not stale. A pass that is running an agent legitimately takes
+     minutes, so only an idle worker is judged on how long ago it last finished. */
   const since = Number(body.secondsSinceLastPass);
-  if (Number.isFinite(since) && since > STALE_PASS_SECONDS) {
-    problems.push(`worker last polled ${since}s ago (limit ${STALE_PASS_SECONDS}s)`);
+  const busy = Number(body.busySeconds);
+  if (Number.isFinite(busy)) {
+    if (busy > BUSY_LIMIT_SECONDS) problems.push(`worker stuck in one pass for ${busy}s (limit ${BUSY_LIMIT_SECONDS}s)`);
+    else note(`worker:   ok · ${body.passes} passes · busy ${busy}s on the current one`);
+  } else {
+    if (Number.isFinite(since) && since > STALE_PASS_SECONDS) {
+      problems.push(`worker last polled ${since}s ago (limit ${STALE_PASS_SECONDS}s)`);
+    }
+    note(`worker:   ok · ${body.passes} passes · last ${since}s ago`);
   }
-  note(`worker:   ok · ${body.passes} passes · last ${since}s ago`);
 }
 
 /* Liveness is /api/catalog, not /api/stats.

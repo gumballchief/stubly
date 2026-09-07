@@ -41,6 +41,12 @@
     text-transform:uppercase;color:var(--ink-soft);border-bottom:1px dashed var(--dash)}
   .crew-drop:hover{color:#B0243B;border-bottom-color:#B0243B}
   .crew-state{margin-top:6px;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+  .crew-result{margin-top:10px}
+  .crew-toggle{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+    background:none;border:0;border-bottom:1px solid var(--dash);color:var(--usdc-deep);cursor:pointer;padding:0 0 2px}
+  .crew-toggle:hover{border-bottom-color:var(--usdc-deep)}
+  .crew-doc{margin-top:12px;padding:22px 24px}
+  .crew-doc[hidden]{display:none}
   .s-wait{color:var(--ink-soft)} .s-go{color:#2775CA} .s-ok{color:#1E7F4C} .s-bad{color:#B0243B}
   .crew-total{display:flex;justify-content:space-between;align-items:baseline;
     border-top:3px solid var(--ink);margin-top:6px;padding-top:14px;
@@ -91,6 +97,7 @@
         <button class="btn" id="btn-pin" type="button">Use PIN wallet</button>
         <button class="btn btn-primary" id="btn-hire" type="button" disabled>Hire the crew</button>
         <button class="btn" id="btn-disconnect" type="button" style="display:none">Disconnect</button>
+        <button class="btn" id="btn-revoke" type="button" style="display:none" title="Set the escrow's USDC allowance back to zero">Revoke permission</button>
       </div>
 
       <div class="wallet-pick" id="wallet-pick" style="display:none" role="listbox" aria-label="Choose a wallet"></div>
