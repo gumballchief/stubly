@@ -135,8 +135,24 @@ async function processJob(jobId, ctx) {
       st.attempts = (st.attempts || 0) + 1;
       st.error = e.message;
       if (st.attempts >= 3) {
-        console.log(`  agent failed ${st.attempts}x: ${e.message} — giving up, job will expire to refund`);
-        st.phase = "agent-failed";
+        /* "The job will expire to refund" was wrong. Expiry is not a state the
+           chain reaches on its own — the buyer has to come back and claim it,
+           and nothing ever told them to. Orders #185730 and #185899 sat funded
+           for a day and a half while the money was there the whole time.
+           The judge can reject instead, and Circle's contract refunds on the
+           spot. The escrow is funded here by definition, so there is always
+           something to give back. If the reject itself fails the phase is left
+           alone deliberately: a refund that did not happen must never be
+           recorded as one that did. */
+        console.log(`  agent failed ${st.attempts}x: ${e.message} — rejecting so the buyer gets their money back now`);
+        try {
+          await jobsLib.reject(evaluatorSigner, jobId, `Agent failed after ${st.attempts} attempts: ${e.message}`);
+          st.phase = "agent-failed-refunded";
+          console.log("  buyer refunded");
+        } catch (re) {
+          st.error = `refund failed: ${re.shortMessage || re.message}`;
+          console.log(`  ${st.error} — retrying next pass`);
+        }
       } else {
         console.log(`  agent failed (attempt ${st.attempts}/3): ${e.message} — will retry next pass`);
       }
@@ -201,9 +217,13 @@ async function pass() {
 
   const latest = await findOurJobs(prov, jobs, providerSigner.address, state);
   const ctx = { jobs, providerSigner, evaluatorSigner, state }; // per-signer contract instances are made inside jobsLib
+  /* "agent-failed" is deliberately NOT skipped any more. It used to be a dead
+     end that left a funded escrow sitting there forever. Picking those up again
+     costs one more attempt and then refunds the buyer, so anything stranded by
+     the old behaviour heals itself on the next pass. */
   for (const jobId of Object.keys(state.jobs)) {
     const phase = state.jobs[jobId].phase;
-    if (["ignored-not-ours", "settled", "chain-completed", "chain-rejected", "chain-expired", "agent-failed"].includes(phase)) continue;
+    if (["ignored-not-ours", "settled", "chain-completed", "chain-rejected", "chain-expired", "agent-failed-refunded"].includes(phase)) continue;
     try { await processJob(jobId, ctx); } catch (e) { console.log(`[err] job ${jobId}: ${e.shortMessage || e.message}`); }
   }
   state.lastBlock = latest;
