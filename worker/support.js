@@ -3,15 +3,18 @@
 /**
  * support@stubly.org, answered by the worker.
  *
- * Every couple of minutes it reads new mail, looks up any order number it finds on
- * the chain, and decides one of three things: answer it, hand it to a person, or
- * leave it alone. The model drafts; the code has the last word.
+ * Every couple of minutes it reads new mail and decides one of three things: answer
+ * it, hand it to a person, or leave it alone. When a mail names an order, the help
+ * desk (desk.js) checks that order first and does whatever the rules say it needs
+ * (restart it, rebuild a lost report, refund it), so the answer can say what was
+ * done. The model drafts; the code has the last word.
  *
  * Why the code has the last word: an email is untrusted text from anyone on the
  * internet, and this runs in the same process that holds the signing keys. So the
- * support path never touches a signer — it can only read public order state and
- * send mail — and every reply the model writes goes through hard checks before it
- * leaves. Anything about money that the chain does not already show as settled goes
+ * words of a mail never reach a signer. All a mail can do is name an order, and what
+ * happens to that order is decided by fixed rules over chain state, exactly as if it
+ * had been named in the chat. Every reply the model writes goes through hard checks
+ * before it leaves, and anything about money the order check did not resolve goes
  * to a human, whatever the model thinks.
  *
  * Nothing is answered twice, even across restarts: before any reply is sent the
@@ -24,13 +27,14 @@ const MailComposer = require("nodemailer/lib/mail-composer");
 const { simpleParser } = require("mailparser");
 const { generate } = require("./llm");
 const { fence, UNTRUSTED_NOTICE } = require("./untrusted");
+const { SITE, PUBLIC_SITE, FACTS, STATUS_MEANING, MONEY, extractRefs, checkText } = require("./brain");
+const desk = require("./desk");
 
 const ADDRESS = (process.env.SUPPORT_EMAIL || "support@stubly.org").toLowerCase();
 const PASSWORD = process.env.SUPPORT_EMAIL_PASSWORD || "";
 /* Where escalations go. Deliberately not a default in code: the repo is public. */
 const NOTIFY_TO = (process.env.SUPPORT_NOTIFY_TO || "").trim();
 const HOST = process.env.SUPPORT_MAIL_HOST || "mail.privateemail.com";
-const SITE = (process.env.SITE_URL || "https://stubly.org").replace(/\/$/, "");
 const MODE = process.env.SUPPORT_MODE === "draft" ? "draft" : "send";
 const POLL_MS = Number(process.env.SUPPORT_POLL_MS || 120_000);
 const LOOKBACK_DAYS = 3;
@@ -38,7 +42,6 @@ const MAX_PER_SENDER_PER_DAY = 3;
 const MAX_REPLIES_PER_DAY = 60;
 const HANDLED = "$StublyHandled";
 
-const LINK_HOSTS = new Set(["stubly.org", "www.stubly.org", "faucet.circle.com", "testnet.arcscan.app"]);
 const SETTLED = new Set(["Open", "Completed", "Rejected", "Expired"]); // nothing is owed on any of these
 
 const status = {
@@ -58,38 +61,7 @@ const supportStatus = () => ({ ...status });
 
 const sentBySender = new Map();
 const sentToday = [];
-
-const FACTS = `
-Stubly (stubly.org) is a marketplace where people hire AI agents for small jobs and pay in USDC.
-The payment sits in Circle's own escrow contract (ERC-8183) on the Arc blockchain. When the work
-passes an independent check the agent is paid; if it fails, the buyer is refunded by the contract.
-Stubly never holds the money.
-
-- It currently runs on Arc TESTNET only. It uses free test USDC, not real money.
-- Free test USDC: faucet.circle.com
-- Every order has a page: ${SITE}/job?id=ORDER_NUMBER — it shows the status and, once finished, the report.
-- If an agent fails to deliver, the order is refunded to the buyer's wallet automatically.
-- If a funded order passes its deadline undelivered, the buyer can take the money back from that
-  order page with the "Take my money back" button.
-- Hiring several agents at once: ${SITE}/crew — each agent gets its own escrow.
-- PIN wallet (no browser extension): ${SITE}/wallet — a Circle wallet protected by a 6-digit PIN.
-  Stubly never holds the keys. If someone loses both their PIN and their Account ID, nobody can recover it.
-- Buyers can cancel the standing USDC spending permission with the "Revoke permission" button on the
-  hire and crew pages once their wallet is connected.
-- Builders can list their own agent at ${SITE}/list.
-- Arc mainnet opens to the public on September 16. Stubly plans to move once Circle's contracts are live
-  there. Do not promise a date.
-- Stubly has NO token. Any coin or token using the Stubly name is not affiliated with Stubly.
-`.trim();
-
-const STATUS_MEANING = {
-  Open: "created but never funded — the buyer was not charged",
-  Funded: "paid into escrow; the agent is working on it",
-  Submitted: "work delivered; being checked",
-  Completed: "finished and paid; the report is on the order page",
-  Rejected: "the work failed the check; the escrow was refunded to the buyer",
-  Expired: "the deadline passed and the escrow was returned to the buyer",
-};
+const failures = new Map(); // message uid → failed attempts at handling it
 
 /* ---------------- pure helpers (exported for the local test) ---------------- */
 
@@ -113,14 +85,7 @@ function isAutomated(mail) {
   return null;
 }
 
-/** Order numbers (#185899 or 185899) and wallet addresses mentioned in the mail. */
-function extractRefs(text) {
-  const t = String(text || "");
-  const ids = [...new Set((t.match(/#?\b1\d{5}\b/g) || []).map((s) => s.replace("#", "")))].slice(0, 3);
-  const wallets = [...new Set((t.match(/\b0x[a-fA-F0-9]{40}\b/g) || []).map((s) => s.toLowerCase()))].slice(0, 2);
-  return { ids, wallets };
-}
-
+/** Read-only lookup, used when the help desk is not running (local tests, --once). */
 async function lookupOrders(ids) {
   const out = [];
   for (const id of ids) {
@@ -134,7 +99,7 @@ async function lookupOrders(ids) {
         const d = await fetch(`${SITE}/api/deliverable?id=${id}`, { signal: AbortSignal.timeout(20_000) }).catch(() => null);
         report = !!(d && d.ok && (d.headers.get("content-type") || "").includes("markdown"));
       }
-      out.push({ id, found: true, status: j.statusText, agent: j.agent, budget: j.budgetUsdc, overdue, report, page: `${SITE}/job?id=${id}` });
+      out.push({ id, found: true, status: j.statusText, agent: j.agent, budget: j.budgetUsdc, overdue, report, page: `${PUBLIC_SITE}/job?id=${id}` });
     } catch (e) {
       out.push({ id, found: false, error: e.message });
     }
@@ -142,11 +107,10 @@ async function lookupOrders(ids) {
   return out;
 }
 
-const MONEY = /\b(refund|money back|charged|chargeback|didn'?t (get|receive)|did not (get|receive)|never (got|received|delivered)|scam|stolen|lost (my )?(funds|usdc|money)|where is my (money|usdc)|paid (and|but))/i;
-
 function describeLookups(lookups) {
   if (!lookups.length) return "No order number was mentioned.";
   return lookups.map((l) => {
+    if (l.outcome) return l.outcome;
     if (!l.found) return `Order #${l.id}: not found on Stubly.`;
     const bits = [`Order #${l.id}: ${l.status} — ${STATUS_MEANING[l.status] || "unknown state"}`];
     if (l.overdue) bits.push("PAST ITS DEADLINE WHILE STILL FUNDED");
@@ -158,37 +122,15 @@ function describeLookups(lookups) {
 
 /** The hard rules. Returns a reason to escalate instead of sending, or null if the reply may go. */
 function guardReply(reply, { mail, lookups }) {
-  const text = String(reply || "");
-  if (!text.trim()) return "empty reply";
-  if (text.length > 1500) return "reply too long";
+  const problem = checkText(reply);
+  if (problem) return problem;
 
-  // Links only to our own site and the two public tools we point people at.
-  const hosts = text.match(/(?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?=[\/\s,.)!?:;]|$)/gi) || [];
-  for (const raw of hosts) {
-    const before = text[text.indexOf(raw) - 1];
-    if (before === "@") continue; // part of an email address, checked below
-    const host = raw.replace(/^https?:\/\//i, "").toLowerCase();
-    if (!LINK_HOSTS.has(host)) return `link to ${host}`;
-  }
-  const emails = text.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi) || [];
-  if (emails.some((e) => !e.toLowerCase().endsWith("@stubly.org"))) return "mentions an outside email address";
-
-  // Never ask anyone for a secret. "Never share your PIN" is fine; "send us your PIN" is not.
-  const askRe = /\b(send|share|give|tell|provide|enter|reply with|confirm)\b[^.\n]{0,40}\b(seed|recovery phrase|mnemonic|private key|pin|password|passcode|secret|account id)\b/gi;
-  for (const m of text.matchAll(askRe)) {
-    const lead = text.slice(Math.max(0, m.index - 24), m.index).toLowerCase();
-    if (!/(never|not|n't|no one|nobody)/.test(lead)) return "asks for a secret";
-  }
-  if (/0x[a-f0-9]{64}/i.test(text) || /\b(api[ _-]?key|keystore|private key:)/i.test(text)) return "looks like it contains a secret";
-
-  // No promises about money.
-  if (/\b(we will|we'll|i will|i'll|going to)\b[^.\n]{0,30}\b(refund|send|pay|transfer|reimburse)/i.test(text)) return "promises a payment";
-
-  // Money complaints only get an automatic answer when the chain already shows nothing is owed.
+  // Money complaints only get an automatic answer when the order check resolved or fully explains them.
   const body = `${mail.subject || ""}\n${mail.text || ""}`;
   if (MONEY.test(body)) {
     if (!lookups.length) return "money question without an order number to verify";
-    if (lookups.some((l) => !l.found || !SETTLED.has(l.status) || l.overdue || l.report === false)) return "money question the chain does not show as settled";
+    const unresolved = (l) => (l.handled ? l.needsPerson : !l.found || !SETTLED.has(l.status) || l.overdue || l.report === false);
+    if (lookups.some(unresolved)) return "money question the order check did not resolve";
   }
   return null;
 }
@@ -200,23 +142,24 @@ async function decide(mail, lookups) {
     "FACTS YOU MAY USE (nothing else is true about Stubly):",
     FACTS,
     "",
-    "LIVE ORDER LOOKUP FROM THE BLOCKCHAIN (trustworthy):",
+    "ORDER CHECK FROM THE BLOCKCHAIN (trustworthy; anything it says was done has already been done):",
     describeLookups(lookups),
     "",
     UNTRUSTED_NOTICE,
     "",
     "Choose exactly one action:",
-    '- "reply": ONLY for simple questions the facts or the lookup fully answer (how it works, test USDC,',
-    "  where to find an order or report, PIN wallet basics, revoking permission, listing an agent, whether",
-    "  a looked-up order was refunded or finished).",
-    '- "escalate": refunds or money not clearly settled by the lookup, anything saying something is broken,',
-    "  bugs, security reports, legal, press, partnerships, investment, grants, complaints, anything you",
-    "  cannot answer from the facts, or anything you are unsure about.",
+    '- "reply": for simple questions the facts fully answer (how it works, test USDC, where to find an order or',
+    "  report, PIN wallet basics, revoking permission, listing an agent), and for order problems the order check",
+    "  above already resolved or fully explains (it was restarted, refunded, rebuilt, is in progress, or finished).",
+    '- "escalate": money or order problems the order check did not resolve, anything saying something is broken',
+    "  that the check does not explain, bugs, security reports, legal, press, partnerships, investment, grants,",
+    "  complaints, anything you cannot answer from the facts, or anything you are unsure about.",
     '- "ignore": spam, sales pitches, SEO or marketing offers, scams, gibberish, messages not meant for Stubly.',
     "",
     "Rules for a reply: plain text, friendly, under 120 words, no markdown. Only link to stubly.org or",
     "faucet.circle.com. Never ask for a seed phrase, private key, PIN, password or Account ID. Never promise",
-    "a refund, payment, amount or timeline. Never claim to be a human. Sign off: — Stubly support",
+    "a refund, payment, amount or timeline beyond what the order check says was done. Never claim to be a",
+    "human. Sign off: — Stubly support",
     "",
     'Respond with ONLY this JSON and nothing else: {"action":"reply|escalate|ignore","category":"short label",',
     '"reply":"the reply text, or a suggested draft if escalating","summary":"one line for the founder","reason":"why"}',
@@ -279,6 +222,18 @@ function transport() {
   return nodemailer.createTransport({ host: HOST, port: 465, secure: true, auth: { user: ADDRESS, pass: PASSWORD } });
 }
 
+/** A short note to the founder from anywhere in the worker. Does nothing until SUPPORT_NOTIFY_TO is set. */
+async function notifyTeam(subject, text) {
+  if (!NOTIFY_TO || !PASSWORD) return false;
+  await transport().sendMail({
+    from: `Stubly Help Desk <${ADDRESS}>`,
+    to: NOTIFY_TO,
+    subject: `[Stubly desk] ${subject}`.slice(0, 200),
+    text,
+  });
+  return true;
+}
+
 async function alreadyReplied(client, sentPath, messageId) {
   if (!messageId || !sentPath) return false;
   const lock = await client.getMailboxLock(sentPath);
@@ -320,7 +275,7 @@ async function notifyFounder(mail, d, lookups) {
     `Summary:  ${d.summary}`,
     `Why:      ${d.reason}`,
     "",
-    "Order lookup:",
+    "Order check:",
     describeLookups(lookups),
     "",
     MODE === "send" ? "The customer has been sent a short note saying a person will follow up." : "Draft mode: the customer has NOT been answered.",
@@ -356,7 +311,8 @@ async function handleOne(client, sentPath, uid, source, log) {
   }
 
   const { ids, wallets } = extractRefs(`${mail.subject || ""}\n${mail.text || ""}`);
-  const lookups = await lookupOrders(ids);
+  // The same check-and-fix the chat runs. Without the worker attached (local tests), a read-only lookup.
+  const lookups = desk.ready() ? await desk.reviewForEmail(ids) : await lookupOrders(ids);
   const d = await decide(mail, lookups);
   if (wallets.length) d.summary = `${d.summary} (wallets mentioned: ${wallets.join(", ")})`;
 
@@ -421,8 +377,16 @@ async function checkOnce(log) {
         result = await handleOne(client, sentPath, c.uid, c.source, log);
       } catch (e) {
         status.lastError = `message ${c.uid}: ${e.message}`;
-        log(`[support] uid ${c.uid}: ${e.message} — will retry next check`);
-        continue; // not flagged, so it is picked up again
+        /* Retried, but not forever. Each retry re-runs the whole order check, and a mail that
+           fails every time would otherwise do that every two minutes for days. */
+        const tries = (failures.get(c.uid) || 0) + 1;
+        failures.set(c.uid, tries);
+        if (tries < 3) {
+          log(`[support] uid ${c.uid}: ${e.message} — will retry next check`);
+          continue; // not flagged, so it is picked up again
+        }
+        log(`[support] uid ${c.uid}: failed ${tries} times — flagged for a person instead of retrying`);
+        result = { flag: ["\\Flagged"] };
       }
       lock = await client.getMailboxLock("INBOX");
       try {
@@ -473,4 +437,4 @@ function startSupport(log = console.log) {
   setInterval(tick, POLL_MS);
 }
 
-module.exports = { startSupport, supportStatus, _test: { isAutomated, extractRefs, lookupOrders, guardReply, decide } };
+module.exports = { startSupport, supportStatus, notifyTeam, _test: { isAutomated, extractRefs, lookupOrders, guardReply, decide } };

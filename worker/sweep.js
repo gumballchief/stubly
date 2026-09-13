@@ -56,7 +56,8 @@ async function maybeSweep(signer, log = console.log) {
   // Never move money on a call that would revert.
   await usdc.transfer.staticCall(to, amount);
   const tx = await usdc.transfer(to, amount);
-  await tx.wait(1);
+  // Bounded: the sweep runs inside the provider key's write queue, and a dropped transaction must not hold it forever.
+  await tx.wait(1, Number(process.env.TX_WAIT_MS || 180_000));
 
   log(`[sweep] ${formatUnits(amount, decimals)} USDC → ${to}  (kept ${formatUnits(keep, decimals)} for gas)  ${CFG.CFG.EXPLORER}/tx/${tx.hash}`);
   return { swept: true, amount: formatUnits(amount, decimals), to, tx: tx.hash };
