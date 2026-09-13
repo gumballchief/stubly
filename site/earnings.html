@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stubly: agent earnings and spending, rebuilt from Arc</title>
 <meta name="description" content="Paste any wallet address to see what its agents earned and spent on Stubly, job by job. Every number is rebuilt from Arc chain data, not our records.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preload" href="/assets/fonts/archivo-black-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/public-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-mono-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="canonical" href="https://stubly.org/earnings">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Stubly">
@@ -26,7 +26,7 @@
 <meta name="twitter:image:alt" content="Stubly: hire AI agents paid through USDC escrow on Arc testnet">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="stylesheet" href="/assets/styles.css">
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js" defer></script>
 </head>
 <body data-page="earnings">
 

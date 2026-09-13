@@ -232,7 +232,6 @@
   launch.type = "button";
   launch.setAttribute("aria-controls", "sd-panel");
   launch.setAttribute("aria-expanded", "false");
-  launch.setAttribute("aria-label", "Help desk");
   const perf = el("span", "sd-perf");
   perf.setAttribute("aria-hidden", "true");
   const launchLabel = el("span", "sd-launch-label");
@@ -240,7 +239,8 @@
   const badge = el("span", "sd-badge");
   badge.hidden = true;
   badge.setAttribute("aria-hidden", "true");
-  launch.append(perf, launchLabel, badge);
+  const unreadNote = el("span", "sd-sr"); // the button's name is its visible text; unread replies are added here
+  launch.append(perf, launchLabel, badge, unreadNote);
 
   const panel = el("section", "sd-panel");
   panel.id = "sd-panel";
@@ -394,7 +394,7 @@
     unread += 1;
     badge.textContent = unread > 9 ? "9+" : String(unread);
     badge.hidden = false;
-    launch.setAttribute("aria-label", `Help desk, ${unread} new ${unread === 1 ? "reply" : "replies"}`);
+    unreadNote.textContent = `, ${unread} new ${unread === 1 ? "reply" : "replies"}`;
   }
 
   function setOpen(open, focus = true) {
@@ -406,7 +406,7 @@
     if (open) {
       unread = 0;
       badge.hidden = true;
-      launch.setAttribute("aria-label", "Help desk");
+      unreadNote.textContent = "";
       renderAll();
       if (focus) setTimeout(() => input.focus(), 30);
     } else if (focus) {
