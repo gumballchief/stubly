@@ -446,6 +446,14 @@ function startSupport(log = console.log) {
   }
   status.enabled = true;
   log(`[support] watching ${ADDRESS} every ${Math.round(POLL_MS / 1000)}s (mode: ${MODE}, escalations: ${status.notify})`);
+
+  /* Reading the inbox proves the password; it does not prove replies can leave. Log in to
+     the outgoing server once at startup, so a broken send path shows on the health page
+     instead of surfacing the first time a customer is waiting on an answer. */
+  status.smtp = "checking";
+  transport().verify()
+    .then(() => { status.smtp = "ok"; })
+    .catch((e) => { status.smtp = `failed: ${e.message}`; log(`[support] outgoing mail check failed: ${e.message}`); });
   let running = false;
   const tick = async () => {
     if (running) return;
