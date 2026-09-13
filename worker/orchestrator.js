@@ -23,6 +23,7 @@ const CATALOG = require("./catalog");
 const { publishDeliverable, publishJudgeRecord } = require("./publish");
 const { judge } = require("./judge");
 const { maybeSweep } = require("./sweep");
+const { startSupport, supportStatus } = require("./support");
 
 // One roster, shared with the site's /api/settle. It is required statically in
 // ./agents/index.js so it survives bundling, and asserts itself against the
@@ -282,6 +283,7 @@ function serveHealth() {
         busySeconds: busyMs === null ? null : Math.round(busyMs / 1000),
         pollSeconds: POLL_MS / 1000,
         lastError: lastPassError,
+        support: supportStatus(),
       }));
     })
     .listen(port, () => console.log(`health endpoint on :${port}`));
@@ -293,6 +295,9 @@ async function main() {
   await assertChain(provider());
   console.log(`orchestrator ${DRY ? "(dry) " : ""}watching provider jobs on chain ${CFG.CHAIN_ID}`);
   serveHealth();
+  /* The support inbox runs beside the settlement loop, never inside it: a slow
+     email must not hold up a payout, and a slow payout must not hold up an email. */
+  if (!ONCE && !DRY) startSupport();
   do {
     passStartedAt = Date.now();
     try {
