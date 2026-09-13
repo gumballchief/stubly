@@ -40,8 +40,13 @@ const CFG = {
   CARD_PATH: process.env.CARD_PATH || "agents",
 };
 
-// Minimal ABI from Circle's ERC-8183 quickstart. The verified on-chain ABI
-// (fetched by abi.js) supersedes this at runtime; this is the offline fallback.
+/* The offline fallback, used whenever the explorer can't be reached (abi.js). The verified ABI
+   supersedes it at runtime, but a fallback that can't read an order is not a fallback: the worker
+   would keep running while every order failed, refunds included. So every function, event and
+   error the worker, the help desk and /api/settle touch is here, copied from the verified
+   implementation (AgenticCommerce). getJob's field order must match the verified struct exactly
+   (id, client, provider, evaluator, description, budget, expiredAt, status, hook): a wrong order
+   would misread every order's status. jobHasBudget is the contract's public mapping getter. */
 const ERC8183_ABI_MIN = [
   "function createJob(address provider, address evaluator, uint256 expiredAt, string description, address hook) returns (uint256)",
   "function setBudget(uint256 jobId, uint256 amount, bytes optParams)",
@@ -49,7 +54,25 @@ const ERC8183_ABI_MIN = [
   "function submit(uint256 jobId, bytes32 deliverable, bytes optParams)",
   "function complete(uint256 jobId, bytes32 reason, bytes optParams)",
   "function reject(uint256 jobId, bytes32 reason, bytes optParams)",
+  "function claimRefund(uint256 jobId)",
+  "function getJob(uint256 jobId) view returns (tuple(uint256 id, address client, address provider, address evaluator, string description, uint256 budget, uint256 expiredAt, uint8 status, address hook))",
+  "function jobHasBudget(uint256 jobId) view returns (bool)",
   "event JobCreated(uint256 indexed jobId, address indexed client, address indexed provider, address evaluator, uint256 expiredAt, address hook)",
+  "event JobFunded(uint256 indexed jobId, address indexed client, uint256 amount)",
+  "event JobSubmitted(uint256 indexed jobId, address indexed provider, bytes32 deliverable)",
+  "event JobCompleted(uint256 indexed jobId, address indexed evaluator, bytes32 reason)",
+  "event JobRejected(uint256 indexed jobId, address indexed rejector, bytes32 reason)",
+  "event JobExpired(uint256 indexed jobId)",
+  "event Refunded(uint256 indexed jobId, address indexed client, uint256 amount)",
+  "error InvalidJob()",
+  "error WrongStatus()",
+  "error Unauthorized()",
+  "error ZeroAddress()",
+  "error ExpiryTooShort()",
+  "error ZeroBudget()",
+  "error ProviderNotSet()",
+  "error FeesTooHigh()",
+  "error HookNotWhitelisted()",
 ];
 
 const ERC20_ABI = [
@@ -72,22 +95,30 @@ function provider() {
  * a stale nonce right after a confirmation, which surfaces as malformed
  * "could not coalesce" errors — local nonce tracking sidesteps that entirely.
  */
+const decrypted = new Map(); // keystore name → decrypted Wallet, see below
 function loadWallet(name, prov) {
   const pw = process.env.KEYSTORE_PASSWORD;
   if (!pw) throw new Error("KEYSTORE_PASSWORD not set in .env");
 
-  /* Locally the keystore is a file. On a host it can't be — the keystores are
-     gitignored, so nothing that deploys from the repo will find one. Fall back
-     to the same encrypted JSON handed in as base64, which keeps the "encrypted
-     keystore, never a bare key" rule intact wherever this runs. */
-  const file = path.join(__dirname, `${name}.keystore.json`);
-  const b64 = process.env[`${name.toUpperCase()}_KEYSTORE_B64`];
-  let json;
-  if (fs.existsSync(file)) json = fs.readFileSync(file, "utf8");
-  else if (b64) json = Buffer.from(b64, "base64").toString("utf8");
-  else throw new Error(`no keystore for "${name}" — run: npm run wallets, or set ${name.toUpperCase()}_KEYSTORE_B64`);
+  let w = decrypted.get(name);
+  if (!w) {
+    /* Locally the keystore is a file. On a host it can't be — the keystores are
+       gitignored, so nothing that deploys from the repo will find one. Fall back
+       to the same encrypted JSON handed in as base64, which keeps the "encrypted
+       keystore, never a bare key" rule intact wherever this runs. */
+    const file = path.join(__dirname, `${name}.keystore.json`);
+    const b64 = process.env[`${name.toUpperCase()}_KEYSTORE_B64`];
+    let json;
+    if (fs.existsSync(file)) json = fs.readFileSync(file, "utf8");
+    else if (b64) json = Buffer.from(b64, "base64").toString("utf8");
+    else throw new Error(`no keystore for "${name}" — run: npm run wallets, or set ${name.toUpperCase()}_KEYSTORE_B64`);
 
-  const w = Wallet.fromEncryptedJsonSync(json, pw);
+    /* Decrypting is deliberately slow (scrypt) and blocks the whole process while
+       it runs: settlement, the support inbox and the help desk chat all stall. So
+       each key is decrypted once per process, not once per pass. */
+    w = Wallet.fromEncryptedJsonSync(json, pw);
+    decrypted.set(name, w);
+  }
   if (!prov) return w;
   const managed = new NonceManager(w.connect(prov));
   managed.address = w.address; // convenience for balance checks and job params

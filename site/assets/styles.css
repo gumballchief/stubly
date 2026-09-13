@@ -301,6 +301,15 @@ footer { border-top: 2px solid var(--ink); margin-top: 30px; padding: 26px 0 40p
   .top nav { gap: 14px; }
 }
 
+/* Phones: the four nav links did not fit beside the wordmark, which made every page wider
+   than the screen, and anything pinned to the screen (the help desk) with it. The nav drops
+   under the wordmark instead. */
+@media (max-width: 560px) {
+  .top-inner { flex-wrap: wrap; row-gap: 0; padding: 10px 0 4px; }
+  .top nav { flex-wrap: wrap; gap: 0; margin-left: -10px; }
+  .top nav a { padding: 10px; font-size: 13.5px; }
+}
+
 /* Folded shelf on /hire — the browse-everything path, out of the way by default. */
 .shelf-fold summary::-webkit-details-marker { display: none; }
 .shelf-fold summary::after { content: " +"; font-weight: 700; }

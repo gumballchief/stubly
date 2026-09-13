@@ -23,7 +23,8 @@ const CATALOG = require("./catalog");
 const { publishDeliverable, publishJudgeRecord } = require("./publish");
 const { judge } = require("./judge");
 const { maybeSweep } = require("./sweep");
-const { startSupport, supportStatus } = require("./support");
+const { startSupport, supportStatus, notifyTeam } = require("./support");
+const desk = require("./desk");
 
 // One roster, shared with the site's /api/settle. It is required statically in
 // ./agents/index.js so it survives bundling, and asserts itself against the
@@ -36,11 +37,36 @@ const ONCE = process.argv.includes("--once");
 const DRY = process.argv.includes("--dry");
 const POLL_MS = Number(process.env.POLL_MS || 20_000);
 const LOOKBACK_BLOCKS = 20_000;
+/* "agent-failed" is deliberately NOT in this list any more. It used to be a dead
+   end that left a funded escrow sitting there forever. Picking those up again
+   refunds the buyer, so anything stranded by the old behaviour heals itself. */
+const DONE_PHASES = ["ignored-not-ours", "settled", "chain-completed", "chain-rejected", "chain-expired", "agent-failed-refunded", "refunded"];
+const nowSec = () => Math.floor(Date.now() / 1000);
 
 function loadState() {
   try { return JSON.parse(fs.readFileSync(STATE_FILE, "utf8")); } catch { return { lastBlock: 0, jobs: {} }; }
 }
 function saveState(s) { fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2)); }
+
+/* One copy of the state for the whole process. Each pass used to reload it from
+   disk and write it back whole, which was fine while the pass was the only thing
+   touching orders. The help desk works on orders too now, and a reload would
+   quietly throw away whatever it recorded in the meantime. */
+const STATE = loadState();
+
+/* One order, one worker at a time. The settlement pass and the help desk both work
+   on orders; without this they could run the same agent twice, or refund an order
+   while its delivery is being signed. */
+const jobLocks = new Map();
+function withJobLock(jobId, fn) {
+  const key = String(jobId);
+  const run = (jobLocks.get(key) || Promise.resolve()).then(() => fn());
+  const tail = run.then(() => {}, () => {});
+  jobLocks.set(key, tail);
+  tail.then(() => { if (jobLocks.get(key) === tail) jobLocks.delete(key); });
+  return run;
+}
+const jobBusy = (jobId) => jobLocks.has(String(jobId));
 
 async function findOurJobs(prov, jobs, providerAddr, state) {
   const latest = await jobsLib.withRetry(() => prov.getBlockNumber());
@@ -48,8 +74,8 @@ async function findOurJobs(prov, jobs, providerAddr, state) {
      lastBlock meant a worker that had been down for days replayed every block
      since it stopped — millions of them, 5,000 at a time — and could not see a
      live order until it finished. Anything older than this window is past its
-     600-second deadline and unsettleable anyway, so there is nothing to gain by
-     walking it. */
+     600-second deadline, and the help desk re-registers any older order someone
+     asks about, so there is nothing to gain by walking it. */
   const from = Math.max(state.lastBlock > 0 ? state.lastBlock + 1 : 0, latest - LOOKBACK_BLOCKS, 0);
   if (from > latest) return latest;
   const filter = jobs.filters.JobCreated(null, null, providerAddr);
@@ -91,6 +117,34 @@ function parseSpec(description) {
   return null;
 }
 
+/**
+ * Give an escrow back to its buyer, now.
+ *
+ * "The job will expire to refund" was wrong. Expiry is not a state the chain
+ * reaches on its own: the buyer has to come back and claim it, and nothing ever
+ * told them to. Orders #185730 and #185899 sat funded for a day and a half while
+ * the money was there the whole time. The judge can reject instead, and Circle's
+ * contract refunds the order's client on the spot, whatever the deadline.
+ *
+ * If the reject fails, the phase is left alone deliberately: a refund that did not
+ * happen must never be recorded as one that did, and the next pass tries again.
+ */
+async function refundNow(jobId, ctx, why) {
+  const st = ctx.state.jobs[jobId];
+  console.log(`[refund] job ${jobId}: ${why} — rejecting so the buyer gets their money back now`);
+  if (DRY) return;
+  try {
+    await jobsLib.reject(ctx.evaluatorSigner, jobId, `Refunded: ${why}`);
+    st.phase = "refunded";
+    st.refundReason = why;
+    console.log("  buyer refunded");
+  } catch (e) {
+    st.error = `refund failed: ${e.shortMessage || e.message}`;
+    console.log(`  ${st.error} — retrying next pass`);
+  }
+  saveState(ctx.state);
+}
+
 /* Judging lives in worker/judge.js — the single source of truth. */
 
 async function processJob(jobId, ctx) {
@@ -98,8 +152,9 @@ async function processJob(jobId, ctx) {
   const j = await jobsLib.withRetry(() => jobs.getJob(jobId));
   const status = JOB_STATUS[Number(j.status ?? j[7])] || "?";
   const description = j.description ?? j[4];
+  const expiredAt = Number(j.expiredAt ?? j[6]);
   const spec = parseSpec(description);
-  const st = state.jobs[jobId];
+  const st = state.jobs[jobId] || (state.jobs[jobId] = { phase: "seen" });
 
   // Sub-jobs are created, funded, delivered and settled inline by the agent that
   // hired them (see agents/launch-kit.js) — the main loop must not touch them.
@@ -125,6 +180,15 @@ async function processJob(jobId, ctx) {
   if (["Completed", "Rejected", "Expired"].includes(status)) { st.phase = `chain-${status.toLowerCase()}`; return; }
 
   if (status === "Funded" && st.phase !== "submitted") {
+    /* Refund first, work second. An order that can no longer be finished (the
+       agent keeps failing, its delivery will not record, or it is well past its
+       deadline) gets its money back before anything else is tried. This used to
+       live only inside the agent-failure branch, so a refund that failed once was
+       retried only after yet another agent run. The rules live in desk.js and are
+       shared with the help desk, so the two can never disagree about an order. */
+    const why = desk.refundReason({ status, now: nowSec(), expiredAt, attempts: st.attempts || 0, submitFails: st.submitFails || 0 });
+    if (why) return refundNow(jobId, ctx, why);
+
     console.log(`[work] job ${jobId} → agent "${spec.agent}"`);
     if (DRY) { console.log("  (dry) would run agent and submit"); return; }
 
@@ -132,31 +196,17 @@ async function processJob(jobId, ctx) {
     let deliverable;
     try {
       deliverable = await agent.run(spec.input || {});
+      // An empty report is a failure, not a delivery: submitting "" only gets it rejected later, unpaid and unrefunded.
+      if (!deliverable || typeof deliverable.content !== "string" || !deliverable.content.trim()) {
+        throw new Error("the agent returned an empty report");
+      }
     } catch (e) {
       st.attempts = (st.attempts || 0) + 1;
       st.error = e.message;
-      if (st.attempts >= 3) {
-        /* "The job will expire to refund" was wrong. Expiry is not a state the
-           chain reaches on its own — the buyer has to come back and claim it,
-           and nothing ever told them to. Orders #185730 and #185899 sat funded
-           for a day and a half while the money was there the whole time.
-           The judge can reject instead, and Circle's contract refunds on the
-           spot. The escrow is funded here by definition, so there is always
-           something to give back. If the reject itself fails the phase is left
-           alone deliberately: a refund that did not happen must never be
-           recorded as one that did. */
-        console.log(`  agent failed ${st.attempts}x: ${e.message} — rejecting so the buyer gets their money back now`);
-        try {
-          await jobsLib.reject(evaluatorSigner, jobId, `Agent failed after ${st.attempts} attempts: ${e.message}`);
-          st.phase = "agent-failed-refunded";
-          console.log("  buyer refunded");
-        } catch (re) {
-          st.error = `refund failed: ${re.shortMessage || re.message}`;
-          console.log(`  ${st.error} — retrying next pass`);
-        }
-      } else {
-        console.log(`  agent failed (attempt ${st.attempts}/3): ${e.message} — will retry next pass`);
-      }
+      saveState(state);
+      const giveUp = desk.refundReason({ status, now: nowSec(), expiredAt, attempts: st.attempts });
+      if (giveUp) return refundNow(jobId, ctx, `${giveUp} (${e.message})`);
+      console.log(`  agent failed (attempt ${st.attempts}/3): ${e.message} — will retry next pass`);
       return;
     }
 
@@ -171,7 +221,20 @@ async function processJob(jobId, ctx) {
     else console.log(`  (not published: ${pub.reason})`);
     saveState(state);
 
-    await jobsLib.submit(providerSigner, jobId, deliverable.content);
+    try {
+      await jobsLib.submit(providerSigner, jobId, deliverable.content);
+    } catch (e) {
+      /* A named revert means the order moved on (someone else delivered it), and
+         the next pass reads the new status. Anything else is a delivery that did
+         not record. That used to loop forever, re-running the agent each pass;
+         now three of them and the order is refunded. */
+      if (!e.revertName) {
+        st.submitFails = (st.submitFails || 0) + 1;
+        st.error = `submit failed: ${e.shortMessage || e.message}`;
+        saveState(state);
+      }
+      throw e;
+    }
     st.phase = "submitted"; st.hash = jobsLib.contentHash(deliverable.content); saveState(state);
     return;
   }
@@ -184,10 +247,18 @@ async function processJob(jobId, ctx) {
        And if both come up empty, stop. Judging an unread deliverable is not a
        verdict, it is a guaranteed rejection: every rule fails against "" and
        the agent loses a payment it earned. Better to leave the job Submitted
-       and try again than to reject work that might be perfectly good. */
+       and try again than to reject work that might be perfectly good.
+
+       But "try again" cannot mean forever. Once the deadline has passed and the
+       report is confirmed gone (missing twice, not merely slow), nothing is coming
+       back to judge, and the buyer is still out the money. Refund it. */
     let content = st.file && fs.existsSync(st.file) ? fs.readFileSync(st.file, "utf8") : "";
     if (!content) content = await fetchPublished(jobId);
     if (!content) {
+      if (nowSec() > expiredAt && (await desk.reportReadable(jobId)) === false) {
+        const why = desk.refundReason({ status, now: nowSec(), expiredAt, report: false });
+        if (why) return refundNow(jobId, ctx, why);
+      }
       console.log(`[judge] job ${jobId}: skipped — deliverable not readable yet, will retry`);
       return;
     }
@@ -209,35 +280,84 @@ async function processJob(jobId, ctx) {
   }
 }
 
-async function pass() {
+/** Everything that signs, built once per process: one nonce counter per key, and each keystore decrypted once.
+    The contract object in it is rebuilt at the start of every pass (see pass()). */
+async function makeContext() {
   const prov = provider();
   const providerSigner = loadWallet(CFG.PROVIDER_KEY, prov);
   const evaluatorSigner = loadWallet(CFG.EVALUATOR_KEY, prov);
   const { jobs } = await jobsLib.contracts(prov);
-  const state = loadState();
+  return { prov, jobs, providerSigner, evaluatorSigner, state: STATE };
+}
 
-  const latest = await findOurJobs(prov, jobs, providerSigner.address, state);
-  const ctx = { jobs, providerSigner, evaluatorSigner, state }; // per-signer contract instances are made inside jobsLib
-  /* "agent-failed" is deliberately NOT skipped any more. It used to be a dead
-     end that left a funded escrow sitting there forever. Picking those up again
-     costs one more attempt and then refunds the buyer, so anything stranded by
-     the old behaviour heals itself on the next pass. */
-  for (const jobId of Object.keys(state.jobs)) {
-    const phase = state.jobs[jobId].phase;
-    if (["ignored-not-ours", "settled", "chain-completed", "chain-rejected", "chain-expired", "agent-failed-refunded"].includes(phase)) continue;
-    try { await processJob(jobId, ctx); } catch (e) { console.log(`[err] job ${jobId}: ${e.shortMessage || e.message}`); }
+async function pass(ctx) {
+  /* Each key's nonce counter starts fresh every pass, as it did when the signers were rebuilt
+     per pass: /api/quote, /api/settle and Launch Kit sign with these keys from outside this
+     counter. Done inside each key's write queue, so it never lands in the middle of a write. */
+  for (const s of [ctx.providerSigner, ctx.evaluatorSigner]) await jobsLib.withKeyLock(s.address, async () => s.reset?.());
+
+  /* The contract object is rebuilt every pass, as it was before the signers became long-lived. Its
+     ABI comes from the explorer, and an explorer blip at boot hands back the offline fallback.
+     Holding one contract for the life of the process would freeze that blip in; rebuilding lets
+     the next pass pick the verified ABI up again. */
+  ctx.jobs = (await jobsLib.contracts(ctx.prov)).jobs;
+
+  const latest = await findOurJobs(ctx.prov, ctx.jobs, ctx.providerSigner.address, STATE);
+  let worked = 0;
+  let failed = 0;
+  let lastJobError = null;
+  for (const jobId of Object.keys(STATE.jobs)) {
+    if (DONE_PHASES.includes(STATE.jobs[jobId].phase)) continue;
+    // An order the help desk is working on right now is skipped, not waited on: the next pass picks it up.
+    if (jobBusy(jobId)) continue;
+    worked++;
+    try {
+      await withJobLock(jobId, () => processJob(jobId, ctx));
+    } catch (e) {
+      failed++;
+      lastJobError = `job ${jobId}: ${e.shortMessage || e.message}`;
+      console.log(`[err] ${lastJobError}`);
+    }
   }
-  state.lastBlock = latest;
-  saveState(state);
+  STATE.lastBlock = latest;
+  saveState(STATE);
 
   // Earnings do not sit on the signing wallet. No-op until SWEEP_TO is set.
+  // The sweep signs from the provider key too, so it waits its turn behind any refund or delivery.
   try {
-    const r = await maybeSweep(providerSigner);
-    if (r.swept) state.lastSweep = { at: new Date().toISOString(), amount: r.amount, tx: r.tx };
-    saveState(state);
+    const r = await jobsLib.withKeyLock(ctx.providerSigner.address, () => maybeSweep(ctx.providerSigner));
+    if (r.swept) STATE.lastSweep = { at: new Date().toISOString(), amount: r.amount, tx: r.tx };
+    saveState(STATE);
   } catch (e) {
     console.log(`[sweep] skipped: ${e.shortMessage || e.message}`);
   }
+  return { worked, failed, lastJobError };
+}
+
+/** Hand the help desk what it needs to act on orders: the same signers, state, locks and code path as the pass. */
+function attachDesk(ctx) {
+  desk.attach({
+    get jobs() { return ctx.jobs; }, // rebuilt every pass; the desk always reads the current one
+    providerSigner: ctx.providerSigner,
+    evaluatorSigner: ctx.evaluatorSigner,
+    providerAddr: ctx.providerSigner.address,
+    evaluatorAddr: ctx.evaluatorSigner.address,
+    state: STATE,
+    save: () => saveState(STATE),
+    AGENTS,
+    busy: jobBusy,
+    withJobLock,
+    // Work an order now instead of on the next pass. Same function as the pass, same lock.
+    tryRun: (jobId) => {
+      if (jobBusy(jobId)) return false;
+      if (!STATE.jobs[jobId]) STATE.jobs[jobId] = { phase: "seen" };
+      withJobLock(jobId, () => processJob(jobId, ctx))
+        .then(() => saveState(STATE))
+        .catch((e) => console.log(`[desk run] job ${jobId}: ${e.shortMessage || e.message}`));
+      return true;
+    },
+    notify: notifyTeam,
+  });
 }
 
 /**
@@ -268,6 +388,16 @@ function serveHealth() {
   if (!port) return;
   require("http")
     .createServer((req, res) => {
+      /* The help desk chat on stubly.org shares this server: /chat and /status are its routes,
+         everything else is health. This process also settles payouts, so nothing a request
+         does is allowed to throw out of here and take it down. */
+      try {
+        if (desk.handleHttp(req, res)) return;
+      } catch (e) {
+        console.log(`[http] ${e.message}`);
+        if (!res.headersSent) { res.writeHead(500, { "content-type": "application/json" }); res.end('{"error":"internal"}'); }
+        return;
+      }
       const now = Date.now();
       const age = lastPassAt ? Math.round((now - lastPassAt) / 1000) : null;
       const busyMs = passStartedAt ? now - passStartedAt : null;
@@ -284,6 +414,7 @@ function serveHealth() {
         pollSeconds: POLL_MS / 1000,
         lastError: lastPassError,
         support: supportStatus(),
+        desk: desk.deskStatus(),
       }));
     })
     .listen(port, () => console.log(`health endpoint on :${port}`));
@@ -298,11 +429,22 @@ async function main() {
   /* The support inbox runs beside the settlement loop, never inside it: a slow
      email must not hold up a payout, and a slow payout must not hold up an email. */
   if (!ONCE && !DRY) startSupport();
+  let ctx = null;
   do {
     passStartedAt = Date.now();
     try {
-      await pass();
-      lastPassError = null;
+      /* Built inside the loop, not before it: a missing keystore or a flaky RPC at
+         boot should show up as a failed pass on the health page and heal on the
+         next one, not crash the process into a restart loop. */
+      if (!ctx) {
+        ctx = await makeContext();
+        if (!ONCE && !DRY) attachDesk(ctx);
+      }
+      const r = await pass(ctx);
+      /* Per-order errors are caught so one bad order can't hold up the rest. But when every order
+         fails, something shared is broken (an ABI, the RPC), and the health page has to say so
+         instead of reporting a clean pass. */
+      lastPassError = r && r.worked > 0 && r.failed === r.worked ? `every order failed this pass (last: ${r.lastJobError})` : null;
     } catch (e) {
       // One bad pass (a flaky RPC, usually) must not kill a hosted worker.
       lastPassError = e.shortMessage || e.message;
