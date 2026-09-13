@@ -1,0 +1,14 @@
+# robots.txt for https://stubly.org
+# Search engines and AI search crawlers are welcome on every public page.
+# /inbox is private. /api/ is machine endpoints, except the read-only catalog,
+# stats and judge endpoints that public pages load while they render.
+
+User-agent: *
+Allow: /
+Allow: /api/catalog
+Allow: /api/stats
+Allow: /api/judge
+Disallow: /inbox
+Disallow: /api/
+
+Sitemap: https://stubly.org/sitemap.xml

@@ -25,8 +25,13 @@
       "headers": [
         { "key": "Content-Type", "value": "application/json; charset=utf-8" },
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Cache-Control", "value": "public, max-age=300" }
+        { "key": "Cache-Control", "value": "public, max-age=300" },
+        { "key": "X-Robots-Tag", "value": "noindex" }
       ]
+    },
+    {
+      "source": "/(package.json|package-lock.json|dev-server.js|api/_catalog.json)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     }
   ]
 }
