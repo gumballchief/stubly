@@ -566,6 +566,7 @@ async function initJob() {
     $("#timeline").innerHTML = STEPS.map(([n, t, d], i) =>
       `<div class="tl-step ${i < done ? "done" : "pending"}"><span class="tl-mark">${i < done ? "[x]" : "[ ]"}</span><span><b>${t}</b> — ${d}</span></div>`).join("");
 
+    { const sl = $("#support-link"); if (sl) sl.href = "mailto:support@stubly.org?subject=" + encodeURIComponent("Order #" + id); }
     if (j.status >= 2) {
       try {
         const r = await fetch(`/api/deliverable?id=${id}`);

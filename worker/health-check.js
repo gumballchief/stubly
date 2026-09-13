@@ -42,6 +42,12 @@ async function checkWorker() {
   }
   if (body.ok !== true) problems.push(`worker reports not ok: ${JSON.stringify(body)}`);
   if (body.lastError) problems.push(`worker lastError: ${body.lastError}`);
+  /* Reported, not failed on: a broken inbox is worth knowing about, not worth paging over
+     the way a stalled payout is. */
+  if (body.support) {
+    const sp = body.support;
+    note(`support:  ${sp.enabled ? "on" : "off"} · mode ${sp.mode} · new last check ${sp.newLastCheck ?? "?"} · answered ${sp.replied} · escalated ${sp.escalated} · ignored ${sp.ignored} · notify ${sp.notify}${sp.lastError ? " · last error: " + sp.lastError : ""}`);
+  }
   if (Number(body.chainId) !== CFG.CHAIN_ID) {
     problems.push(`worker is on chain ${body.chainId}, expected ${CFG.CHAIN_ID}`);
   }
