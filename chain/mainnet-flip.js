@@ -278,7 +278,7 @@ async function flip() {
   }
   const yamlPath = path.join(ROOT, "render.yaml");
   const nextYaml = renderYamlForMainnet(fs.readFileSync(yamlPath, "utf8"), V);
-  if (DRY) say("   would pin render.yaml to mainnet (chain 5042, Circle's addresses)");
+  if (DRY) say("   would pin render.yaml to mainnet (chain 5042, the mainnet escrow and registry)");
   else fs.writeFileSync(yamlPath, nextYaml);
   run("git", ["add", "render.yaml"]);
   run("git", ["commit", "-m", "Worker runs on Arc mainnet"], { allowFail: true });
