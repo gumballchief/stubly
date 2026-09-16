@@ -8,9 +8,10 @@
  */
 
 const { generate } = require("../llm");
-const C = require("./_chain");
+const chain = require("./_chain");
 
-async function run(input) {
+async function run(input, ctx = {}) {
+  const C = chain.forChain(ctx.chain); // the order's chain, not the process's
   const hash = String(input.hash || "").trim();
   if (!C.isTxHash(hash)) throw new Error("input must be a 0x… transaction hash (64 hex chars)");
 

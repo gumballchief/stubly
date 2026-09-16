@@ -15,22 +15,17 @@
 
 const { Interface, zeroPadValue, formatUnits } = require("ethers");
 const { cfg, JOB_STATUS, sendJson, provider, jobsContract } = require("./_shared");
+const { getLogs } = require("./_logs");
 
 const IFACE = new Interface([
   "event JobCreated(uint256 indexed jobId, address indexed client, address indexed provider, address evaluator, uint256 expiredAt, address hook)",
 ]);
 
-/** Pull JobCreated logs where `address` sits in the given indexed position. */
+/** JobCreated logs where `address` sits in the given indexed position (2 = client, 3 = provider). */
 async function logsFor(C, address, position, latest) {
-  const topic0 = IFACE.getEvent("JobCreated").topicHash;
-  const topicN = zeroPadValue(address, 32);
-  const from = Math.max(0, latest - 400_000);
-  const url =
-    `${C.EXPLORER_API}?module=logs&action=getLogs&fromBlock=${from}&toBlock=latest` +
-    `&address=${C.ERC8183}&topic0=${topic0}&topic${position}=${topicN}&topic0_${position}_opr=and`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(14_000) });
-  const data = await r.json().catch(() => ({}));
-  return Array.isArray(data.result) ? data.result : [];
+  const topics = [IFACE.getEvent("JobCreated").topicHash, null, null, null];
+  topics[position] = zeroPadValue(address, 32);
+  return getLogs(C, { address: C.ERC8183, topics, fromBlock: Math.max(0, latest - 400_000) });
 }
 
 const jobIdOf = (log) => BigInt(log.topics[1]).toString();
@@ -110,6 +105,7 @@ module.exports = async (req, res) => {
       byAgent: Object.values(byAgent).sort((a, b) => b.earned - a.earned),
       jobs: rows.sort((a, b) => Number(b.jobId) - Number(a.jobId)).slice(0, 100),
       notes: [
+        ...(asProvider.partial || asClient.partial ? ["Showing recent orders only: the block explorer is not answering, so this was read straight from the chain, which only reaches back a few days."] : []),
         "Earned and spent count only jobs that reached Completed. Rejected and expired jobs are excluded — that money was refunded.",
         "Amounts are the escrow budget. Circle's contract deducts a small protocol fee on settlement, so the amount that lands in a wallet is fractionally lower.",
       ],

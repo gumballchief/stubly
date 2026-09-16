@@ -25,6 +25,9 @@ const { judge } = require("./judge");
 const { maybeSweep } = require("./sweep");
 const { startSupport, supportStatus, notifyTeam } = require("./support");
 const desk = require("./desk");
+/* What this chain sells and whether it is taking new orders: the same rules /api/quote applies,
+   so the worker cannot price an order the site would refuse. Mainnet sells MAINNET_ROSTER only. */
+const { sells, ordersOpen, blobPath } = require("../site/api/_shared");
 
 // One roster, shared with the site's /api/settle. It is required statically in
 // ./agents/index.js so it survives bundling, and asserts itself against the
@@ -32,7 +35,9 @@ const desk = require("./desk");
 const AGENTS = require("./agents");
 
 const STATE_FILE = path.join(__dirname, "state.json");
-const DELIVER_DIR = path.join(__dirname, "..", "deliverables");
+/* Local copies take the site's shape (blobPath): bare for testnet, under the chain id
+   otherwise, so two chains' order N never share a file on one machine either. */
+const localDeliverable = (jobId) => path.join(__dirname, "..", blobPath("deliverable", jobId, CFG.CHAIN_ID));
 const ONCE = process.argv.includes("--once");
 const DRY = process.argv.includes("--dry");
 const POLL_MS = Number(process.env.POLL_MS || 20_000);
@@ -40,7 +45,7 @@ const LOOKBACK_BLOCKS = 20_000;
 /* "agent-failed" is deliberately NOT in this list any more. It used to be a dead
    end that left a funded escrow sitting there forever. Picking those up again
    refunds the buyer, so anything stranded by the old behaviour heals itself. */
-const DONE_PHASES = ["ignored-not-ours", "settled", "chain-completed", "chain-rejected", "chain-expired", "agent-failed-refunded", "refunded"];
+const DONE_PHASES = ["ignored-not-ours", "ignored-not-sold-here", "settled", "chain-completed", "chain-rejected", "chain-expired", "agent-failed-refunded", "refunded", "subcontract-closed", "subcontract-recovered"];
 const nowSec = () => Math.floor(Date.now() / 1000);
 
 function loadState() {
@@ -94,12 +99,13 @@ async function findOurJobs(prov, jobs, providerAddr, state) {
   return latest;
 }
 
-/** The hosted copy of a deliverable, for work this worker did not submit. */
+/** The hosted copy of a deliverable, for work this worker did not submit. Always this chain's
+    copy: judging another chain's order with the same number would release money on the wrong report. */
 async function fetchPublished(jobId) {
   const base = process.env.SITE_URL;
   if (!base) return "";
   try {
-    const r = await fetch(`${base.replace(/\/$/, "")}/api/deliverable?id=${jobId}`, {
+    const r = await fetch(`${base.replace(/\/$/, "")}/api/deliverable?id=${jobId}&chainId=${CFG.CHAIN_ID}`, {
       signal: AbortSignal.timeout(20_000),
     });
     if (!r.ok) return "";
@@ -134,12 +140,52 @@ async function refundNow(jobId, ctx, why) {
   console.log(`[refund] job ${jobId}: ${why} — rejecting so the buyer gets their money back now`);
   if (DRY) return;
   try {
-    await jobsLib.reject(ctx.evaluatorSigner, jobId, `Refunded: ${why}`);
+    await jobsLib.reject(ctx.evaluatorSigner, jobId, `Refunded: ${why}`, CFG);
     st.phase = "refunded";
     st.refundReason = why;
     console.log("  buyer refunded");
   } catch (e) {
     st.error = `refund failed: ${e.shortMessage || e.message}`;
+    console.log(`  ${st.error} — retrying next pass`);
+  }
+  saveState(ctx.state);
+}
+
+/*
+ * A Launch Kit sub-order is paid for by Stubly's own provider wallet and settled inline
+ * by the run that opened it. If that run is cut off (a timeout, a crash, a retry), the
+ * sub-order stays Funded with Stubly's float inside and nothing ever comes back for it.
+ * No inline run is still working fifteen minutes after it opened a sub-order, so after
+ * that the judge rejects it and the escrow returns the float to the wallet that paid.
+ * Only sub-orders whose client and judge are our own wallets are touched: this never
+ * moves anyone else's money.
+ */
+const SUB_LIFETIME_SEC = 3600;          // launch-kit opens sub-orders with a one-hour deadline
+const SUB_ABANDONED_AFTER_SEC = 15 * 60;
+
+async function recoverSubcontract(jobId, j, status, expiredAt, ctx, st) {
+  const lower = (a) => String(a || "").toLowerCase();
+  const client = lower(j.client ?? j[1]);
+  const judge = lower(j.evaluator ?? j[3]);
+  if (client !== lower(ctx.providerSigner.address) || judge !== lower(ctx.evaluatorSigner.address)) {
+    st.phase = "ignored-not-ours";
+    return;
+  }
+  if (status === "Completed" || status === "Rejected" || status === "Expired") { st.phase = "subcontract-closed"; return; }
+  if (status === "Open") {
+    st.phase = nowSec() > expiredAt ? "subcontract-closed" : "subcontract-handled-inline"; // nothing is held until it is funded
+    return;
+  }
+  if (nowSec() < expiredAt - SUB_LIFETIME_SEC + SUB_ABANDONED_AFTER_SEC) { st.phase = "subcontract-handled-inline"; return; }
+
+  console.log(`[recover] sub-order ${jobId} is ${status} and abandoned — rejecting so the float returns to the provider wallet`);
+  if (DRY) return;
+  try {
+    await jobsLib.reject(ctx.evaluatorSigner, jobId, "Abandoned sub-order: float returned", CFG);
+    st.phase = "subcontract-recovered";
+    console.log("  float returned");
+  } catch (e) {
+    st.error = `sub-order recovery failed: ${e.shortMessage || e.message}`;
     console.log(`  ${st.error} — retrying next pass`);
   }
   saveState(ctx.state);
@@ -157,22 +203,39 @@ async function processJob(jobId, ctx) {
   const st = state.jobs[jobId] || (state.jobs[jobId] = { phase: "seen" });
 
   // Sub-jobs are created, funded, delivered and settled inline by the agent that
-  // hired them (see agents/launch-kit.js) — the main loop must not touch them.
-  if (spec?.sub) { st.phase = "subcontract-handled-inline"; return; }
+  // hired them (see agents/launch-kit.js). A live one is left alone; one a cut-off
+  // run abandoned is recovered.
+  if (spec?.sub) return recoverSubcontract(jobId, j, status, expiredAt, ctx, st);
 
   if (!spec) { st.phase = "ignored-not-ours"; return; }
+
+  /* An agent this chain does not sell is never priced here. It can still be funded: an order
+     quoted before the roster shrank, or by a site still on the old roster, already has its
+     budget. If that happens the buyer gets the money back now rather than waiting out the
+     deadline, so an Open order stays watched until its deadline has passed. Only then is it
+     final: nothing is waiting on us, and a late funding could be claimed back by the buyer at
+     once. Anything already delivered settles as normal. */
+  if (!sells(CFG, spec.agent)) {
+    if (status === "Open") {
+      if (nowSec() > expiredAt) st.phase = "ignored-not-sold-here";
+      return;
+    }
+    if (status === "Funded") return refundNow(jobId, ctx, `${spec.agent} is not sold on this chain`);
+  }
 
   if (status === "Open") {
     // Jobs created from the site arrive without a budget — quoting is our move.
     const hasBudget = await jobsLib.withRetry(() => jobs.jobHasBudget(jobId));
     if (!hasBudget && st.phase !== "quoted") {
+      // A chain that has stopped taking new orders (TESTNET_ORDERS=closed) is not priced here either.
+      if (!ordersOpen(CFG)) return;
       const price = CATALOG[spec.agent]?.priceUsdc;
       if (!price) { st.phase = "ignored-unknown-agent"; return; }
       console.log(`[quote] job ${jobId} → setBudget ${price} USDC`);
       if (DRY) return;
-      const { usdc } = await jobsLib.contracts(providerSigner);
+      const { usdc } = await jobsLib.contracts(providerSigner, CFG);
       const decimals = await jobsLib.withRetry(() => usdc.decimals());
-      await jobsLib.setBudget(providerSigner, jobId, parseUnits(price, decimals));
+      await jobsLib.setBudget(providerSigner, jobId, parseUnits(price, decimals), CFG);
       st.phase = "quoted"; saveState(state);
     }
     return; // now waiting for the client to fund
@@ -195,7 +258,8 @@ async function processJob(jobId, ctx) {
     const agent = AGENTS[spec.agent];
     let deliverable;
     try {
-      deliverable = await agent.run(spec.input || {});
+      // This worker's chain, provider and signers: Launch Kit's sub-orders share the nonce counters, chain agents read this chain.
+      deliverable = await agent.run(spec.input || {}, { chain: CFG, provider: ctx.prov, providerSigner, evaluatorSigner });
       // An empty report is a failure, not a delivery: submitting "" only gets it rejected later, unpaid and unrefunded.
       if (!deliverable || typeof deliverable.content !== "string" || !deliverable.content.trim()) {
         throw new Error("the agent returned an empty report");
@@ -210,8 +274,8 @@ async function processJob(jobId, ctx) {
       return;
     }
 
-    fs.mkdirSync(DELIVER_DIR, { recursive: true });
-    const file = path.join(DELIVER_DIR, `${jobId}.md`);
+    const file = localDeliverable(jobId);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, deliverable.content);
     st.phase = "delivered-locally"; st.file = file; saveState(state);
 
@@ -222,7 +286,7 @@ async function processJob(jobId, ctx) {
     saveState(state);
 
     try {
-      await jobsLib.submit(providerSigner, jobId, deliverable.content);
+      await jobsLib.submit(providerSigner, jobId, deliverable.content, CFG);
     } catch (e) {
       /* A named revert means the order moved on (someone else delivered it), and
          the next pass reads the new status. Anything else is a delivery that did
@@ -273,8 +337,8 @@ async function processJob(jobId, ctx) {
 
     // The digest rides in ERC-8183's own `reason` field — the commitment lands
     // in the same transaction that moves the money. No companion contract.
-    if (j.ok) await jobsLib.completeRaw(evaluatorSigner, jobId, j.digest);
-    else await jobsLib.rejectRaw(evaluatorSigner, jobId, j.digest);
+    if (j.ok) await jobsLib.completeRaw(evaluatorSigner, jobId, j.digest, CFG);
+    else await jobsLib.rejectRaw(evaluatorSigner, jobId, j.digest, CFG);
 
     st.phase = "settled"; st.verdict = j.verdict; st.digest = j.digest; saveState(state);
   }
@@ -286,7 +350,7 @@ async function makeContext() {
   const prov = provider();
   const providerSigner = loadWallet(CFG.PROVIDER_KEY, prov);
   const evaluatorSigner = loadWallet(CFG.EVALUATOR_KEY, prov);
-  const { jobs } = await jobsLib.contracts(prov);
+  const { jobs } = await jobsLib.contracts(prov, CFG);
   return { prov, jobs, providerSigner, evaluatorSigner, state: STATE };
 }
 
@@ -300,7 +364,7 @@ async function pass(ctx) {
      ABI comes from the explorer, and an explorer blip at boot hands back the offline fallback.
      Holding one contract for the life of the process would freeze that blip in; rebuilding lets
      the next pass pick the verified ABI up again. */
-  ctx.jobs = (await jobsLib.contracts(ctx.prov)).jobs;
+  ctx.jobs = (await jobsLib.contracts(ctx.prov, CFG)).jobs;
 
   const latest = await findOurJobs(ctx.prov, ctx.jobs, ctx.providerSigner.address, STATE);
   let worked = 0;

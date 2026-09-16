@@ -8,13 +8,18 @@
  */
 
 const { Contract } = require("ethers");
-const { provider } = require("../../chain/config");
+const { CFG, provider } = require("../../chain/config");
 const { REGISTRY, IDENTITY_ABI } = require("../../chain/registry");
-const C = require("./_chain");
+const chain = require("./_chain");
 
-async function run(input) {
+async function run(input, ctx = {}) {
+  const C = chain.forChain(ctx.chain); // the order's chain, not the process's
   const raw = String(input.agent || "").trim();
   if (!raw) throw new Error("give an ERC-8004 agent id (a number) or an owner address");
+
+  /* The registry address and RPC below are the worker's own chain's. Looking an agent up for an
+     order on any other chain would read the wrong registry, so it refuses instead. */
+  if (C.CHAIN_ID !== CFG.CHAIN_ID || !REGISTRY.identity) throw new Error(`agent lookups are not available on ${C.CHAIN_LABEL} yet`);
 
   const prov = provider();
   const identity = new Contract(REGISTRY.identity, IDENTITY_ABI, prov);

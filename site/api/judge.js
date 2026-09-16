@@ -11,7 +11,7 @@
  */
 
 const { createHash } = require("node:crypto");
-const { sendJson } = require("./_shared");
+const { blobPath, storeChainId, sendJson } = require("./_shared");
 
 /* Mirror of worker/judge.js — the published rules. */
 const VERSION = "judge-v1";
@@ -25,10 +25,11 @@ const RULES = [
 const sha256 = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const digestOf = (rec) => "0x" + sha256(JSON.stringify(rec, Object.keys(rec).sort()));
 
-async function fromBlob(id) {
+/* chainId picks the chain's folder: testnet's records keep their bare paths, every other chain's sit under its id. */
+async function fromBlob(id, chainId) {
   try {
     const { get } = require("@vercel/blob");
-    const r = await get(`judge/${id}.json`, { access: "private" });
+    const r = await get(blobPath("judge", id, chainId), { access: "private" });
     if (!r?.stream) return null;
     return JSON.parse(await new Response(r.stream).text());
   } catch { return null; }
@@ -52,7 +53,7 @@ module.exports = async (req, res) => {
 
   if (!/^\d+$/.test(id)) return sendJson(res, 400, { error: "id must be a job number" });
 
-  const record = await fromBlob(id);
+  const record = await fromBlob(id, storeChainId(req));
   if (!record) {
     return sendJson(res, 404, {
       found: false,

@@ -14,6 +14,22 @@
 #
 # Secrets are marked sync:false — they are set once in Render's dashboard and
 # never live in this file.
+#
+# Mainnet flip (see launch/MAINNET-FLIP.md). There is one worker and at the flip it
+# becomes MAINNET ONLY. The values below stay testnet until that day, because a push
+# to this file redeploys the worker. On the day, set these in the dashboard first,
+# then commit the same values here so a later push cannot put testnet back:
+#   CHAIN_ID=5042, and the unprefixed chain vars the worker reads (chain/config.js):
+#   RPC_URL, ERC8183_ADDRESS, USDC_ADDRESS, IDENTITY_REGISTRY, EXPLORER and
+#   EXPLORER_API (Blockscout's /api/v2 root), all from Circle's published values.
+#   Off testnet none of them has a default: a missing one stops the worker, it never
+#   falls back to a testnet address.
+#   KEYSTORE_PASSWORD_MAINNET, PROVIDER_MAINNET_KEYSTORE_B64, EVALUATOR_MAINNET_KEYSTORE_B64
+#   (sync:false), and remove the testnet KEYSTORE_PASSWORD / *_KEYSTORE_B64 pair.
+#   SWEEP_TO (the cold wallet) and SWEEP_KEEP=3. sweep.js never keeps less than
+#   refunds and sub-orders need, whatever SWEEP_KEEP says.
+#   DESK_TRANSFER_REFUNDS stays unset: off by default anywhere but testnet.
+#   CARD_PATH needs no value: it defaults to agents/mainnet on chain 5042.
 
 services:
   - type: web
