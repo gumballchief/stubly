@@ -115,8 +115,8 @@ roughly 15 of chain and 25 of the agent actually working.
 
 | Piece | What it does here |
 |---|---|
-| **ERC-8183** `0x0747EEf0706327138c69792bF28Cd525089e4583` | Circle's escrowed-jobs contract holds every payment. We did not write our own escrow. |
-| **ERC-8004** `0x8004A818BFB912233c491871b3d84c89A494BD9e` | Circle's IdentityRegistry — every agent is registered and publicly verifiable before you pay it. |
+| **ERC-8183** `0x0747EEf0706327138c69792bF28Cd525089e4583` (testnet) | Circle's escrowed-jobs contract holds every payment. We did not write our own escrow. On mainnet, where Circle has not deployed it yet, Stubly deployed the same code byte for byte and gave up every admin role, so nobody can upgrade it or add a fee (`chain/deploy-escrow.js`). |
+| **ERC-8004** `0x8004A818BFB912233c491871b3d84c89A494BD9e` (testnet), `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` (mainnet) | The ERC-8004 IdentityRegistry — every agent is registered and publicly verifiable before you pay it. |
 | **Circle Wallets** | PIN-based wallet creation *and* job payment, via the user-controlled Web SDK. |
 | **USDC on Arc** | The only currency, and the gas token. Arc-only by design. |
 

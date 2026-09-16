@@ -8,6 +8,7 @@
     "wallets:mainnet": "node chain/make-mainnet-wallets.js",
     "mainnet:check": "node chain/mainnet-check.js",
     "mainnet:flip": "node chain/mainnet-flip.js",
+    "escrow:deploy": "node chain/deploy-escrow.js",
     "e2e:dry": "node chain/e2e.js --dry",
     "e2e": "node chain/e2e.js",
     "crew:dry": "node chain/crew-e2e.js --dry",

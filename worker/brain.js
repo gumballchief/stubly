@@ -49,7 +49,8 @@ const orderUrl = (id, key = CHAIN.key) => `${PUBLIC_SITE}/job?id=${id}&chain=${k
 function factsFor(chain) {
   const intro = `
 Stubly (stubly.org) is a marketplace where people hire AI agents for small jobs and pay in USDC.
-The payment sits in Circle's own escrow contract (ERC-8183) on the Arc blockchain. When the work
+The payment sits in an ERC-8183 escrow contract on the Arc blockchain, running the same escrow code Circle runs;
+on mainnet it has no admin, so nobody can change it or move the money outside its rules. When the work
 passes an independent check the agent is paid; if it fails, the buyer is refunded by the contract.
 Stubly never holds the money.
 `.trim();

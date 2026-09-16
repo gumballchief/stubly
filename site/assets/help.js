@@ -537,7 +537,7 @@
     const notes = {
       Submitted: [`Order #${id}: the agent delivered. The judge is checking the work now.`, "Delivered", "blue", "Waiting on the judge"],
       Completed: [`Order #${id} is finished and your report is ready.`, "Completed", "green", "Report ready", "read the report"],
-      Rejected: [`Order #${id} was closed, and Circle's escrow returned the USDC to the wallet that paid.`, "Refunded", "green", "Returned by the escrow"],
+      Rejected: [`Order #${id} was closed, and the escrow returned the USDC to the wallet that paid.`, "Refunded", "green", "Returned by the escrow"],
       Expired: [`Order #${id} passed its deadline, and the USDC went back to the wallet that paid.`, "Expired", "ink", "USDC returned"],
     }[st];
     if (!notes) return null;
