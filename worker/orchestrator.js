@@ -45,7 +45,7 @@ const LOOKBACK_BLOCKS = 20_000;
 /* "agent-failed" is deliberately NOT in this list any more. It used to be a dead
    end that left a funded escrow sitting there forever. Picking those up again
    refunds the buyer, so anything stranded by the old behaviour heals itself. */
-const DONE_PHASES = ["ignored-not-ours", "ignored-not-sold-here", "settled", "chain-completed", "chain-rejected", "chain-expired", "agent-failed-refunded", "refunded"];
+const DONE_PHASES = ["ignored-not-ours", "ignored-not-sold-here", "settled", "chain-completed", "chain-rejected", "chain-expired", "agent-failed-refunded", "refunded", "subcontract-closed", "subcontract-recovered"];
 const nowSec = () => Math.floor(Date.now() / 1000);
 
 function loadState() {
@@ -151,6 +151,46 @@ async function refundNow(jobId, ctx, why) {
   saveState(ctx.state);
 }
 
+/*
+ * A Launch Kit sub-order is paid for by Stubly's own provider wallet and settled inline
+ * by the run that opened it. If that run is cut off (a timeout, a crash, a retry), the
+ * sub-order stays Funded with Stubly's float inside and nothing ever comes back for it.
+ * No inline run is still working fifteen minutes after it opened a sub-order, so after
+ * that the judge rejects it and the escrow returns the float to the wallet that paid.
+ * Only sub-orders whose client and judge are our own wallets are touched: this never
+ * moves anyone else's money.
+ */
+const SUB_LIFETIME_SEC = 3600;          // launch-kit opens sub-orders with a one-hour deadline
+const SUB_ABANDONED_AFTER_SEC = 15 * 60;
+
+async function recoverSubcontract(jobId, j, status, expiredAt, ctx, st) {
+  const lower = (a) => String(a || "").toLowerCase();
+  const client = lower(j.client ?? j[1]);
+  const judge = lower(j.evaluator ?? j[3]);
+  if (client !== lower(ctx.providerSigner.address) || judge !== lower(ctx.evaluatorSigner.address)) {
+    st.phase = "ignored-not-ours";
+    return;
+  }
+  if (status === "Completed" || status === "Rejected" || status === "Expired") { st.phase = "subcontract-closed"; return; }
+  if (status === "Open") {
+    st.phase = nowSec() > expiredAt ? "subcontract-closed" : "subcontract-handled-inline"; // nothing is held until it is funded
+    return;
+  }
+  if (nowSec() < expiredAt - SUB_LIFETIME_SEC + SUB_ABANDONED_AFTER_SEC) { st.phase = "subcontract-handled-inline"; return; }
+
+  console.log(`[recover] sub-order ${jobId} is ${status} and abandoned — rejecting so the float returns to the provider wallet`);
+  if (DRY) return;
+  try {
+    await jobsLib.reject(ctx.evaluatorSigner, jobId, "Abandoned sub-order: float returned", CFG);
+    st.phase = "subcontract-recovered";
+    console.log("  float returned");
+  } catch (e) {
+    st.error = `sub-order recovery failed: ${e.shortMessage || e.message}`;
+    console.log(`  ${st.error} — retrying next pass`);
+  }
+  saveState(ctx.state);
+}
+
 /* Judging lives in worker/judge.js — the single source of truth. */
 
 async function processJob(jobId, ctx) {
@@ -163,8 +203,9 @@ async function processJob(jobId, ctx) {
   const st = state.jobs[jobId] || (state.jobs[jobId] = { phase: "seen" });
 
   // Sub-jobs are created, funded, delivered and settled inline by the agent that
-  // hired them (see agents/launch-kit.js) — the main loop must not touch them.
-  if (spec?.sub) { st.phase = "subcontract-handled-inline"; return; }
+  // hired them (see agents/launch-kit.js). A live one is left alone; one a cut-off
+  // run abandoned is recovered.
+  if (spec?.sub) return recoverSubcontract(jobId, j, status, expiredAt, ctx, st);
 
   if (!spec) { st.phase = "ignored-not-ours"; return; }
 

@@ -130,7 +130,7 @@ async function runChecks({ env = process.env, needFunds = true } = {}) {
 
   if (V.PROVIDER_WALLET && V.EVALUATOR_WALLET) {
     const [p, e] = await Promise.all([usdcOf(V, V.PROVIDER_WALLET), usdcOf(V, V.EVALUATOR_WALLET)]).catch(() => [0, 0]);
-    add("Provider wallet has 3 USDC", p >= 3, needFunds, `holds ${p.toFixed(2)} USDC; send at least ${Math.max(0, 3 - p).toFixed(2)} more to ${V.PROVIDER_WALLET}`);
+    add("Provider wallet has 4 USDC", p >= 4, needFunds, `holds ${p.toFixed(2)} USDC; send at least ${Math.max(0, 4 - p).toFixed(2)} more to ${V.PROVIDER_WALLET}`);
     add("Evaluator wallet has 1 USDC", e >= 1, needFunds, `holds ${e.toFixed(2)} USDC; send at least ${Math.max(0, 1 - e).toFixed(2)} more to ${V.EVALUATOR_WALLET}`);
   }
 
