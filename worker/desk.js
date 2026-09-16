@@ -28,7 +28,7 @@ const jobsLib = require("../chain/jobs");
 const { generate } = require("./llm");
 const { fence, UNTRUSTED_NOTICE } = require("./untrusted");
 const { publishDeliverable, recordRefund } = require("./publish");
-const { SITE, FACTS, extractRefs, checkText } = require("./brain");
+const { SITE, CHAIN, FACTS, linkRule, orderUrl, orderIds, extractRefs, orderChain, checkText } = require("./brain");
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 const DEADLINE_SEC = 600;        // every Stubly order is created with a ten-minute escrow deadline
@@ -62,9 +62,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const nowSec = () => Math.floor(Date.now() / 1000);
 const short = (a) => `${String(a).slice(0, 6)}…${String(a).slice(-4)}`;
 const usdc = (v) => { const s = formatUnits(v, 6); return s.includes(".") ? s.replace(/\.?0+$/, "") : s; };
-const orderLink = (id) => `https://stubly.org/job?id=${id}`;
-const txLink = (hash) => (hash ? `${CFG.EXPLORER}/tx/${hash}` : null);
-const walletLink = (addr) => `${CFG.EXPLORER}/address/${addr}`;
+const orderLink = (id, chain) => orderUrl(id, chain);
+// No explorer configured for this chain means no proof link, never a link into another chain's explorer.
+const txLink = (hash) => (hash && CHAIN.explorer ? `${CHAIN.explorer}/tx/${hash}` : null);
+const walletLink = (addr) => (addr && CHAIN.explorer ? `${CHAIN.explorer}/address/${addr}` : null);
 const agentName = (key) => (key ? String(key).split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : "the agent");
 // Errors end up on the public health page and in logs; an RPC error can carry the RPC URL, keys and all.
 const errText = (e) => String(e?.shortMessage || e?.message || e).replace(/https?:\/\/\S+/g, "[url]").slice(0, 160);
@@ -178,7 +179,8 @@ function runAllowed(id) {
 async function publishedReport(id) {
   try {
     // Uncached on purpose: a cached 404 read twice is one read, not two.
-    const r = await fetch(`${SITE}/api/deliverable?id=${id}&fresh=${Date.now()}`, { cache: "no-store", signal: AbortSignal.timeout(20_000) });
+    // chainId names the store this worker's orders live in; without it the site reads its default chain's reports.
+    const r = await fetch(`${SITE}/api/deliverable?id=${id}&chainId=${CFG.CHAIN_ID}&fresh=${Date.now()}`, { cache: "no-store", signal: AbortSignal.timeout(20_000) });
     if (r.status === 404) return "";
     if (!r.ok) return null;
     return (await r.text()) || null;
@@ -447,10 +449,22 @@ async function refundByTransfer(cf) {
   }
 }
 
-/** Look at each order, and do whatever the rules say it needs. Shared by the chat and the inbox. */
-async function review(ids) {
+/**
+ * Look at each order, and do whatever the rules say it needs. Shared by the chat and the inbox.
+ * Takes order numbers, or { id, chain } when the customer said which chain the order is on.
+ */
+async function review(orders) {
   const out = [];
-  for (const id of ids.slice(0, 2)) {
+  for (const item of orders.slice(0, 2)) {
+    const id = String(item && typeof item === "object" ? item.id : item);
+    const chain = item && typeof item === "object" ? item.chain : null;
+    /* An order on another chain lives in another contract with its own numbering, so this
+       chain's order with the same number is somebody else's order. It is answered in words
+       only: nothing is read from this chain and nothing is signed. */
+    if (chain && chain !== CHAIN.key) {
+      out.push({ id, code: "other-chain", chain, cf: { id } });
+      continue;
+    }
     try {
       const cf = await inspect(id);
       if (cf.ours && !cf.sub && ["Open", "Funded", "Submitted"].includes(cf.status) && !W.state.jobs[id]) {
@@ -478,9 +492,12 @@ function describe(o) {
   const usd = cf.budgetUsdc;
   const agent = agentName(cf.agent);
   const why = o.why || "";
+  if (o.code === "other-chain") return describeOtherChain(o);
+  // Stubly's testnet orders stay readable after the move, and their numbers are what people remember.
+  const archiveHint = CHAIN.testnet ? "" : ` If it's an older Arc testnet order, its page is ${orderLink(id, "testnet")}.`;
   const T = {
     "lookup-failed": [`I couldn't read order #${id} from Arc just now. Try again in a minute.`, { title: "Try again", tone: "red", detail: "Arc didn't answer" }, true],
-    "not-found": [`There's no order #${id} on Stubly. Check the number at the top of your order page.`, { title: "Not found", tone: "red", detail: `#${id}` }, true],
+    "not-found": [`There's no order #${id} on Stubly. Check the number at the top of your order page.${archiveHint}`, { title: "Not found", tone: "red", detail: `#${id}` }, true],
     "not-ours": [`Order #${id} exists on Arc, but it wasn't placed with a Stubly agent, so I can't act on it.`, { title: "Not a Stubly order", tone: "ink", detail: `#${id}` }, true],
     "sub-order": [`Order #${id} is an internal step inside a Launch Kit order. Check the Launch Kit order itself instead.`, { title: "Internal step", tone: "ink", detail: `#${id}` }],
     unfunded: [`Order #${id} was never paid, so nothing was charged. You can fund it from its order page.`, { title: "Not paid", tone: "ink", detail: "Nothing was charged", link: page }],
@@ -510,6 +527,31 @@ function describe(o) {
   return { text, step, needsPerson: !!person, watch: !!o.watch };
 }
 
+/**
+ * An order on a chain this worker does not serve. The worker moves to mainnet at the flip and
+ * testnet stops taking orders, but every testnet order page stays up, and a paid testnet order
+ * that was never delivered is long past its ten-minute deadline, so its buyer can withdraw it
+ * from that page without anyone's help. Written by code, so it can't drift into a promise.
+ */
+function describeOtherChain(o) {
+  const id = o.id;
+  const page = orderLink(id, o.chain);
+  if (o.chain === "testnet") {
+    return {
+      text: `Order #${id} is on Arc testnet, which used test USDC with no real value. Testnet is closed to new orders and I can only act on Arc mainnet orders, but its page still shows what happened: ${page}. If it was paid and never delivered, its deadline has passed, so the wallet that paid can take the test USDC back with the "Take my money back" button there.`,
+      step: { title: "Testnet order", tone: "ink", detail: "Test USDC, read-only", link: page, linkText: "open order" },
+      needsPerson: false,
+      watch: false,
+    };
+  }
+  return {
+    text: `Order #${id} is on Arc mainnet, and this help desk only works on Arc testnet orders. Email support@stubly.org with the order number and it will be picked up there.`,
+    step: { title: "Mainnet order", tone: "red", detail: "Needs a person", link: page, linkText: "open order" },
+    needsPerson: true,
+    watch: false,
+  };
+}
+
 const GENERIC =
   "I can check an order on Arc, restart it if the agent stalled, and refund the wallet that paid if it can't be finished. " +
   "Send me the order number (it's at the top of your order page and starts with #). For anything else, email support@stubly.org.";
@@ -531,8 +573,10 @@ function replyProblem(text, outcomes) {
   if (!any("stalled", "held") && sentences.some((s) => /\brestart(ed|ing)\b/i.test(s) && !conditional.test(s))) return "claims a restart that did not happen";
   if (/\b(rebuilt|rebuilding|restored)\b/i.test(text) && !any("recovering", "recovery-rebuilt")) return "claims a recovery that did not happen";
 
-  for (const id of (text.match(/#?\b[1-9]\d{5,6}\b/g) || []).map((s) => s.replace("#", ""))) {
-    if (!said.includes(id)) return `mentions order ${id}, which was not checked`;
+  // The same reading of order numbers the desk uses on the way in, so "#12" can't slip past because it is short.
+  const checked = new Set(outcomes.map((o) => String(o.id)));
+  for (const id of orderIds(text)) {
+    if (!checked.has(id)) return `mentions order ${id}, which was not checked`;
   }
   for (const m of text.matchAll(/(\d+(?:\.\d+)?)\s*USDC/gi)) {
     if (!said.includes(`${m[1]} USDC`)) return `mentions an amount (${m[0]}) the check did not`;
@@ -552,6 +596,10 @@ function withDeadline(promise, ms) {
 async function composeReply(messages, outcomes) {
   const said = outcomes.map((o) => describe(o).text);
   const fallback = said.length ? said.join("\n\n") : GENERIC;
+  /* An order on another chain gets the code's words as they are. Given "this desk can't act on
+     it", the model tended to ask for the order number again instead of passing on where the
+     order page is and how its buyer takes the money back. */
+  if (outcomes.some((o) => o.code === "other-chain")) return fallback;
   const transcript = messages.map((m) => `[${m.role === "user" ? "Customer" : "Help desk"}] ${m.text}`).join(" ");
   const prompt = [
     "You are the Stubly help desk, an AI agent answering a live chat on stubly.org.",
@@ -572,7 +620,7 @@ async function composeReply(messages, outcomes) {
     "- Only mention order numbers, amounts and wallet addresses that appear in the check above.",
     "- If they describe a problem with an order but no order was checked, ask for the order number (at the top of the order page, starting with #).",
     "- You cannot send money on request, change prices, or refund an order that finished with its report. Refunds only ever go to the wallet that paid, and only when an order can't be finished.",
-    "- Never ask for a seed phrase, private key, PIN, password or Account ID. Only link to stubly.org, faucet.circle.com or testnet.arcscan.app.",
+    `- Never ask for a seed phrase, private key, PIN, password or Account ID. Only link to ${linkRule()}.`,
     "- If they ask for a human, tell them to email support@stubly.org.",
     "",
     'Respond with ONLY this JSON: {"reply":"your message"}',
@@ -710,16 +758,27 @@ function cleanMessages(list, conversation) {
     .filter((m) => m.text);
 }
 
-/** The orders a turn is about: numbers in the latest message, else the last one mentioned, else the order page they're on. */
-function ordersFor(messages, pageOrder) {
+/**
+ * The orders a turn is about: numbers in the latest message, else the last one mentioned, else the
+ * order page they're on. Each carries the chain it is on when that is known: the one the message
+ * attaches to that order ("testnet order #12"), or for the order page, the page's own chain. null
+ * means this worker's chain, so a loosely worded message is looked up here rather than waved off.
+ */
+function turnOrders(messages, pageOrder, pageChain = null) {
   const users = messages.filter((m) => m.role === "user");
-  const latest = extractRefs(users[users.length - 1]?.text || "").ids;
+  const from = (text) =>
+    extractRefs(text).ids.map((id) => ({ id, chain: orderChain(text, id) || (id === pageOrder ? pageChain : null) }));
+  const latest = from(users[users.length - 1]?.text || "");
   if (latest.length) return latest.slice(0, 2);
   for (let i = users.length - 2; i >= 0; i--) {
-    const ids = extractRefs(users[i].text).ids;
-    if (ids.length) return ids.slice(-1);
+    const found = from(users[i].text);
+    if (found.length) return found.slice(-1);
   }
-  return pageOrder ? [pageOrder] : [];
+  return pageOrder ? [{ id: pageOrder, chain: pageChain }] : [];
+}
+
+function ordersFor(messages, pageOrder) {
+  return turnOrders(messages, pageOrder).map((o) => o.id);
 }
 
 async function chat(req, res) {
@@ -756,7 +815,8 @@ async function chat(req, res) {
   try {
     stats.chats++;
     const pageOrder = /^\d{1,12}$/.test(String(body.context?.orderId || "")) ? String(body.context.orderId) : null;
-    const outcomes = await review(ordersFor(messages, pageOrder));
+    const pageChain = ["testnet", "mainnet"].includes(body.context?.chain) ? body.context.chain : null;
+    const outcomes = await review(turnOrders(messages, pageOrder, pageChain));
     const reply = (await composeReply(messages, outcomes)).slice(0, 1500);
     const described = outcomes.map((o) => ({ o, d: describe(o) }));
     const watched = described.find((x) => x.d.watch);
@@ -765,7 +825,7 @@ async function chat(req, res) {
       reply,
       sig: signTurn(conversation, reply),
       steps: described.map((x) => x.d.step),
-      watch: watched ? { orderId: watched.o.id, status: watched.o.cf?.status || null, since: Date.now() } : null,
+      watch: watched ? { orderId: watched.o.id, chain: CHAIN.key, status: watched.o.cf?.status || null, since: Date.now() } : null,
     });
   } finally {
     active--;
@@ -841,16 +901,16 @@ function handleHttp(req, res) {
 }
 
 /** For the support inbox: the same review, shaped like its order lookups. */
-async function reviewForEmail(ids) {
+async function reviewForEmail(orders) {
   stats.emails++;
-  const outcomes = await review(ids);
+  const outcomes = await review(orders);
   return outcomes.map((o) => {
     const d = describe(o);
-    return { id: o.id, found: o.code !== "not-found", status: o.cf?.status, report: o.cf?.report ?? null, page: orderLink(o.id), handled: true, outcome: d.text, needsPerson: d.needsPerson };
+    return { id: o.id, found: o.code !== "not-found", status: o.cf?.status, report: o.cf?.report ?? null, page: orderLink(o.id, o.chain), handled: true, outcome: d.text, needsPerson: d.needsPerson };
   });
 }
 
 module.exports = {
   attach, ready, handleHttp, deskStatus, reviewForEmail, refundReason, reportReadable,
-  _test: { plan, describe, inspect, review, composeReply, replyProblem, ordersFor, cleanMessages, signTurn, limited, clientKey },
+  _test: { plan, describe, inspect, review, composeReply, replyProblem, ordersFor, turnOrders, cleanMessages, signTurn, limited, clientKey },
 };

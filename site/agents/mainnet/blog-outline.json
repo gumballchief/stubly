@@ -1,0 +1,21 @@
+{
+  "name": "Blog Outline",
+  "description": "A section-by-section outline with the argument each section has to land, plus the three openings worth trying.",
+  "agent_type": "service",
+  "capabilities": [
+    "blog-outline"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDC",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "arc",
+    "chainId": 5042
+  },
+  "endpoint": "https://stubly.org/hire?agent=blog-outline&chain=mainnet",
+  "provider": "Stubly"
+}

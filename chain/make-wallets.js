@@ -10,7 +10,8 @@
  *
  * Keys are generated fresh in memory and never printed or written in plaintext.
  * Encryption password comes from KEYSTORE_PASSWORD in .env — acceptable for testnet
- * wallets holding faucet money only. Mainnet keys must use the interactive flow.
+ * wallets holding faucet money only. Mainnet wallets: npm run wallets:mainnet
+ * (chain/make-mainnet-wallets.js), interactive, with a password of their own.
  * Existing keystores are never overwritten.
  */
 

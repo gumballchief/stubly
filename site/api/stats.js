@@ -20,6 +20,7 @@
 
 const { Interface, zeroPadValue } = require("ethers");
 const { cfg, sendJson, jobsContract } = require("./_shared");
+const { getLogs } = require("./_logs");
 
 const IFACE = new Interface([
   "event JobCreated(uint256 indexed jobId, address indexed client, address indexed provider, address evaluator, uint256 expiredAt, address hook)",
@@ -54,11 +55,7 @@ module.exports = async (req, res) => {
     const C = cfg(req);
     const topic0 = IFACE.getEvent("JobCreated").topicHash;
     const providerTopic = zeroPadValue(C.PROVIDER_WALLET, 32);
-    const url = `${C.EXPLORER_API}?module=logs&action=getLogs&fromBlock=0&toBlock=latest` +
-      `&address=${C.ERC8183}&topic0=${topic0}&topic3=${providerTopic}&topic0_3_opr=and`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(25_000) });
-    const data = await r.json().catch(() => ({}));
-    const logs = Array.isArray(data.result) ? data.result : [];
+    const logs = await getLogs(C, { address: C.ERC8183, topics: [topic0, null, null, providerTopic], fromBlock: 0, timeoutMs: 25_000 });
 
     const clients = new Set(logs.map((l) => (l.topics?.[2] || "").toLowerCase()).filter(Boolean));
 

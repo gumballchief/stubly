@@ -31,8 +31,11 @@ verified ABI (chain/abi.js fetches + caches it from Blockscout).
 
 - Style follows `gold/protocol` (solc 0.8.26 if we ever write contracts; ethers v6; keeper-style
   workers: staticCall first, DRY_RUN default, crash-safe state.json).
-- Keys: encrypted keystores only (`chain/make-wallets.js`), never plaintext in .env. Testnet
-  keystores may use KEYSTORE_PASSWORD from .env; mainnet keys never.
+- Keys: encrypted keystores only, never plaintext in .env. Testnet keystores come from
+  `chain/make-wallets.js` and may use KEYSTORE_PASSWORD from .env. Mainnet keystores come from
+  `npm run wallets:mainnet` (typed password, never in .env) and open only with
+  KEYSTORE_PASSWORD_MAINNET, which lives in the host's dashboard because a hosted worker must
+  sign unattended. That is deliberate: do not "fix" it back to an interactive prompt on hosts.
 - Site: static HTML + `api/` Vercel serverless, no framework (gold pattern). No AI-slop design.
 - Stage tracker: S0 foundations ✅/… S1 money-loop e2e, S2 orchestrator+house agents,
   S3 marketplace site, S4 Circle embedded wallets, S5 ERC-8004 registry + open supply,

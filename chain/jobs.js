@@ -1,12 +1,12 @@
 "use strict";
 
 /**
- * Thin, safe wrappers around Circle's ERC-8183 contract on Arc testnet.
+ * Thin, safe wrappers around Circle's ERC-8183 contract on Arc, testnet or mainnet.
  * Every write is staticCall'd first (keeper rule: a revert should cost a
  * console line, not gas), then sent and awaited to 1 confirmation.
  */
 
-const { Contract, keccak256, toUtf8Bytes } = require("ethers");
+const { Contract, keccak256, toUtf8Bytes, isAddress } = require("ethers");
 const { CFG, ERC20_ABI, JOB_STATUS } = require("./config");
 const { erc8183Abi } = require("./abi");
 
@@ -16,11 +16,16 @@ const NO_PARAMS = "0x";
    later write from that key, forever. */
 const WAIT_MS = Number(process.env.TX_WAIT_MS || 180_000);
 
-async function contracts(signerOrProvider) {
-  const abi = await erc8183Abi();
+/* Which chain a contract lives on is the caller's to say, never this module's.
+   Every function below takes the chain config last (C). The worker is one chain for
+   its whole life and may leave it off, which means chain/config's CFG. /api/settle
+   and Launch Kit run inside a request whose chain is chosen per call, so they must
+   pass it: without it, a mainnet signer talked to the testnet escrow's address. */
+async function contracts(signerOrProvider, C = CFG) {
+  const abi = await erc8183Abi(C);
   return {
-    jobs: new Contract(CFG.ERC8183, abi, signerOrProvider),
-    usdc: new Contract(CFG.USDC, ERC20_ABI, signerOrProvider),
+    jobs: new Contract(C.ERC8183, abi, signerOrProvider),
+    usdc: new Contract(C.USDC, ERC20_ABI, signerOrProvider),
   };
 }
 
@@ -42,6 +47,42 @@ async function withRetry(fn, attempt = 1) {
     }
     throw e;
   }
+}
+
+/**
+ * Refuse the first write on a chain until the node proves it is that chain and that
+ * the escrow and USDC addresses hold code.
+ *
+ * The failure this stops is silent. A staticCall to an address with no code returns
+ * 0x, which decodes as success for a function with no return value, so the real
+ * transaction is sent, mines with status 1 and does nothing. The caller then reports
+ * a settlement that never happened while the buyer's money sits Funded. Checked once
+ * per process per chain and addresses; a failed check is not remembered, so the next
+ * write asks again.
+ */
+const writableChains = new Map();
+function assertWritable(prov, C = CFG) {
+  const key = `${C.CHAIN_ID}:${String(C.ERC8183 || "").toLowerCase()}:${String(C.USDC || "").toLowerCase()}`;
+  if (!writableChains.has(key)) {
+    const check = (async () => {
+      if (!prov || typeof prov.send !== "function") throw new Error("no provider to check the chain with - refusing to touch money");
+      const live = Number(BigInt(await withRetry(() => prov.send("eth_chainId", []))));
+      if (live !== Number(C.CHAIN_ID)) {
+        throw new Error(`connected to chain ${live} but this write is for chain ${C.CHAIN_ID} - refusing to touch money`);
+      }
+      for (const [label, addr] of [["escrow", C.ERC8183], ["USDC", C.USDC]]) {
+        if (!isAddress(addr)) throw new Error(`no ${label} address configured for chain ${C.CHAIN_ID} - refusing to touch money`);
+        const code = await withRetry(() => prov.send("eth_getCode", [addr, "latest"]));
+        if (!code || code === "0x") {
+          throw new Error(`no contract code at the ${label} address ${addr} on chain ${live} - refusing to touch money`);
+        }
+      }
+      return live;
+    })();
+    writableChains.set(key, check);
+    check.catch(() => { if (writableChains.get(key) === check) writableChains.delete(key); });
+  }
+  return writableChains.get(key);
 }
 
 /**
@@ -103,19 +144,20 @@ async function signerAddress(contract) {
   return typeof r?.getAddress === "function" ? r.getAddress() : "unknown";
 }
 
-async function send(contract, method, args, label) {
+async function send(contract, method, args, label, C = CFG) {
+  await assertWritable(contract.runner?.provider, C);
   // The whole attempt, retries included, holds the key: a retry must not interleave with someone else's write.
-  return withKeyLock(await signerAddress(contract), () => sendNow(contract, method, args, label));
+  return withKeyLock(await signerAddress(contract), () => sendNow(contract, method, args, label, C));
 }
 
-async function sendNow(contract, method, args, label, attempt = 1) {
+async function sendNow(contract, method, args, label, C, attempt = 1) {
   await sleep(1200); // pacing: give the RPC a beat after the previous confirmation
   try {
     await contract[method].staticCall(...args); // dry-run: throws with the real revert reason
     const overrides = await feeOverrides(contract.runner.provider);
     const tx = await contract[method](...args, overrides);
     const rc = await tx.wait(1, WAIT_MS);
-    console.log(`  ${label}: ${CFG.EXPLORER}/tx/${rc.hash}`);
+    console.log(`  ${label}: ${C.EXPLORER}/tx/${rc.hash}`);
     return rc;
   } catch (e) {
     /* A named revert is the contract saying no on purpose. Retrying it three
@@ -126,7 +168,7 @@ async function sendNow(contract, method, args, label, attempt = 1) {
     if (!isRevert && attempt < 4) {
       contract.runner?.reset?.(); // NonceManager: drop local nonce state before retrying
       await sleep(3000 * attempt);
-      return sendNow(contract, method, args, label, attempt + 1);
+      return sendNow(contract, method, args, label, C, attempt + 1);
     }
     if (isRevert) { e.revertName = named; e.shortMessage = `${label} reverted: ${named}`; }
     throw e;
@@ -138,10 +180,10 @@ function contentHash(text) {
   return keccak256(toUtf8Bytes(text));
 }
 
-async function createJob(clientSigner, { providerAddr, evaluatorAddr, expiresInSec, description }) {
-  const { jobs } = await contracts(clientSigner);
+async function createJob(clientSigner, { providerAddr, evaluatorAddr, expiresInSec, description }, C = CFG) {
+  const { jobs } = await contracts(clientSigner, C);
   const expiredAt = Math.floor(Date.now() / 1000) + expiresInSec;
-  const rc = await send(jobs, "createJob", [providerAddr, evaluatorAddr, expiredAt, description, "0x0000000000000000000000000000000000000000"], "createJob");
+  const rc = await send(jobs, "createJob", [providerAddr, evaluatorAddr, expiredAt, description, "0x0000000000000000000000000000000000000000"], "createJob", C);
   // Pull jobId from the JobCreated event
   for (const log of rc.logs) {
     try {
@@ -152,32 +194,33 @@ async function createJob(clientSigner, { providerAddr, evaluatorAddr, expiresInS
   throw new Error("JobCreated event not found in receipt");
 }
 
-async function setBudget(providerSigner, jobId, amount) {
-  const { jobs } = await contracts(providerSigner);
-  return send(jobs, "setBudget", [jobId, amount, NO_PARAMS], "setBudget");
+async function setBudget(providerSigner, jobId, amount, C = CFG) {
+  const { jobs } = await contracts(providerSigner, C);
+  return send(jobs, "setBudget", [jobId, amount, NO_PARAMS], "setBudget", C);
 }
 
-async function fund(clientSigner, jobId, amount) {
-  const { jobs, usdc } = await contracts(clientSigner);
+async function fund(clientSigner, jobId, amount, C = CFG) {
+  const { jobs, usdc } = await contracts(clientSigner, C);
   const owner = await clientSigner.getAddress();
-  const allowance = await withRetry(() => usdc.allowance(owner, CFG.ERC8183));
-  if (allowance < amount) await send(usdc, "approve", [CFG.ERC8183, amount], "approve");
-  return send(jobs, "fund", [jobId, NO_PARAMS], "fund");
+  // The approval is for the escrow on the chain being funded, not whichever one the process started on.
+  const allowance = await withRetry(() => usdc.allowance(owner, C.ERC8183));
+  if (allowance < amount) await send(usdc, "approve", [C.ERC8183, amount], "approve", C);
+  return send(jobs, "fund", [jobId, NO_PARAMS], "fund", C);
 }
 
-async function submit(providerSigner, jobId, deliverableText) {
-  const { jobs } = await contracts(providerSigner);
-  return send(jobs, "submit", [jobId, contentHash(deliverableText), NO_PARAMS], "submit");
+async function submit(providerSigner, jobId, deliverableText, C = CFG) {
+  const { jobs } = await contracts(providerSigner, C);
+  return send(jobs, "submit", [jobId, contentHash(deliverableText), NO_PARAMS], "submit", C);
 }
 
-async function complete(evaluatorSigner, jobId, reasonText) {
-  const { jobs } = await contracts(evaluatorSigner);
-  return send(jobs, "complete", [jobId, contentHash(reasonText), NO_PARAMS], "complete");
+async function complete(evaluatorSigner, jobId, reasonText, C = CFG) {
+  const { jobs } = await contracts(evaluatorSigner, C);
+  return send(jobs, "complete", [jobId, contentHash(reasonText), NO_PARAMS], "complete", C);
 }
 
-async function reject(evaluatorSigner, jobId, reasonText) {
-  const { jobs } = await contracts(evaluatorSigner);
-  return send(jobs, "reject", [jobId, contentHash(reasonText), NO_PARAMS], "reject");
+async function reject(evaluatorSigner, jobId, reasonText, C = CFG) {
+  const { jobs } = await contracts(evaluatorSigner, C);
+  return send(jobs, "reject", [jobId, contentHash(reasonText), NO_PARAMS], "reject", C);
 }
 
 /**
@@ -185,9 +228,9 @@ async function reject(evaluatorSigner, jobId, reasonText) {
  * permission is needed and nothing of ours is involved — which is the whole
  * reason a crew is one escrow per agent rather than one for the lot.
  */
-async function claimRefund(clientSigner, jobId) {
-  const { jobs } = await contracts(clientSigner);
-  return send(jobs, "claimRefund", [jobId], "claimRefund");
+async function claimRefund(clientSigner, jobId, C = CFG) {
+  const { jobs } = await contracts(clientSigner, C);
+  return send(jobs, "claimRefund", [jobId], "claimRefund", C);
 }
 
 /**
@@ -195,14 +238,14 @@ async function claimRefund(clientSigner, jobId) {
  * digest itself, rather than a hash of a label. Anyone can fetch the published
  * record, recompute its digest, and compare it to what is on-chain.
  */
-async function completeRaw(evaluatorSigner, jobId, digest32) {
-  const { jobs } = await contracts(evaluatorSigner);
-  return send(jobs, "complete", [jobId, digest32, NO_PARAMS], "complete");
+async function completeRaw(evaluatorSigner, jobId, digest32, C = CFG) {
+  const { jobs } = await contracts(evaluatorSigner, C);
+  return send(jobs, "complete", [jobId, digest32, NO_PARAMS], "complete", C);
 }
 
-async function rejectRaw(evaluatorSigner, jobId, digest32) {
-  const { jobs } = await contracts(evaluatorSigner);
-  return send(jobs, "reject", [jobId, digest32, NO_PARAMS], "reject");
+async function rejectRaw(evaluatorSigner, jobId, digest32, C = CFG) {
+  const { jobs } = await contracts(evaluatorSigner, C);
+  return send(jobs, "reject", [jobId, digest32, NO_PARAMS], "reject", C);
 }
 
 /**
@@ -214,9 +257,10 @@ async function rejectRaw(evaluatorSigner, jobId, digest32) {
  * be mined twice. Any failure after broadcast carries the hash, so whoever looks at
  * it can see whether the money moved instead of guessing.
  */
-async function transferUsdc(signer, to, amount, { claim, reserve = 0n } = {}) {
-  const { usdc } = await contracts(signer);
+async function transferUsdc(signer, to, amount, { claim, reserve = 0n } = {}, C = CFG) {
+  const { usdc } = await contracts(signer, C);
   const from = await signerAddress(usdc);
+  await assertWritable(usdc.runner.provider, C);
   return withKeyLock(from, async () => {
     const prov = usdc.runner.provider;
     signer.reset?.(); // the shared nonce counter may be stale after writes from elsewhere with this key
@@ -232,7 +276,7 @@ async function transferUsdc(signer, to, amount, { claim, reserve = 0n } = {}) {
         withRetry(() => usdc.transfer.estimateGas(to, amount)),
         usdc.transfer.populateTransaction(to, amount),
       ]);
-      const raw = await base.signTransaction({ to: req.to, data: req.data, nonce, gasLimit: (gas * 12n) / 10n, chainId: CFG.CHAIN_ID, ...fees });
+      const raw = await base.signTransaction({ to: req.to, data: req.data, nonce, gasLimit: (gas * 12n) / 10n, chainId: Number(C.CHAIN_ID), ...fees });
       const hash = keccak256(raw);
       if (claim && !(await claim({ hash, raw, nonce }))) return { claimed: false };
 
@@ -247,7 +291,7 @@ async function transferUsdc(signer, to, amount, { claim, reserve = 0n } = {}) {
       try { rc = await prov.waitForTransaction(hash, 1, WAIT_MS); } catch (e) { throw Object.assign(e, { txHash: hash }); }
       if (!rc) throw Object.assign(new Error("refund not confirmed yet"), { txHash: hash });
       if (rc.status !== 1) throw Object.assign(new Error("refund transaction reverted"), { txHash: hash });
-      console.log(`  refund transfer: ${CFG.EXPLORER}/tx/${hash}`);
+      console.log(`  refund transfer: ${C.EXPLORER}/tx/${hash}`);
       return { claimed: true, hash, rc };
     } finally {
       signer.reset?.(); // this nonce was used outside the counter
@@ -257,5 +301,6 @@ async function transferUsdc(signer, to, amount, { claim, reserve = 0n } = {}) {
 
 module.exports = {
   contracts, contentHash, createJob, setBudget, fund, submit,
-  complete, reject, completeRaw, rejectRaw, claimRefund, transferUsdc, withKeyLock, withRetry, JOB_STATUS,
+  complete, reject, completeRaw, rejectRaw, claimRefund, transferUsdc, withKeyLock, withRetry, assertWritable, JOB_STATUS,
+  feeOverrides, WAIT_MS,
 };

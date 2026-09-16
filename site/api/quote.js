@@ -12,12 +12,18 @@
  *
  * This endpoint is open, and safe to be open: it will only ever write the
  * catalog price, only onto a job that names our provider wallet, only while
- * that job is still unpriced. There is nothing a caller can steer.
+ * that job is still unpriced, and only for an agent the job's chain sells.
+ * There is nothing a caller can steer.
+ *
+ * Quoting is also the gate for new orders. A buyer's order cannot be funded until it
+ * has a price, and only we can set one, so a chain that has stopped taking orders
+ * (TESTNET_ORDERS=closed) or an agent a chain does not sell is refused here.
  */
 
 const { Contract, parseUnits } = require("ethers");
-const { cfg, CATALOG, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
+const { moneyCfg, ordersOpen, sells, CATALOG, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
 const { loadWallet } = require("../../chain/config");
+const { assertWritable } = require("../../chain/jobs");
 
 const SET_BUDGET_ABI = ["function setBudget(uint256 jobId, uint256 amount, bytes optParams)"];
 
@@ -61,7 +67,18 @@ module.exports = async (req, res) => {
     const { jobId } = await readBody(req);
     if (!/^\d+$/.test(String(jobId || ""))) return sendJson(res, 400, { error: "numeric jobId required" });
 
-    const C = cfg(req);
+    // A chain named but not configured is refused, never quoted on testnet instead.
+    const C = moneyCfg(req);
+    if (!C) return sendJson(res, 503, { ok: false, reason: "that chain is not configured on this site yet" });
+    if (!ordersOpen(C)) {
+      return sendJson(res, 200, {
+        ok: false,
+        closed: true,
+        chain: C.KEY,
+        reason: "Testnet orders are closed. Stubly now takes orders on Arc mainnet. Earlier testnet orders, their reports and judge records stay readable.",
+      });
+    }
+
     const jobs = jobsContract(C);
     const j = await jobs.getJob(BigInt(jobId));
 
@@ -80,11 +97,16 @@ module.exports = async (req, res) => {
     let spec = null;
     try { spec = JSON.parse(j.description); } catch { /* free-text, not ours */ }
     const agent = spec?.agent;
+    // An unpriced order cannot be funded, so an agent this chain does not sell never takes money.
+    if (agent && CATALOG[agent] && !sells(C, agent)) {
+      return sendJson(res, 200, { ok: false, reason: "that agent is not sold on this chain" });
+    }
     // The price comes from the catalog. Nothing in the job description sets it.
     const price = agent && CATALOG[agent]?.priceUsdc;
     if (!price) return sendJson(res, 200, { ok: false, reason: "unknown agent" });
 
     const signer = await providerSigner(C);
+    await assertWritable(signer.provider, C); // no code at the escrow means a "successful" call that does nothing
     const c = new Contract(C.ERC8183, SET_BUDGET_ABI, signer);
     const amount = parseUnits(String(price), 6);
 

@@ -43,6 +43,7 @@ const CHAINS = {
     EVALUATOR_WALLET: "0x6F5A2E61DA4C779c6b4119F3BfEC8ec53Db488C7",
     PROVIDER_KEY: "provider",
     EVALUATOR_KEY: "evaluator",
+    START_BLOCK: 0,
   },
   mainnet: {
     KEY: "mainnet",
@@ -50,25 +51,36 @@ const CHAINS = {
     TESTNET: false,
     CHAIN_ID: Number(process.env.MAINNET_CHAIN_ID || 5042),
     RPC_URL: process.env.MAINNET_RPC_URL || "",
-    PUBLIC_RPC_URL: process.env.MAINNET_PUBLIC_RPC_URL || process.env.MAINNET_RPC_URL || "",
+    /* No fallback to MAINNET_RPC_URL: that one may be a paid or keyed endpoint, and
+       wallet_addEthereumChain would write it into every visitor's wallet for good.
+       Until the public one is set, mainnet counts as not configured. */
+    PUBLIC_RPC_URL: process.env.MAINNET_PUBLIC_RPC_URL || "",
     ERC8183: process.env.MAINNET_ERC8183 || "",
     USDC: process.env.MAINNET_USDC || "",
     IDENTITY_REGISTRY: process.env.MAINNET_IDENTITY_REGISTRY || "",
     EXPLORER: process.env.MAINNET_EXPLORER || "",
     EXPLORER_API: process.env.MAINNET_EXPLORER_API || "",
-    CIRCLE_CHAIN: process.env.MAINNET_CIRCLE_CHAIN || "ARC",
+    /* Circle's Wallets API has no Arc mainnet blockchain name yet. Empty until Circle
+       publishes one, so nothing creates a PIN wallet on a guessed chain. */
+    CIRCLE_CHAIN: process.env.MAINNET_CIRCLE_CHAIN || "",
     PROVIDER_WALLET: process.env.MAINNET_PROVIDER_WALLET || "",
     EVALUATOR_WALLET: process.env.MAINNET_EVALUATOR_WALLET || "",
     /* Separate keystores, never the testnet ones: a key that has lived on a
        laptop and in three CI environments does not get to sign for real money. */
     PROVIDER_KEY: "provider_mainnet",
     EVALUATOR_KEY: "evaluator_mainnet",
+    /* The block Circle's escrow was deployed in. Log reads that fall back to the RPC start
+       here, because no Stubly order can be older than the contract it lives in. */
+    START_BLOCK: Number(process.env.MAINNET_START_BLOCK || 0),
   },
 };
 
-/** A chain is usable once it can be reached and has an escrow to read. */
+/** A chain is usable once everything a buyer's order touches is known: the node, the
+    public RPC a wallet adds, the escrow, USDC, both of our wallets and the explorer. A
+    half-filled config would otherwise hand browsers an empty evaluator or RPC. */
 function configured(c) {
-  return Boolean(c && c.RPC_URL && c.ERC8183 && c.PROVIDER_WALLET);
+  return Boolean(c && c.RPC_URL && c.PUBLIC_RPC_URL && c.ERC8183 && c.USDC &&
+    c.PROVIDER_WALLET && c.EVALUATOR_WALLET && c.EXPLORER);
 }
 
 /** Read every call so a test (or a launch-day env flip) takes effect at once. */
@@ -87,6 +99,54 @@ function chainKey(req) {
 }
 
 function cfg(req) { return CHAINS[chainKey(req)]; }
+
+/**
+ * The chain for a request that signs. Reads may fall back to the default chain,
+ * because an old link must keep resolving; a write may not. A request that names a
+ * chain which is not configured, or a DEFAULT_CHAIN that is not, gets null and the
+ * endpoint refuses, rather than pricing or settling the order on testnet instead.
+ */
+function moneyCfg(req) {
+  let want = "";
+  try { want = new URL(req && req.url || "", "http://x").searchParams.get("chain") || ""; } catch { /* not a URL */ }
+  if (want) return Object.hasOwn(CHAINS, want) && configured(CHAINS[want]) ? CHAINS[want] : null;
+  const def = process.env.DEFAULT_CHAIN || "testnet";
+  return Object.hasOwn(CHAINS, def) && configured(CHAINS[def]) ? CHAINS[def] : null;
+}
+
+/** Testnet stops taking new orders at the flip (TESTNET_ORDERS=closed). Already funded
+    orders still settle and every page stays readable: published links point at them. */
+function ordersOpen(c) {
+  return !(c && c.TESTNET && process.env.TESTNET_ORDERS === "closed");
+}
+
+/**
+ * Where a report or judge record is stored. Testnet and mainnet are separate escrows
+ * whose order numbers overlap, so mainnet order N must never read or overwrite testnet
+ * order N's report: the worker judges what it reads, and releases money on it. Testnet
+ * keeps its bare paths, so every link already published still resolves. Refunds were
+ * namespaced for every chain from the start (publish.js) and stay as they are.
+ */
+function blobPath(kind, id, chainId) {
+  const n = Number(chainId || CHAINS.testnet.CHAIN_ID);
+  const ns = n === CHAINS.testnet.CHAIN_ID ? "" : `${n}/`;
+  if (kind === "judge") return `judge/${ns}${id}.json`;
+  if (kind === "deliverable") return `deliverables/${ns}${id}.md`;
+  throw new Error(`no blob path for ${kind}`);
+}
+
+/** The chain whose stored files a read wants. ?chainId= (the worker's) wins, then ?chain=,
+    which names a namespace even while that chain has no RPC configured: reading the right
+    folder needs only its id, and falling back to testnet's would serve the wrong report. */
+function storeChainId(req) {
+  let q;
+  try { q = new URL(req && req.url || "", "http://x").searchParams; } catch { q = new URLSearchParams(); }
+  const id = q.get("chainId");
+  if (id && /^\d+$/.test(id)) return Number(id);
+  const want = q.get("chain");
+  if (want && Object.hasOwn(CHAINS, want)) return CHAINS[want].CHAIN_ID;
+  return cfg(req).CHAIN_ID;
+}
 
 /* Back-compat: CFG still reads like the old flat constant, resolved against
    whichever chain is currently the default. Every line not yet migrated — and
@@ -110,6 +170,67 @@ const ABI = [
 
 // Single source of truth for the roster — shared with worker/catalog.js.
 const CATALOG = require("./_catalog.json");
+
+/**
+ * What mainnet sells: 50 of the 100 agents. Everything else stays a testnet agent.
+ *
+ * Chosen by what has actually worked: every agent with a completed testnet order
+ * (research-brief 47, wallet-report 13, site-audit 8, headers-check 6, thread-writer 4,
+ * copy-pack 3, then api-docs, faq-writer, pricing-review, chain-pulse, env-audit, eli5,
+ * cold-email, competitor-matrix), then enough of the rest to cover each kind of work
+ * the dispatcher and planner route to. Left off on purpose:
+ *  - launch-kit: it pays for its sub-orders out of the provider wallet. A run cut off
+ *    by /api/settle's 60-second limit, or retried, opens fresh sub-orders and leaves
+ *    the earlier ones Funded until someone claims them back by hand. Fine with test
+ *    USDC, not with the float of a real wallet. It comes back once sub-orders are recovered.
+ *  - agent-lookup: reads the identity registry from the worker's own environment, and
+ *    mainnet has no registry address yet.
+ *  - readme-writer, name-check: depend on outside services (GitHub's unauthenticated API,
+ *    third-party lookups) that rate-limit shared server addresses.
+ *  - gas-estimate, tokenomics-review, whitepaper-digest: a model's guesses about gas or a
+ *    token read as advice once real money is involved.
+ * Enforced by /api/catalog, dispatch, plan, quote, settle, the worker and registry.js.
+ */
+const MAINNET_ROSTER = Object.freeze([
+  // on-chain and site checks
+  "research-brief", "wallet-report", "token-report", "tx-explain", "contract-check", "chain-pulse",
+  "site-audit", "headers-check", "landing-critique", "meta-tags",
+  // launch and marketing
+  "copy-pack", "thread-writer", "tagline", "value-prop", "product-description", "press-release",
+  "newsletter", "linkedin-post", "blog-outline", "seo-keywords", "subject-lines", "case-study",
+  "cold-email", "outreach-sequence",
+  // engineering
+  "api-docs", "faq-writer", "env-audit", "error-explain", "regex-builder", "sql-explain", "test-plan",
+  "runbook", "postmortem", "pr-description", "tech-spec", "bug-report", "refactor-plan",
+  // business and planning
+  "pricing-review", "competitor-matrix", "pitch-critic", "swot", "unit-economics", "decision-brief",
+  "okrs", "risk-register", "roadmap", "user-personas", "vendor-comparison",
+  // everyday writing
+  "eli5", "translate",
+]);
+{
+  const unknown = MAINNET_ROSTER.filter((k) => !Object.hasOwn(CATALOG, k));
+  if (unknown.length || new Set(MAINNET_ROSTER).size !== MAINNET_ROSTER.length) {
+    throw new Error(`MAINNET_ROSTER drifted from the catalog: unknown [${unknown}] or a key listed twice`);
+  }
+}
+
+/** Is this agent for sale on this chain? c is a chain config or a chain id. Testnet sells
+    the whole catalog; any other chain, configured or not, sells only the mainnet roster. */
+function sells(c, key) {
+  if (!key || !Object.hasOwn(CATALOG, key)) return false;
+  const id = Number(c && typeof c === "object" ? c.CHAIN_ID : c);
+  if (id === CHAINS.testnet.CHAIN_ID) return true;
+  /* MAINNET_ROSTER_OFF takes agents off the mainnet shelf without a code change, e.g. the
+     chain-reading agents while the mainnet explorer refuses server requests. */
+  const off = String(process.env.MAINNET_ROSTER_OFF || "").split(",").map((k) => k.trim()).filter(Boolean);
+  return MAINNET_ROSTER.includes(key) && !off.includes(key);
+}
+
+/** The catalog as that chain sells it. */
+function shelf(c) {
+  return Object.fromEntries(Object.entries(CATALOG).filter(([k]) => sells(c, k)));
+}
 
 /**
  * Cheap keyword pass — catches the obvious requests without spending a model
@@ -155,16 +276,17 @@ const HINTS = [
   [/\blaunch\b.*\b(kit|package|everything)\b/i, "launch-kit"],
 ];
 
-function keywordPick(text, skip = new Set()) {
-  for (const [re, key] of HINTS) if (!skip.has(key) && re.test(text) && CATALOG[key]) return key;
+/* catalog narrows the pick to one chain's shelf (see shelf()); left off, the whole catalog. */
+function keywordPick(text, skip = new Set(), catalog = CATALOG) {
+  for (const [re, key] of HINTS) if (!skip.has(key) && re.test(text) && catalog[key]) return key;
   return null;
 }
 
 /** Every agent the request names outright, in table order, de-duplicated. */
-function keywordAll(text, skip = new Set()) {
+function keywordAll(text, skip = new Set(), catalog = CATALOG) {
   const out = [];
   for (const [re, key] of HINTS) {
-    if (skip.has(key) || out.includes(key) || !CATALOG[key]) continue;
+    if (skip.has(key) || out.includes(key) || !catalog[key]) continue;
     if (re.test(text)) out.push(key);
   }
   return out;
@@ -197,7 +319,7 @@ function sendJson(res, status, body, cacheControl) {
 }
 
 module.exports = {
-  CFG, CHAINS, cfg, chainKey, defaultChain, configured,
-  JOB_STATUS, CATALOG, HINTS, keywordPick, keywordAll,
+  CFG, CHAINS, cfg, chainKey, defaultChain, configured, moneyCfg, ordersOpen, blobPath, storeChainId,
+  JOB_STATUS, CATALOG, MAINNET_ROSTER, sells, shelf, HINTS, keywordPick, keywordAll,
   provider, jobsContract, sendJson,
 };
