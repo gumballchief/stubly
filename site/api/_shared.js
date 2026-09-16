@@ -172,42 +172,20 @@ const ABI = [
 const CATALOG = require("./_catalog.json");
 
 /**
- * What mainnet sells: 50 of the 100 agents. Everything else stays a testnet agent.
+ * What mainnet sells: every agent in the catalog, the same shelf as testnet.
  *
- * Chosen by what has actually worked: every agent with a completed testnet order
- * (research-brief 47, wallet-report 13, site-audit 8, headers-check 6, thread-writer 4,
- * copy-pack 3, then api-docs, faq-writer, pricing-review, chain-pulse, env-audit, eli5,
- * cold-email, competitor-matrix), then enough of the rest to cover each kind of work
- * the dispatcher and planner route to. Left off on purpose:
- *  - launch-kit: it pays for its sub-orders out of the provider wallet. A run cut off
- *    by /api/settle's 60-second limit, or retried, opens fresh sub-orders and leaves
- *    the earlier ones Funded until someone claims them back by hand. Fine with test
- *    USDC, not with the float of a real wallet. It comes back once sub-orders are recovered.
- *  - agent-lookup: reads the identity registry from the worker's own environment, and
- *    mainnet has no registry address yet.
- *  - readme-writer, name-check: depend on outside services (GitHub's unauthenticated API,
- *    third-party lookups) that rate-limit shared server addresses.
- *  - gas-estimate, tokenomics-review, whitepaper-digest: a model's guesses about gas or a
- *    token read as advice once real money is involved.
+ * The earlier 50-agent cut is gone. What it guarded against is handled directly:
+ *  - launch-kit pays for its sub-orders from the provider wallet; a run cut off mid-way
+ *    used to leave one Funded forever. The worker now recovers an abandoned sub-order
+ *    (worker/orchestrator.js recoverSubcontract), so the float comes back on its own.
+ *  - agent-lookup reads the identity registry from the worker's environment, which the
+ *    mainnet flip sets.
+ *  - agents that lean on outside services (readme-writer, name-check) can fail when those
+ *    rate-limit; a failed order is refunded by the escrow like any other.
+ * MAINNET_ROSTER_OFF can still take agents off the mainnet shelf without a code change.
  * Enforced by /api/catalog, dispatch, plan, quote, settle, the worker and registry.js.
  */
-const MAINNET_ROSTER = Object.freeze([
-  // on-chain and site checks
-  "research-brief", "wallet-report", "token-report", "tx-explain", "contract-check", "chain-pulse",
-  "site-audit", "headers-check", "landing-critique", "meta-tags",
-  // launch and marketing
-  "copy-pack", "thread-writer", "tagline", "value-prop", "product-description", "press-release",
-  "newsletter", "linkedin-post", "blog-outline", "seo-keywords", "subject-lines", "case-study",
-  "cold-email", "outreach-sequence",
-  // engineering
-  "api-docs", "faq-writer", "env-audit", "error-explain", "regex-builder", "sql-explain", "test-plan",
-  "runbook", "postmortem", "pr-description", "tech-spec", "bug-report", "refactor-plan",
-  // business and planning
-  "pricing-review", "competitor-matrix", "pitch-critic", "swot", "unit-economics", "decision-brief",
-  "okrs", "risk-register", "roadmap", "user-personas", "vendor-comparison",
-  // everyday writing
-  "eli5", "translate",
-]);
+const MAINNET_ROSTER = Object.freeze(Object.keys(CATALOG));
 {
   const unknown = MAINNET_ROSTER.filter((k) => !Object.hasOwn(CATALOG, k));
   if (unknown.length || new Set(MAINNET_ROSTER).size !== MAINNET_ROSTER.length) {

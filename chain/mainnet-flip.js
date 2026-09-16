@@ -10,13 +10,13 @@
  *
  * It follows launch/MAINNET-FLIP.md in order and stops at the first thing that is not
  * right. Nothing starts until `npm run mainnet:check` passes: Circle's escrow and identity
- * registry on chain, USDC real, both wallets funded, all 50 agent cards present.
+ * registry on chain, USDC real, both wallets funded, every agent card present.
  *
  * What it does after you type FLIP:
  *   1. asks the mainnet wallet password once (hidden) and proves it opens both wallets
  *   2. commits the mainnet branch, merges it into master, pushes, deploys the site
- *      (mainnet still switched off, so this is safe) and checks the 50 cards are live
- *   3. registers the 50 agents' ERC-8004 identities on mainnet (costs a little gas)
+ *      (mainnet still switched off, so this is safe) and checks every agent card is live
+ *   3. registers every agent's ERC-8004 identity on mainnet (costs a little gas)
  *   4. puts the mainnet settings on Vercel, closes testnet to new orders, redeploys
  *   5. waits for testnet orders to finish, then moves the worker to mainnet
  *      (automatically with RENDER_API_KEY + RENDER_SERVICE_ID set, otherwise it tells
@@ -179,7 +179,8 @@ async function flip() {
     MAINNET_START_BLOCK: String(block),
   };
 
-  say("\nThis will: deploy the mainnet code, register 50 agent identities on Arc mainnet, put the mainnet");
+  const { MAINNET_ROSTER: ROSTER } = require(path.join(ROOT, "site/api/_shared.js"));
+  say(`\nThis will: deploy the mainnet code, register ${ROSTER.length} agent identities on Arc mainnet, put the mainnet`);
   say("settings on Vercel, close testnet to new orders, and move the worker to mainnet.");
   if (rosterOff.length) say(`The explorer refuses server requests right now, so these agents stay off the mainnet shop: ${rosterOff.join(", ")}.`);
   const go = DRY ? "FLIP" : await ask("\nType FLIP to go ahead: ");
@@ -191,7 +192,7 @@ async function flip() {
   step(3, "Ship the mainnet code with mainnet still switched off");
   run("git", ["checkout", BRANCH]);
   run("git", ["add", "-A"]);
-  run("git", ["commit", "-m", "Ready for Arc mainnet: chain-aware money path, 50-agent shop, profile, log fallback"], { allowFail: true });
+  run("git", ["commit", "-m", "Ready for Arc mainnet: chain-aware money path, full agent shop, profile, log fallback"], { allowFail: true });
   run("git", ["checkout", "master"]);
   run("git", ["pull", "--ff-only", "origin", "master"]);
   run("git", ["merge", "--no-ff", BRANCH, "-m", "Merge mainnet-launch"]);
