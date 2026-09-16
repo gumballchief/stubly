@@ -8,8 +8,9 @@
  *
  * It asks the chain itself, not documentation, because the question that matters is
  * whether the contracts are really there and really the ones the code expects.
- * Addresses come from MAINNET_* env vars when set; otherwise it tries the addresses
- * Circle used on testnet, since both registries were deployed at fixed addresses.
+ * Addresses come from MAINNET_* env vars when set. Otherwise the escrow is Stubly's own
+ * deployment (chain/escrow-mainnet.json, from npm run escrow:deploy) once it exists, else the
+ * address Circle used on testnet; the identity registry is the ERC-8004 team's mainnet address.
  */
 
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
@@ -21,6 +22,14 @@ const { ERC8183_ABI_MIN } = require("./config");
 const EIP1967_IMPL_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
 const ROOT = path.join(__dirname, "..");
 
+/* Stubly's own escrow, once npm run escrow:deploy has finished: Circle's ERC-8183 code with no admin. */
+function ownEscrow() {
+  try {
+    const s = JSON.parse(fs.readFileSync(path.join(__dirname, "escrow-mainnet.json"), "utf8"));
+    return s.finishedAt && /^0x[0-9a-fA-F]{40}$/.test(s.escrow || "") ? s : null;
+  } catch { return null; }
+}
+
 function mainnetValues(env = process.env) {
   const addrOf = (name) => {
     try { return "0x" + JSON.parse(fs.readFileSync(path.join(__dirname, `${name}.keystore.json`), "utf8")).address.replace(/^0x/i, ""); }
@@ -31,8 +40,10 @@ function mainnetValues(env = process.env) {
     RPC_URL: env.MAINNET_RPC_URL || "https://rpc.mainnet.arc.io",
     PUBLIC_RPC_URL: env.MAINNET_PUBLIC_RPC_URL || "https://rpc.mainnet.arc.io",
     EXPLORER: env.MAINNET_EXPLORER || "https://explorer.arc.io",
-    ERC8183: env.MAINNET_ERC8183 || "0x0747EEf0706327138c69792bF28Cd525089e4583",
-    IDENTITY_REGISTRY: env.MAINNET_IDENTITY_REGISTRY || "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    ERC8183: env.MAINNET_ERC8183 || ownEscrow()?.escrow || "0x0747EEf0706327138c69792bF28Cd525089e4583",
+    /* The ERC-8004 team deploys to one address on every mainnet and another on every testnet. This is
+       the mainnet one, live on Arc with the same implementation and owner as the testnet registry. */
+    IDENTITY_REGISTRY: env.MAINNET_IDENTITY_REGISTRY || "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
     USDC: env.MAINNET_USDC || "0x3600000000000000000000000000000000000000",
     PROVIDER_WALLET: env.MAINNET_PROVIDER_WALLET || addrOf("provider_mainnet"),
     EVALUATOR_WALLET: env.MAINNET_EVALUATOR_WALLET || addrOf("evaluator_mainnet"),
@@ -86,12 +97,28 @@ async function runChecks({ env = process.env, needFunds = true } = {}) {
   }
 
   const escrowCode = await rpc(V.RPC_URL, "eth_getCode", [V.ERC8183, "latest"]).catch(() => "0x");
-  add("Circle's ERC-8183 escrow is deployed", hasCode(escrowCode), true,
-    hasCode(escrowCode) ? `code at ${V.ERC8183}` : `no contract at ${V.ERC8183} yet (set MAINNET_ERC8183 if Circle used another address)`);
+  add("ERC-8183 escrow is deployed", hasCode(escrowCode), true,
+    hasCode(escrowCode) ? `code at ${V.ERC8183}` : `no contract at ${V.ERC8183} yet: run npm run escrow:deploy (or set MAINNET_ERC8183 if Circle deploys theirs)`);
+
+  /* Stubly's own escrow is only safe to use with nobody able to change it. Its deployer must hold no role;
+     npm run escrow:deploy also checked that no one else was ever granted one. */
+  const own = ownEscrow();
+  if (own && hasCode(escrowCode) && own.escrow.toLowerCase() === V.ERC8183.toLowerCase()) {
+    try {
+      const roles = new Interface(["function hasRole(bytes32,address) view returns (bool)"]);
+      const holds = async (role) => BigInt(await rpc(V.RPC_URL, "eth_call", [{ to: V.ERC8183, data: roles.encodeFunctionData("hasRole", [role, own.deployer]) }, "latest"])) !== 0n;
+      const adminRole = require("ethers").keccak256(Buffer.from("ADMIN_ROLE"));
+      const still = (await holds("0x" + "00".repeat(32))) || (await holds(adminRole));
+      add("Stubly's escrow has no admin", !still, true,
+        still ? `deployer ${own.deployer} still holds a role: run npm run escrow:deploy again to finish` : "nobody can upgrade it, charge a fee or add a hook");
+    } catch (e) {
+      add("Stubly's escrow has no admin", false, true, e.message);
+    }
+  }
 
   const idCode = await rpc(V.RPC_URL, "eth_getCode", [V.IDENTITY_REGISTRY, "latest"]).catch(() => "0x");
-  add("Circle's ERC-8004 identity registry is deployed", hasCode(idCode), true,
-    hasCode(idCode) ? `code at ${V.IDENTITY_REGISTRY}` : `no contract at ${V.IDENTITY_REGISTRY} yet (set MAINNET_IDENTITY_REGISTRY if Circle used another address)`);
+  add("ERC-8004 identity registry is deployed", hasCode(idCode), true,
+    hasCode(idCode) ? `code at ${V.IDENTITY_REGISTRY}` : `no contract at ${V.IDENTITY_REGISTRY} yet (set MAINNET_IDENTITY_REGISTRY if it lives elsewhere)`);
 
   /* The escrow is a proxy, so its real functions live in the implementation. Every
      function the worker and the site call must be in that code, or the fallback ABI in

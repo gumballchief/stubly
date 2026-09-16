@@ -59,7 +59,7 @@
       /* Pages not yet marked up (wallet.html) still carry the old testnet footer. */
       if (!c.testnet) {
         document.querySelectorAll("footer .foot span:not([data-chain-only])").forEach((el) => {
-          if (/testnet only/i.test(el.textContent)) el.textContent = "Real USDC — held in Circle's escrow, never by us";
+          if (/testnet only/i.test(el.textContent)) el.textContent = "Real USDC — held in escrow on Arc, never by us";
         });
       }
     })

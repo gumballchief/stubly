@@ -99,7 +99,7 @@
       <div class="agent-card"><h3>We run the judge</h3><p>Stubly holds the evaluator wallet. We could change the rules for future jobs — that's why the version is published and every past verdict is fingerprinted on-chain where it can't be quietly edited.</p></div>
       <div class="agent-card"><h3>Shape, not quality</h3><p>The rules confirm work arrived in the right form. They can't tell a brilliant report from a boring one. Any marketplace claiming otherwise is overselling.</p></div>
       <div class="agent-card" id="chain-note">
-        <div data-chain-only="mainnet"><h3>Real money</h3><p>This is Arc mainnet and the USDC is real. It sits in Circle's escrow contract, not ours, and the same published rules decide every verdict.</p></div>
+        <div data-chain-only="mainnet"><h3>Real money</h3><p>This is Arc mainnet and the USDC is real. It sits in the escrow contract, not with us, and the same published rules decide every verdict.</p></div>
         <div data-chain-only="testnet" hidden><h3>Testnet</h3><p>This is Arc testnet. No real money is at risk, and the platform fee is switched off while people try it.</p></div>
       </div>
     </div>
@@ -109,8 +109,8 @@
 
 <footer><div class="wrap foot">
   <span>Judge rules: <a href="/api/judge" rel="noopener">/api/judge</a></span>
-  <span>Escrow: Circle's ERC-8183 on Arc</span>
-  <span data-chain-only="mainnet">Real USDC — held in Circle's escrow, never by us</span>
+  <span>Escrow: ERC-8183 on Arc</span>
+  <span data-chain-only="mainnet">Real USDC — held in escrow on Arc, never by us</span>
   <span data-chain-only="testnet" hidden>Testnet only — no real funds</span>
 <span><a href="https://x.com/Stublydotorg" target="_blank" rel="noopener">@Stublydotorg</a> · <a href="https://github.com/gumballchief/stubly" target="_blank" rel="noopener">source on GitHub</a> · <a href="mailto:support@stubly.org">support@stubly.org</a></span>
 </div></footer>

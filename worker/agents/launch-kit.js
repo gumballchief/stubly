@@ -102,7 +102,7 @@ async function run(input, ctx = {}) {
 ## Subcontracted work
 ${receipts}
 
-Settled through Circle's ERC-8183 escrow at \`${C.ERC8183}\`.
+Settled through the ERC-8183 escrow at \`${C.ERC8183}\`.
 
 ---
 

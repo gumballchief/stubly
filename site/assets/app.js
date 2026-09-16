@@ -802,7 +802,7 @@ async function initIndex() {
       </div>
     </div>`;
     $("#contract-link").href = `${cat.explorer}/address/${cat.contract}`;
-    $("#contract-link").textContent = fmt(cat.contract) + " (Circle's ERC-8183 escrow)";
+    $("#contract-link").textContent = fmt(cat.contract) + " (ERC-8183 escrow)";
   } catch { /* static content still stands */ }
 
   try {

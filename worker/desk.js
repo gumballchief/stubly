@@ -294,7 +294,7 @@ function refundedNow(cf, why, tx) {
     tone: "green",
     detail: `${cf.budgetUsdc} USDC back to ${short(cf.client)}`,
     link: txLink(tx) || walletLink(cf.client),
-    text: `Order #${cf.id} couldn't be finished because ${why}, so it was refunded. Circle's escrow sent ${cf.budgetUsdc} USDC back to the wallet that paid (${short(cf.client)}).`,
+    text: `Order #${cf.id} couldn't be finished because ${why}, so it was refunded. the escrow sent ${cf.budgetUsdc} USDC back to the wallet that paid (${short(cf.client)}).`,
   });
   return { code: "refunded-now", why, cf, tx };
 }
@@ -517,9 +517,9 @@ function describe(o) {
     "recovery-present": [`The report for order #${id} turned out to be there after all. It's on the order page.`, { title: "Completed", tone: "green", detail: "Report ready", link: page, linkText: "read the report" }],
     "recovery-refunded": [`The report for order #${id} couldn't be rebuilt, so its ${usd} USDC was already sent back to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} USDC to ${short(cf.client)}`, link: txLink(o.tx) || walletLink(cf.client), linkText: o.tx ? "view on Arc" : "view wallet" }],
     "recovery-needs-person": [`Order #${id} needs a person: ${why}. Email support@stubly.org with the order number and it will be picked up there.`, { title: "Needs a person", tone: "red", detail: why }, true],
-    refunded: [`Order #${id} was already refunded. Circle's escrow returned ${usd} USDC to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} USDC returned`, link: walletLink(cf.client), linkText: "view wallet" }],
+    refunded: [`Order #${id} was already refunded. the escrow returned ${usd} USDC to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} USDC returned`, link: walletLink(cf.client), linkText: "view wallet" }],
     expired: [`Order #${id} passed its deadline, and its ${usd} USDC was already taken back from the escrow.`, { title: "Expired", tone: "ink", detail: `${usd} USDC returned`, link: walletLink(cf.client), linkText: "view wallet" }],
-    "refunded-now": [`Order #${id} couldn't be finished because ${why}, so I refunded it. Circle's escrow sent ${usd} USDC back to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} USDC to ${short(cf.client)}`, link: txLink(o.tx) || walletLink(cf.client), linkText: o.tx ? "view on Arc" : "view wallet" }],
+    "refunded-now": [`Order #${id} couldn't be finished because ${why}, so I refunded it. the escrow sent ${usd} USDC back to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} USDC to ${short(cf.client)}`, link: txLink(o.tx) || walletLink(cf.client), linkText: o.tx ? "view on Arc" : "view wallet" }],
     "refund-failed": [`Order #${id} is due a refund because ${why}, but the transaction didn't go through just now. The worker retries it automatically.`, { title: "Refund retrying", tone: "red", detail: `${usd} USDC`, link: page }, true],
     "needs-person": [`Order #${id} needs a person: ${why}. Email support@stubly.org with the order number and it will be picked up there.`, { title: "Needs a person", tone: "red", detail: why }, true],
   };

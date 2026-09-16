@@ -18,6 +18,8 @@ Full plan: `~/.claude/plans/delightful-splashing-clarke.md`
 | USDC (ERC-20 interface) | `0x3600000000000000000000000000000000000000` — read decimals() at runtime, do not assume |
 | Explorer | https://testnet.arcscan.app (Blockscout REST v2 at /api/v2) |
 | Faucet | https://faucet.circle.com (20 USDC / 2h per address) |
+| Mainnet (5042) escrow | Circle has NOT deployed ERC-8183 there. `npm run escrow:deploy` deploys the same code (byte-identical to Circle's testnet escrow, CC0 reference implementation) and renounces both admin roles; result in `chain/escrow-mainnet.json`, which mainnet:check and mainnet:flip read |
+| Mainnet ERC-8004 identity | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` (the 8004 team's mainnet address, same implementation and owner as testnet's `0x8004A818…`) |
 
 ## ERC-8183 flow (from Circle's quickstart)
 
@@ -57,6 +59,7 @@ from console.circle.com → API & Client Keys → Standard/Testnet).
 ## Commands
 
 - `npm run wallets` — generate client/provider/evaluator testnet keystores (prints addresses to faucet-fund)
+- `npm run escrow:deploy -- --dry-run` — proves the stored escrow build is Circle's code and prices the mainnet deploy; without --dry-run it deploys from deployer_mainnet (typed password) and gives up admin
 - `npm run e2e:dry` — connectivity check: chain-id, balances, contract code present
 - `npm run e2e` — full job lifecycle on testnet (create→budget→fund→submit→complete, then refund paths)
 - `npm run site` — local stand-in for Vercel on :8791 (static + `api/`); needed by the crew script

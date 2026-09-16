@@ -69,7 +69,7 @@ const CHAINS = {
        laptop and in three CI environments does not get to sign for real money. */
     PROVIDER_KEY: "provider_mainnet",
     EVALUATOR_KEY: "evaluator_mainnet",
-    /* The block Circle's escrow was deployed in. Log reads that fall back to the RPC start
+    /* The block the escrow was deployed in. Log reads that fall back to the RPC start
        here, because no Stubly order can be older than the contract it lives in. */
     START_BLOCK: Number(process.env.MAINNET_START_BLOCK || 0),
   },
