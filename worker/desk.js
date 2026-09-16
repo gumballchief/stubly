@@ -216,6 +216,8 @@ async function inspect(id, { report = true } = {}) {
       && String(j.evaluator ?? j[3]).toLowerCase() === OURS.evaluator
       && !!(spec && W.AGENTS[spec.agent]),
     sub: !!spec?.sub,
+    // Paid in the token (worker/tokenpay.js): the escrow's client is Stubly's pay wallet, and the buyer's tokens go back from there.
+    paidInToken: !!spec?.pay,
     agent: spec?.agent || null,
     input: spec?.input || {},
     budget: BigInt(j.budget ?? j[5]),
@@ -409,6 +411,8 @@ async function refundByTransfer(cf) {
   const amount = cf.budget;
   const dollars = Number(formatUnits(amount, 6));
   if (!TRANSFER_REFUNDS) return needsPerson(cf, "automatic refunds for finished orders are switched off on this network");
+  // Its client is the pay wallet, not the buyer, and the buyer paid in tokens: a USDC transfer would refund the wrong wallet in the wrong money.
+  if (cf.paidInToken) return needsPerson(cf, "this order was paid in tokens, so its refund is handled by a person");
   if (amount <= 0n) return needsPerson(cf, "the order had no price to refund");
   if (dollars > MAX_TRANSFER_USDC) return needsPerson(cf, "the order is above the automatic refund limit");
   if (today().transferUsdc + dollars > DAILY_TRANSFER_USDC) return needsPerson(cf, "today's limit for automatic refunds was reached");
@@ -523,8 +527,13 @@ function describe(o) {
     "refund-failed": [`Order #${id} is due a refund because ${why}, but the transaction didn't go through just now. The worker retries it automatically.`, { title: "Refund retrying", tone: "red", detail: `${usd} USDC`, link: page }, true],
     "needs-person": [`Order #${id} needs a person: ${why}. Email support@stubly.org with the order number and it will be picked up there.`, { title: "Needs a person", tone: "red", detail: why }, true],
   };
-  const [text, step, person] = T[o.code] || T["lookup-failed"];
-  return { text, step, needsPerson: !!person, watch: !!o.watch };
+  const [plain, step, person] = T[o.code] || T["lookup-failed"];
+  /* An order paid in tokens: the escrow's USDC goes back to Stubly's pay wallet, and the buyer's tokens go back to
+     them from there. "USDC back to the wallet that paid" would name the wrong wallet and the wrong money. */
+  const tokenRefund = o.cf?.paidInToken && ["refunded", "refunded-now", "expired", "refund"].includes(o.code);
+  const text = !tokenRefund ? plain
+    : `Order #${id} ${o.code === "refund" ? `can't be finished because ${why}, so it is being refunded` : o.code === "expired" ? "passed its deadline and was refunded" : "was refunded"}. It was paid in tokens, so the tokens go back to the wallet that paid automatically, usually within a few minutes.`;
+  return { text, step: tokenRefund ? { ...step, detail: "Tokens go back automatically", link: page, linkText: "open order" } : step, needsPerson: !!person, watch: !!o.watch };
 }
 
 /**
@@ -912,5 +921,7 @@ async function reviewForEmail(orders) {
 
 module.exports = {
   attach, ready, handleHttp, deskStatus, reviewForEmail, refundReason, reportReadable,
+  // The same request plumbing for the other routes on the worker's server (worker/tokenpay.js).
+  http: { send, readJson, limited, clientKey, cors, ORIGINS },
   _test: { plan, describe, inspect, review, composeReply, replyProblem, ordersFor, turnOrders, cleanMessages, signTurn, limited, clientKey },
 };

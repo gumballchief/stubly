@@ -37,6 +37,9 @@ const CFG = {
   PROVIDER_KEY: process.env.PROVIDER_KEY || (ON_TESTNET ? "provider" : "provider_mainnet"),
   EVALUATOR_KEY: process.env.EVALUATOR_KEY || (ON_TESTNET ? "evaluator" : "evaluator_mainnet"),
   CLIENT_KEY: process.env.CLIENT_KEY || (ON_TESTNET ? "client" : "client_mainnet"),
+  /* The pay wallet behind "pay with $STUBLY" (worker/tokenpay.js): it holds USDC to fund escrows
+     for buyers who pay in the token. Only loaded when TOKENPAY=on. */
+  TREASURY_KEY: process.env.TREASURY_KEY || (ON_TESTNET ? "treasury" : "treasury_mainnet"),
   /* Circle deployed the ERC-8004 registries. Env-overridable so mainnet is a
      configuration change, and so a mismatched pair fails loudly rather than
      minting identities into the wrong registry. */

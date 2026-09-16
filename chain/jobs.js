@@ -302,5 +302,5 @@ async function transferUsdc(signer, to, amount, { claim, reserve = 0n } = {}, C 
 module.exports = {
   contracts, contentHash, createJob, setBudget, fund, submit,
   complete, reject, completeRaw, rejectRaw, claimRefund, transferUsdc, withKeyLock, withRetry, assertWritable, JOB_STATUS,
-  feeOverrides, WAIT_MS,
+  feeOverrides, WAIT_MS, send,
 };
