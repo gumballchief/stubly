@@ -5,6 +5,7 @@
  *
  *   npm run wallets:mainnet                        provider_mainnet + evaluator_mainnet
  *   npm run wallets:mainnet -- --with-client       also client_mainnet (only for test orders)
+ *   npm run wallets:mainnet -- --with-treasury     also treasury_mainnet, the pay wallet for orders paid in tokens
  *   npm run wallets:mainnet -- --copy provider_mainnet
  *        copies that keystore, still encrypted, as base64 to the clipboard for the
  *        host's PROVIDER_MAINNET_KEYSTORE_B64 setting. Nothing is printed.
@@ -28,7 +29,7 @@ const readline = require("readline");
 const { spawnSync } = require("child_process");
 
 const ROLES = ["provider_mainnet", "evaluator_mainnet"];
-const ALL_MAINNET = [...ROLES, "client_mainnet"];
+const ALL_MAINNET = [...ROLES, "client_mainnet", "treasury_mainnet"];
 const TESTNET = ["client", "provider", "evaluator"];
 /* The testnet provider and evaluator, as published in site/api/_shared.js, so they
    are refused even on a machine that no longer has their keystore files. */
@@ -38,6 +39,7 @@ const ROLE_HELP = {
   provider_mainnet: "the agents' wallet: sets prices, delivers work, gets paid",
   evaluator_mainnet: "approves or rejects work, and refunds buyers",
   client_mainnet: "a buyer wallet, only for test orders",
+  treasury_mainnet: "the pay wallet: holds USDC to fund orders paid in tokens, and holds those tokens until each order settles",
 };
 
 const fileFor = (name, dir = __dirname) => path.join(dir, `${name}.keystore.json`);
@@ -163,7 +165,7 @@ async function main() {
 
   if (!process.stdin.isTTY) throw new Error("run this in a terminal window; it needs to hide what you type");
 
-  const roles = args.includes("--with-client") ? ALL_MAINNET : ROLES;
+  const roles = [...ROLES, ...(args.includes("--with-client") ? ["client_mainnet"] : []), ...(args.includes("--with-treasury") ? ["treasury_mainnet"] : [])];
   const anyExisting = ALL_MAINNET.filter((r) => fs.existsSync(fileFor(r)));
   for (const r of anyExisting) {
     if (!keystoreAddress(fileFor(r))) throw new Error(`${fileFor(r)} is unreadable. Move it out of the chain folder and run this again`);

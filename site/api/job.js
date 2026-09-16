@@ -40,6 +40,14 @@ module.exports = async (req, res) => {
     let spec = null;
     try { spec = JSON.parse(j.description); } catch { /* free-text job */ }
 
+    /* Paid in tokens: the escrow's client is Stubly's pay wallet and the buyer is named in the order.
+       Anyone can write a buyer into a description, so it only counts when the pay wallet created the order. */
+    const p = spec?.pay;
+    const pay = p && /^0x[a-fA-F0-9]{40}$/.test(C.PAY_WALLET || "") && String(j.client).toLowerCase() === C.PAY_WALLET.toLowerCase()
+      && /^0x[a-fA-F0-9]{40}$/.test(String(p.buyer || "")) && /^\d{1,78}$/.test(String(p.amount || ""))
+      ? { buyer: p.buyer, amount: String(p.amount), decimals: Number(p.decimals) || 18, symbol: String(p.symbol || "TOKEN").replace(/[^\w$.-]/g, "").slice(0, 12) || "TOKEN" }
+      : null;
+
     sendJson(res, 200, {
       live: true,
       id,
@@ -54,6 +62,7 @@ module.exports = async (req, res) => {
       agent: spec?.agent || null,
       input: spec?.input || null,
       ours: j.provider.toLowerCase() === C.PROVIDER_WALLET.toLowerCase(),
+      pay,
       explorer: `${C.EXPLORER}/address/${C.ERC8183}`,
       chain: C.KEY,
     });
