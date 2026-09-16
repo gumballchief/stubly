@@ -22,21 +22,60 @@ const ARC = {
 let CIRCLE_CHAIN = "ARC-TESTNET";
 
 
-/* Hydrate the two above from the server. Safe to call anywhere, any number of
-   times: it fetches once and every later caller awaits the same promise. A
-   failed fetch leaves the fallback in place rather than blocking a hire. */
-let _chainReady = null;
-function chainReady() {
-  if (!_chainReady) {
-    _chainReady = api("/api/catalog").then((cat) => {
+/* Which chain this page is about. ?chain=testnet|mainnet in the address picks it;
+   without one the server's default answers, and the first /api/catalog response
+   says which chain that was. From then on every API call and every link this page
+   writes names that chain, so an order placed or opened here keeps pointing at the
+   same contract even after the default changes. Old links with no ?chain still work. */
+const URL_CHAIN = (() => {
+  const c = new URLSearchParams(location.search).get("chain");
+  return c === "testnet" || c === "mainnet" ? c : null;
+})();
+let CHAIN_KEY = URL_CHAIN;
+
+/** A same-site path with this page's chain added, unless it already names one. */
+function onChain(path) {
+  if (!CHAIN_KEY || /[?&]chain=/.test(path)) return path;
+  return `${path}${path.includes("?") ? "&" : "?"}chain=${CHAIN_KEY}`;
+}
+
+/* Hydrate the chain from the server. Safe to call anywhere, any number of times:
+   it fetches once and every later caller awaits the same promise. A failed fetch
+   is forgotten so the next caller tries again. The key the server answers with
+   wins over ?chain, because an unconfigured chain is served as testnet and the
+   page should say what it is actually showing. */
+let _catalog = null;
+function catalog() {
+  if (!_catalog) {
+    _catalog = api("/api/catalog").then((cat) => {
       if (cat && cat.chain) {
+        if (cat.chain.key === "testnet" || cat.chain.key === "mainnet") CHAIN_KEY = cat.chain.key;
         if (cat.chain.addChain) Object.assign(ARC, cat.chain.addChain);
         if (cat.chain.circleChain) CIRCLE_CHAIN = cat.chain.circleChain;
       }
-      return ARC;
-    }).catch(() => ARC);
+      return cat;
+    }).catch((e) => { _catalog = null; throw e; });
   }
-  return _chainReady;
+  return _catalog;
+}
+
+/* The fallback stays in place when the catalog can't be read, rather than blocking a hire. */
+function chainReady() {
+  return catalog().then(() => ARC, () => ARC);
+}
+
+/* Testnet stops taking new orders at the flip, but an old bookmark or a hand-typed
+   ?chain=testnet can still open its shop. Checked before any wallet prompt: a createJob
+   signed there makes an order that can never be priced, so it would only cost gas.
+   Returns the words to show instead, or null while the chain takes orders. */
+const MAIN_SHOP = { hire: "/hire?chain=mainnet", crew: "/crew?chain=mainnet" };
+function ordersClosed(cat, shop) {
+  if (!cat || !cat.chain || cat.chain.ordersOpen !== false) return null;
+  return `This is Stubly's Arc testnet shop, which is closed to new orders. Nothing was signed and no money moved. Hire on Arc mainnet: <a href="${MAIN_SHOP[shop]}">${MAIN_SHOP[shop].split("?")[0]} on mainnet</a>. Past testnet orders stay readable on their order pages.`;
+}
+/* The quote endpoint says so too, in case the catalog was read before the chain closed. */
+function quoteClosed(q) {
+  return q && q.closed ? String(q.reason || "This chain is closed to new orders.").replace(/[<>&]/g, "") : null;
 }
 
 const IFACE_JOBS = [
@@ -122,11 +161,18 @@ const $ = (sel) => document.querySelector(sel);
 const fmt = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
 async function api(path) {
-  const r = await fetch(path);
+  const r = await fetch(onChain(path));
   return r.ok || r.headers.get("content-type")?.includes("json") ? r.json() : Promise.reject(new Error(`${r.status}`));
 }
+/* PIN wallets exist only on chains Circle supports; ask once before showing the button. */
+async function hidePinIfUnsupported() {
+  const b = $("#btn-pin");
+  if (!b) return;
+  try { const c = await postApi({ action: "config" }); if (c && c.pinWallets === false) b.hidden = true; } catch { /* leave it; a click still gets a clear refusal */ }
+}
+
 async function postApi(body) {
-  const r = await fetch("/api/circle", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const r = await fetch(onChain("/api/circle"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   return r.json();
 }
 
@@ -225,7 +271,9 @@ async function disconnectWallet(eth) {
 
 /* ————— page: hire ————— */
 async function initHire() {
-  const cat = await api("/api/catalog");
+  const cat = await catalog();
+  const closed = ordersClosed(cat, "hire");
+  if (closed) $("#carbon").innerHTML = closed;
   const agents = cat.agents;
   const choiceBox = $("#agent-choice");
   const inputField = $("#job-input");
@@ -273,7 +321,7 @@ async function initHire() {
       $("#ask-result").style.display = "none";
       askNote("reading the shelf…");
       try {
-        const r = await fetch("/api/dispatch", {
+        const r = await fetch(onChain("/api/dispatch"), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ text }),
@@ -319,6 +367,7 @@ async function initHire() {
     } catch (e) { log(`✗ ${e.message}`, "bad"); }
   });
 
+  hidePinIfUnsupported();
   $("#btn-pin").addEventListener("click", async () => {
     try {
       const userId = localStorage.getItem("am_circle_user");
@@ -379,21 +428,23 @@ async function initHire() {
        poll. If that call fails for any reason the worker still picks the job
        up, so we fall through to polling instead of giving up. */
     log("   pricing the order…");
-    let quoted = false;
+    let quoted = false, shut = null;
     try {
-      const q = await (await fetch("/api/quote", {
+      const q = await (await fetch(onChain("/api/quote"), {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ jobId }),
       })).json();
       quoted = !!q.ok;
+      shut = quoteClosed(q);
     } catch { /* fall through to the poll below */ }
+    if (shut) throw new Error(`${shut} Order #${jobId} was created but never paid, so no USDC moved.`);
 
     for (let i = 0; i < 30 && !quoted; i++) {
       await new Promise((r) => setTimeout(r, 4000));
       const j = await api(`/api/job?id=${jobId}`);
       quoted = j.hasBudget;
     }
-    if (!quoted) throw new Error(`quote pending — finish later from /job?id=${jobId}; your money has NOT moved`);
+    if (!quoted) throw new Error(`quote pending — finish later from ${onChain(`/job?id=${jobId}`)}; your money has NOT moved`);
 
     /* The escrow only needs an allowance, and an allowance persists. Approving
        the exact price every time cost a PIN prompt per job for no benefit — so
@@ -423,15 +474,16 @@ async function initHire() {
        Deliberately not awaited: the buyer should land on their work order and
        watch the stamps arrive, not stare at this line for half a minute. If the
        call fails, the polling worker settles it as it always did. */
-    fetch("/api/settle", {
+    fetch(onChain("/api/settle"), {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ jobId }),
     }).catch(() => { /* the worker is the backstop */ });
-    setTimeout(() => { location.href = `/job?id=${jobId}`; }, 1200);
+    setTimeout(() => { location.href = onChain(`/job?id=${jobId}`); }, 1200);
   }
 
   $("#btn-create").addEventListener("click", async () => {
     try {
+      if (closed) return log(`✗ ${closed}`, "bad");
       const a = agents[selected];
       const val = inputField.value.trim();
       if (!val) return log("✗ fill in the job field first", "bad");
@@ -466,21 +518,23 @@ async function initHire() {
          which is how six buyers with money in their wallets walked away. The
          poll below stays as the backstop for when this call fails. */
       log("2/3 pricing the order…");
-      let quoted = false;
+      let quoted = false, shut = null;
       try {
-        const q = await (await fetch("/api/quote", {
+        const q = await (await fetch(onChain("/api/quote"), {
           method: "POST", headers: { "content-type": "application/json" },
           body: JSON.stringify({ jobId }),
         })).json();
         quoted = !!q.ok;
+        shut = quoteClosed(q);
       } catch { /* fall through to the poll below */ }
+      if (shut) throw new Error(`${shut} Order #${jobId} was created but never paid, so no USDC moved.`);
 
       for (let i = 0; i < 30 && !quoted; i++) {
         await new Promise((r) => setTimeout(r, 4000));
         const j = await api(`/api/job?id=${jobId}`);
         quoted = j.hasBudget;
       }
-      if (!quoted) throw new Error(`quote pending — finish later from /job?id=${jobId}; your money has NOT moved`);
+      if (!quoted) throw new Error(`quote pending — finish later from ${onChain(`/job?id=${jobId}`)}; your money has NOT moved`);
       log("   quote posted ✓", "ok");
 
       const amount = ethers.parseUnits(a.priceUsdc, 6);
@@ -497,13 +551,13 @@ async function initHire() {
          undelivered, and we had to refund them by hand. Deliberately not
          awaited: the buyer should land on their work order and watch the stamps
          arrive. If the call fails, the polling worker settles it as before. */
-      fetch("/api/settle", {
+      fetch(onChain("/api/settle"), {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ jobId }),
       }).catch(() => { /* the worker is the backstop */ });
 
       log(`opening work order #${jobId}…`);
-      location.href = `/job?id=${jobId}`;
+      location.href = onChain(`/job?id=${jobId}`);
     } catch (e) {
       log(`✗ ${e.shortMessage || e.message}`, "bad");
       $("#btn-create").disabled = false;
@@ -532,21 +586,32 @@ const STEPS = [
 
 async function initJob() {
   const id = new URLSearchParams(location.search).get("id");
-  if (!id) { $("#job-main").innerHTML = "<p>No job number in the address. Open a work order like <code>/job?id=161321</code>.</p>"; return; }
+  if (!id) { $("#job-main").innerHTML = "<p>No job number in the address. Open a work order like <code>/job?id=161321&amp;chain=testnet</code>.</p>"; return; }
   $("#t-no").textContent = `#${id}`;
-  const bc = $("#barcode"); if (bc) { renderBarcode(bc, id); $("#barcode-label").textContent = `ARC·${parseInt(ARC.chainId, 16)}·JOB·${id}`; }
+  // The label prints the chain id, so it waits for the server to say which chain this order is on.
+  const bc = $("#barcode");
+  if (bc) {
+    renderBarcode(bc, id);
+    chainReady().then(() => { $("#barcode-label").textContent = `ARC·${parseInt(ARC.chainId, 16)}·JOB·${id}`; });
+  }
   let lastStatus = -1;
 
   let catalogCache = null;
   const agentTitle = async (key) => {
     if (!key) return "external job";
-    if (!catalogCache) { try { catalogCache = (await api("/api/catalog")).agents; } catch { catalogCache = {}; } }
+    if (!catalogCache) { try { catalogCache = (await catalog()).agents; } catch { catalogCache = {}; } }
     return catalogCache[key]?.title || key;
   };
 
   async function refresh() {
     const j = await api(`/api/job?id=${id}`);
     if (!j.live) { $("#carbon").textContent = `chain read failed: ${j.error} — retrying…`; return; }
+    /* An old link with no ?chain can be answered from testnet; pin the page to that chain
+       so the report, the verdict and every link read the same contract. */
+    if (!URL_CHAIN && j.chain && j.chain !== CHAIN_KEY) {
+      CHAIN_KEY = j.chain;
+      const u = new URL(location.href); u.searchParams.set("chain", j.chain); history.replaceState(null, "", u);
+    }
     $("#t-agent").textContent = await agentTitle(j.agent);
     $("#t-input").textContent = j.input ? Object.values(j.input)[0] : "—";
     $("#t-price").textContent = j.hasBudget ? `${Number(j.budgetUsdc).toFixed(2)} USDC` : "quote pending";
@@ -569,7 +634,7 @@ async function initJob() {
     { const sl = $("#support-link"); if (sl) sl.href = "mailto:support@stubly.org?subject=" + encodeURIComponent("Order #" + id); }
     if (j.status >= 2) {
       try {
-        const r = await fetch(`/api/deliverable?id=${id}`);
+        const r = await fetch(onChain(`/api/deliverable?id=${id}`));
         if (r.ok && r.headers.get("content-type")?.includes("markdown")) {
           $("#deliverable-wrap").style.display = "block";
           $("#deliverable").innerHTML = mdToHtml(await r.text());
@@ -597,7 +662,7 @@ async function initJob() {
             $("#btn-fund").disabled = true;
             const w = await connectWallet((m) => { note.textContent = m; });
             const signer = await new ethers.BrowserProvider(w.eth).getSigner();
-            const cat = await api("/api/catalog");
+            const cat = await catalog();
             const jobs = new ethers.Contract(cat.contract, IFACE_JOBS, signer);
             const usdc = new ethers.Contract(cat.usdc, IFACE_USDC, signer);
             const amount = ethers.parseUnits(Number(j.budgetUsdc).toFixed(6), 6);
@@ -648,7 +713,7 @@ async function initJob() {
                 btn.disabled = false; return;
               }
               const signer = await new ethers.BrowserProvider(w.eth).getSigner();
-              const cat = await api("/api/catalog");
+              const cat = await catalog();
               const jobs = new ethers.Contract(cat.contract, IFACE_JOBS, signer);
               note.textContent = "withdrawing from escrow…";
               const tx = await jobs.claimRefund(id);
@@ -719,13 +784,13 @@ function agentCard(key, a, cat) {
       ${a.agentId ? `<a class="id-badge" href="${cat.explorer}/token/${cat.identityRegistry}/instance/${a.agentId}" target="_blank" rel="noopener" title="ERC-8004 on-chain identity">◆ verified agent #${a.agentId}</a>` : ""}
       <p>${a.blurb}</p>
       <div class="agent-meta"><span><b>${a.priceUsdc} USDC</b> per job</span><span>${a.eta}</span></div>
-      <a class="btn btn-primary" href="/hire?agent=${key}">Hire ${a.title}</a>
+      <a class="btn btn-primary" href="${onChain(`/hire?agent=${key}`)}">Hire ${a.title}</a>
     </div>`;
 }
 
 async function initIndex() {
   try {
-    const cat = await api("/api/catalog");
+    const cat = await catalog();
     const total = Object.keys(cat.agents).length;
 
     $("#agent-grid").innerHTML = `<div class="desk">
@@ -756,7 +821,7 @@ async function initIndex() {
 
 /* ————— page: the whole shelf ————— */
 async function initAgents() {
-  const cat = await api("/api/catalog");
+  const cat = await catalog();
   const all = cat.agents;
   const total = Object.keys(all).length;
   $("#count").textContent =
@@ -816,7 +881,9 @@ async function initAgents() {
    The cost is one confirmation per agent. Worth it: the first agent is already
    working while the buyer approves the third. */
 async function initCrew() {
-  const cat = await api("/api/catalog");
+  const cat = await catalog();
+  const closed = ordersClosed(cat, "crew");
+  if (closed) $("#plan-note").innerHTML = closed;
   let plan = null;          // [{agent,title,blurb,priceUsdc,field,label,input}]
   let account = null, walletEth = null, mode = null, circleCtx = null;
 
@@ -884,7 +951,7 @@ async function initCrew() {
     note("reading the request…");
     $("#btn-plan").disabled = true;
     try {
-      const r = await (await fetch("/api/plan", {
+      const r = await (await fetch(onChain("/api/plan"), {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ text }),
       })).json();
@@ -916,6 +983,7 @@ async function initCrew() {
     } catch (e) { log(`✗ ${e.message}`, "bad"); }
   });
 
+  hidePinIfUnsupported();
   $("#btn-pin").addEventListener("click", async () => {
     try {
       const userId = localStorage.getItem("am_circle_user");
@@ -986,13 +1054,15 @@ async function initCrew() {
 
     /* Price it from the catalog server-side, same as a solo hire. */
     setState(i, `#${jobId} · pricing…`, "s-go");
-    let quoted = false;
+    let quoted = false, shut = null;
     try {
-      const q = await (await fetch("/api/quote", {
+      const q = await (await fetch(onChain("/api/quote"), {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jobId }),
       })).json();
       quoted = !!q.ok;
+      shut = quoteClosed(q);
     } catch { /* fall through to the poll */ }
+    if (shut) throw new Error(`${shut} Order #${jobId} was created but never paid, so no USDC moved.`);
     for (let n = 0; n < 20 && !quoted; n++) {
       await new Promise((r) => setTimeout(r, 3000));
       quoted = (await api(`/api/job?id=${jobId}`)).hasBudget;
@@ -1038,7 +1108,7 @@ async function initCrew() {
 
     /* Start it now rather than waiting for a poll. Not awaited: the next agent
        should be getting ordered while this one is already working. */
-    fetch("/api/settle", {
+    fetch(onChain("/api/settle"), {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jobId }),
     }).catch(() => { /* the worker is the backstop */ });
 
@@ -1057,7 +1127,7 @@ async function initCrew() {
     let md = null;
     for (let n = 0; n < 12 && md === null; n++) {
       try {
-        const r = await fetch(`/api/deliverable?id=${jobId}`);
+        const r = await fetch(onChain(`/api/deliverable?id=${jobId}`));
         if (r.ok && r.headers.get("content-type")?.includes("markdown")) { md = await r.text(); break; }
       } catch { /* keep waiting */ }
       await new Promise((s) => setTimeout(s, 5000));
@@ -1090,7 +1160,7 @@ async function initCrew() {
         if (s) setState(i, `#${jobId} · ${s[0]}`, s[1]);
         if (["Completed", "Rejected", "Expired"].includes(j.statusText)) {
           const el = $(`[data-state="${i}"]`);
-          if (el) el.innerHTML += ` · <a href="/job?id=${jobId}">open</a>`;
+          if (el) el.innerHTML += ` · <a href="${onChain(`/job?id=${jobId}`)}">open</a>`;
           if (j.statusText === "Completed") showResult(i, jobId);
           return;
         }
@@ -1102,6 +1172,7 @@ async function initCrew() {
 
   /* ————— hire the whole crew ————— */
   $("#btn-hire").addEventListener("click", async () => {
+    if (closed) return log(`✗ ${closed}`, "bad");
     const missing = plan.findIndex((s) => !String(s.input || "").trim());
     if (missing >= 0) {
       setState(missing, "fill this in first", "s-bad");
@@ -1132,7 +1203,21 @@ async function initCrew() {
   });
 }
 
+/* Keep a chain someone chose in the address while they read orders, verdicts and profiles.
+   Only onto those read-only pages: the sample order is a testnet order, and carrying its
+   chain onto "Hire an agent" would walk a new visitor into the closed testnet shop instead of
+   the real one. Links that already name a chain keep their own. */
+function carryChain() {
+  if (!URL_CHAIN) return;
+  document.querySelectorAll('a[href^="/"]').forEach((a) => {
+    const href = a.getAttribute("href");
+    if (href.startsWith("//") || !/^\/(job|judge|profile)(?=[?#/]|$)/.test(href) || /[?&]chain=/.test(href)) return;
+    a.setAttribute("href", `${href}${href.includes("?") ? "&" : "?"}chain=${URL_CHAIN}`);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  carryChain();
   const page = document.body.dataset.page;
   if (page === "hire") initHire().catch((e) => { $("#carbon").textContent = e.message; });
   if (page === "job") initJob();

@@ -29,8 +29,8 @@
 <body data-page="job">
 
 <header class="top"><div class="wrap top-inner">
-  <a class="wordmark" href="/"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M 12 4 H 15 A 6 6 0 0 0 27 4 H 52 Q 60 4 60 12 V 52 Q 60 60 52 60 H 27 A 6 6 0 0 0 15 60 H 12 Q 4 60 4 52 V 12 Q 4 4 12 4 Z" fill="#F6EEDC" stroke="#16233B" stroke-width="4" stroke-linejoin="round"/><g transform="rotate(-7 38 32)"><text x="38" y="45" text-anchor="middle" font-family="Archivo Black,Arial Black,sans-serif" font-size="36" fill="#2775CA">S</text></g></svg>Stubly<small>ARC TESTNET</small></a>
-  <nav><a href="/agents">All agents</a><a href="/crew">Hire a crew</a><a href="/hire">Hire an agent</a><a href="/earnings">Earnings</a></nav>
+  <a class="wordmark" href="/"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M 12 4 H 15 A 6 6 0 0 0 27 4 H 52 Q 60 4 60 12 V 52 Q 60 60 52 60 H 27 A 6 6 0 0 0 15 60 H 12 Q 4 60 4 52 V 12 Q 4 4 12 4 Z" fill="#F6EEDC" stroke="#16233B" stroke-width="4" stroke-linejoin="round"/><g transform="rotate(-7 38 32)"><text x="38" y="45" text-anchor="middle" font-family="Archivo Black,Arial Black,sans-serif" font-size="36" fill="#2775CA">S</text></g></svg>Stubly<small>ARC</small></a>
+  <nav><a href="/agents">All agents</a><a href="/crew">Hire a crew</a><a href="/hire">Hire an agent</a><a href="/profile">Profile</a></nav>
 </div></header>
 
 <main class="wrap" id="job-main">
@@ -78,13 +78,16 @@
 </main>
 
 <footer><div class="wrap foot">
-  <span>Every state change above is a transaction on Arc testnet.</span>
-  <span>Testnet only — no real funds</span>
+  <span data-chain-only="mainnet">Every state change above is a transaction on Arc.</span>
+  <span data-chain-only="testnet" hidden>Every state change above is a transaction on Arc testnet.</span>
+  <span data-chain-only="mainnet">Real USDC — held in Circle's escrow, never by us</span>
+  <span data-chain-only="testnet" hidden>Testnet order — test USDC, no real funds</span>
 <span><a href="https://x.com/Stublydotorg" target="_blank" rel="noopener">@Stublydotorg</a> · <a href="https://github.com/gumballchief/stubly" target="_blank" rel="noopener">source on GitHub</a> · <a href="mailto:support@stubly.org">support@stubly.org</a></span>
 </div></footer>
 
 <script src="/assets/app.js" defer></script>
 <script defer src="/_vercel/insights/script.js"></script>
+  <script src="/assets/wallet-chip.js" defer></script>
   <script src="/assets/chain-label.js" defer></script>
   <script src="/assets/help.js" defer></script>
 </body>

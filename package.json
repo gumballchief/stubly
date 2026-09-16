@@ -5,6 +5,9 @@
   "description": "Agent-hire marketplace on Arc testnet — USDC escrow via Circle's ERC-8183",
   "scripts": {
     "wallets": "node chain/make-wallets.js",
+    "wallets:mainnet": "node chain/make-mainnet-wallets.js",
+    "mainnet:check": "node chain/mainnet-check.js",
+    "mainnet:flip": "node chain/mainnet-flip.js",
     "e2e:dry": "node chain/e2e.js --dry",
     "e2e": "node chain/e2e.js",
     "crew:dry": "node chain/crew-e2e.js --dry",

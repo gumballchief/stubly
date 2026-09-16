@@ -8,24 +8,36 @@
  * seconds and never sleeps, so that pass was redundant — and it meant GitHub
  * held the provider key, the evaluator key and their decryption password.
  *
- * Nothing here signs anything. It reads three public things and fails loudly if
- * any of them is wrong, so a silent outage produces an email instead of a
- * customer who paid and got nothing.
+ * Nothing here signs anything. It reads public things and fails loudly if any
+ * of them is wrong, so a silent outage produces an email instead of a customer
+ * who paid and got nothing.
  *
  *   node worker/health-check.js            # WORKER_URL and SITE_URL from env
+ *
+ * Checks the chain named by CHAIN_ID (testnet unless set). Off testnet it needs
+ * PROVIDER_WALLET and EVALUATOR_WALLET: testnet's are never assumed.
  */
 
 const { Contract, JsonRpcProvider, Interface, zeroPadValue, formatUnits } = require("ethers");
 const { CFG } = require("../chain/config");
+const { sells } = require("../site/api/_shared");
 
-const PROVIDER_WALLET = process.env.PROVIDER_WALLET || "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944";
+/* Defaulting to testnet's provider made the stranded-buyer scan filter mainnet's escrow for
+   a wallet that never trades there, find nothing, and report all clear. */
+const PROVIDER_WALLET = process.env.PROVIDER_WALLET || (CFG.TESTNET ? "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944" : "");
+const EVALUATOR_WALLET = process.env.EVALUATOR_WALLET || (CFG.TESTNET ? "0x6F5A2E61DA4C779c6b4119F3BfEC8ec53Db488C7" : "");
 const WORKER_URL = process.env.WORKER_URL || "";
 const SITE_URL = process.env.SITE_URL || "https://stubly.org";
+const CHAIN_KEY = CFG.TESTNET ? "testnet" : "mainnet";
 
 /* A pass every 10s means anything past a couple of minutes is a stall, not a blip. */
 const STALE_PASS_SECONDS = 180;
 /* A single pass past this is wedged, not working. */
 const BUSY_LIMIT_SECONDS = 900;
+/* Gas on Arc is USDC. An evaluator out of gas silently stops every settlement and every
+   escrow refund; a provider under a dollar cannot quote, deliver or fund a sub-order. */
+const PROVIDER_MIN_USDC = Number(process.env.PROVIDER_MIN_USDC || 1);
+const EVALUATOR_MIN_USDC = Number(process.env.EVALUATOR_MIN_USDC || 0.2);
 
 const problems = [];
 const note = (s) => console.log(s);
@@ -73,21 +85,31 @@ async function checkWorker() {
    on that means paging a human because a cache was cold, which trains people to
    ignore the alert. Catalog does no chain reads, so it answers the actual
    question: are the site and its functions serving? Stats is reported when it
-   comes back and skipped when it does not. */
+   comes back and skipped when it does not.
+
+   Both ask for this chain by name. After the flip the site's default is mainnet, and
+   a site whose mainnet is not configured quietly answers with testnet, so the chain it
+   answered with is checked too. */
 async function checkSite() {
   try {
-    const r = await fetch(`${SITE_URL}/api/catalog`, { signal: AbortSignal.timeout(30_000) });
+    const r = await fetch(`${SITE_URL}/api/catalog?chain=${CHAIN_KEY}`, { signal: AbortSignal.timeout(30_000) });
     if (!r.ok) return problems.push(`site /api/catalog returned HTTP ${r.status}`);
     const c = await r.json();
+    if (Number(c.chainId) !== CFG.CHAIN_ID) {
+      problems.push(`site answered ?chain=${CHAIN_KEY} with chain ${c.chainId}, expected ${CFG.CHAIN_ID} (is it configured on the site?)`);
+    }
+    const keys = Object.keys(c.agents || {});
+    const offShelf = keys.filter((k) => !sells(CFG, k));
+    if (offShelf.length) problems.push(`site lists agents this chain does not sell: ${offShelf.join(", ")}`);
     const registered = Object.values(c.agents || {}).filter((a) => a.agentId).length;
     if (!registered) problems.push("site is serving no registered agent identities");
-    note(`site:     ok · ${Object.keys(c.agents || {}).length} agents · ${registered} with an identity · chain ${c.chainId}`);
+    note(`site:     ok · ${keys.length} agents · ${registered} with an identity · chain ${c.chainId}`);
   } catch (e) {
     return problems.push(`site /api/catalog unreachable: ${e.message}`);
   }
 
   try {
-    const r = await fetch(`${SITE_URL}/api/stats`, { signal: AbortSignal.timeout(45_000) });
+    const r = await fetch(`${SITE_URL}/api/stats?chain=${CHAIN_KEY}`, { signal: AbortSignal.timeout(45_000) });
     const s = await r.json();
     if (s.live) note(`stats:    ${s.jobs} orders · ${s.settled} settled · ${s.hirers} buyers`);
     else note(`stats:    slow or unavailable this run (${s.error || "no reason given"}) — not treated as an outage`);
@@ -96,21 +118,37 @@ async function checkSite() {
   }
 }
 
+/* The wallets that sign every settlement and refund, read straight off the chain. */
+async function checkBalances(prov) {
+  const live = Number(BigInt(await prov.send("eth_chainId", [])));
+  if (live !== CFG.CHAIN_ID) return problems.push(`RPC_URL is chain ${live}, expected ${CFG.CHAIN_ID}`);
+  for (const [role, addr, min] of [["provider", PROVIDER_WALLET, PROVIDER_MIN_USDC], ["evaluator", EVALUATOR_WALLET, EVALUATOR_MIN_USDC]]) {
+    if (!addr) continue;
+    const usdc = Number(formatUnits(await prov.getBalance(addr), 18)); // native balance: 18 decimals at the RPC
+    if (usdc < min) problems.push(`${role} wallet ${addr} holds ${usdc.toFixed(4)} USDC, under the ${min} USDC it needs for gas`);
+    else note(`${role.padEnd(9)} ${usdc.toFixed(4)} USDC`);
+  }
+}
+
 /* The condition that actually hurts someone: money in escrow, deadline gone,
    nothing delivered. That is a buyer who paid and got nothing. */
-async function checkStrandedBuyers() {
-  const prov = new JsonRpcProvider(CFG.RPC_URL, CFG.CHAIN_ID, { staticNetwork: true });
+async function checkStrandedBuyers(prov) {
+  if (!CFG.EXPLORER_API || !CFG.ERC8183) return problems.push(`stranded check impossible: EXPLORER_API or ERC8183_ADDRESS not set for chain ${CFG.CHAIN_ID}`);
   const iface = new Interface([
     "event JobCreated(uint256 indexed jobId, address indexed client, address indexed provider, address evaluator, uint256 expiredAt, address hook)",
   ]);
-  const url =
-    `${CFG.EXPLORER_API.replace(/\/v2$/, "")}?module=logs&action=getLogs&fromBlock=0&toBlock=latest` +
-    `&address=${CFG.ERC8183}&topic0=${iface.getEvent("JobCreated").topicHash}` +
-    `&topic3=${zeroPadValue(PROVIDER_WALLET, 32)}&topic0_3_opr=and`;
-
-  const r = await fetch(url, { signal: AbortSignal.timeout(60_000) });
-  const logs = (await r.json()).result;
-  if (!Array.isArray(logs)) return note("stranded: skipped (explorer returned no log list)");
+  let logs;
+  try {
+    const { getLogs } = require("../site/api/_logs");
+    logs = await getLogs({ ...CFG, START_BLOCK: Number(process.env.START_BLOCK || 0) }, {
+      address: CFG.ERC8183,
+      topics: [iface.getEvent("JobCreated").topicHash, null, null, zeroPadValue(PROVIDER_WALLET, 32)],
+      fromBlock: 0,
+      timeoutMs: 60_000,
+    });
+  } catch (e) {
+    return problems.push(`stranded check impossible: neither the explorer nor the RPC returned logs (${e.message})`);
+  }
 
   const jobs = new Contract(CFG.ERC8183, [
     "function getJob(uint256) view returns (tuple(uint256 id, address client, address provider, address evaluator, string description, uint256 budget, uint256 expiredAt, uint8 status, address hook))",
@@ -130,9 +168,20 @@ async function checkStrandedBuyers() {
 }
 
 (async () => {
+  note(`chain:    ${CFG.CHAIN_ID} (${CHAIN_KEY})`);
   await checkWorker();
   await checkSite();
-  await checkStrandedBuyers().catch((e) => problems.push(`stranded check failed: ${e.message}`));
+
+  if (!PROVIDER_WALLET || !EVALUATOR_WALLET) {
+    problems.push(`PROVIDER_WALLET and EVALUATOR_WALLET must be set to check chain ${CFG.CHAIN_ID}; testnet's are never assumed`);
+  }
+  if (!CFG.RPC_URL) {
+    problems.push(`RPC_URL is not set for chain ${CFG.CHAIN_ID}`);
+  } else {
+    const prov = new JsonRpcProvider(CFG.RPC_URL, CFG.CHAIN_ID, { staticNetwork: true });
+    await checkBalances(prov).catch((e) => problems.push(`balance check failed: ${e.message}`));
+    if (PROVIDER_WALLET) await checkStrandedBuyers(prov).catch((e) => problems.push(`stranded check failed: ${e.message}`));
+  }
 
   if (problems.length) {
     console.error(`\nFAILING — ${problems.length} problem(s):`);

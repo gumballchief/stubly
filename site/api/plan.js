@@ -20,7 +20,9 @@
  * anyone is charged. The model picks the crew; it does not quote.
  */
 
-const { CATALOG, keywordPick, keywordAll, sendJson } = require("./_shared");
+/* The crew is drawn from the shelf of the chain this request is for (shelf()): mainnet sells
+   50 of the agents, and a step naming one it does not sell could never be quoted or funded. */
+const { cfg, shelf, keywordPick, keywordAll, sendJson } = require("./_shared");
 
 const MAX_STEPS = 5;      // 5 USDC is the most one sentence can spend
 const MAX = 2000;
@@ -80,14 +82,14 @@ function parseSteps(out) {
   return steps.length ? { steps, why: "", parsed: true } : null;
 }
 
-async function modelPlan(text, timeoutMs) {
+async function modelPlan(text, timeoutMs, catalog) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
 
   /* A hundred agents with full blurbs is a large prompt, and the request waits
      on every token of it. Clipping each blurb keeps enough to choose by and
      takes seconds off the answer. */
-  const menu = Object.entries(CATALOG)
+  const menu = Object.entries(catalog)
     .filter(([k]) => !NOT_FOR_CREWS.has(k))
     .map(([k, a]) => `${k} | ${a.title} | needs a ${a.input.field} | ${String(a.blurb || "").slice(0, 80)}`)
     .join("\n");
@@ -161,7 +163,7 @@ async function modelPlan(text, timeoutMs) {
     for (const s of v.steps) {
       const k = s && s.agent;
       // The model does not get to invent agents, or bill for the same one twice.
-      if (!k || !CATALOG[k] || seen.has(k) || NOT_FOR_CREWS.has(k)) continue;
+      if (!k || !catalog[k] || seen.has(k) || NOT_FOR_CREWS.has(k)) continue;
       seen.add(k);
       steps.push({ agent: k, input: String(s.input || "").slice(0, 500) });
       if (steps.length >= MAX_STEPS) break;
@@ -178,8 +180,8 @@ async function modelPlan(text, timeoutMs) {
  * not a second model call: this endpoint already waits up to 25s for the first
  * one, and a buyer should not sit through two.
  */
-function fallbackSingle(text) {
-  const k = keywordPick(text, NOT_FOR_CREWS);
+function fallbackSingle(text, catalog) {
+  const k = keywordPick(text, NOT_FOR_CREWS, catalog);
   return k ? { steps: [{ agent: k, input: "" }], why: "matched on keywords" } : null;
 }
 
@@ -195,10 +197,11 @@ module.exports = async (req, res) => {
        the retry usually lands in seconds. A reply that parsed and simply had no
        crew in it IS an answer, and is taken at its word. Two 25s attempts fit
        inside the function's 60s ceiling; one 40s attempt plus a retry would not. */
-    let attempt = await modelPlan(text, 25_000);
-    if (!attempt || (!attempt.parsed && !attempt.timedOut)) attempt = await modelPlan(text, 25_000);
+    const catalog = shelf(cfg(req));
+    let attempt = await modelPlan(text, 25_000, catalog);
+    if (!attempt || (!attempt.parsed && !attempt.timedOut)) attempt = await modelPlan(text, 25_000, catalog);
 
-    let plan = attempt && attempt.steps.length ? attempt : fallbackSingle(text);
+    let plan = attempt && attempt.steps.length ? attempt : fallbackSingle(text, catalog);
 
     /* The model is not steady about crew size: the same sentence came back as
        two agents one minute and one the next, at temperature zero. So the
@@ -207,7 +210,7 @@ module.exports = async (req, res) => {
        buyer's own words asked for, every one is priced from the catalog, and
        each is removable on the page before anything is paid. */
     if (plan) {
-      const named = keywordAll(text, NOT_FOR_CREWS);
+      const named = keywordAll(text, NOT_FOR_CREWS, catalog);
       const have = new Set(plan.steps.map((s) => s.agent));
       for (const k of named) {
         if (plan.steps.length >= MAX_STEPS) break;
@@ -226,7 +229,7 @@ module.exports = async (req, res) => {
     }
 
     const steps = plan.steps.map((s) => {
-      const a = CATALOG[s.agent];
+      const a = catalog[s.agent];
       return {
         agent: s.agent,
         title: a.title,

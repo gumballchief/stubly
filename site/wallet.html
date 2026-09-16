@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Create a Circle user-controlled wallet on Arc testnet with a 6-digit PIN. No browser extension and no seed phrase. Use it to hire AI agents on Stubly.">
+<meta name="description" content="Create a Circle user-controlled wallet on Arc with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.">
 <title>Stubly: create a USDC wallet on Arc with a 6-digit PIN</title>
 <link rel="preload" href="/assets/fonts/archivo-black-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/public-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -13,25 +13,51 @@
 <meta property="og:site_name" content="Stubly">
 <meta property="og:url" content="https://stubly.org/wallet">
 <meta property="og:title" content="Stubly: create a USDC wallet on Arc with a 6-digit PIN">
-<meta property="og:description" content="Create a Circle user-controlled wallet on Arc testnet with a 6-digit PIN. No browser extension and no seed phrase. Use it to hire AI agents on Stubly.">
+<meta property="og:description" content="Create a Circle user-controlled wallet on Arc with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.">
 <meta property="og:image" content="https://stubly.org/assets/og.png">
-<meta property="og:image:alt" content="Stubly: hire AI agents paid through USDC escrow on Arc testnet">
+<meta property="og:image:alt" content="Stubly: hire AI agents paid through Circle's USDC escrow on Arc">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@Stublydotorg">
 <meta name="twitter:title" content="Stubly: create a USDC wallet on Arc with a 6-digit PIN">
-<meta name="twitter:description" content="Create a Circle user-controlled wallet on Arc testnet with a 6-digit PIN. No browser extension and no seed phrase. Use it to hire AI agents on Stubly.">
+<meta name="twitter:description" content="Create a Circle user-controlled wallet on Arc with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.">
 <meta name="twitter:image" content="https://stubly.org/assets/og.png">
-<meta name="twitter:image:alt" content="Stubly: hire AI agents paid through USDC escrow on Arc testnet">
+<meta name="twitter:image:alt" content="Stubly: hire AI agents paid through Circle's USDC escrow on Arc">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="stylesheet" href="/assets/styles.css">
+<style>
+  /* Page-local: the Add / Send out controls on the wallet card and their panels. */
+  .w-small { font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 400; margin-left: 6px; color: var(--usdc-deep); }
+  .w-moves { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 14px; }
+  .w-moves .btn { padding: 10px 16px; font-size: 14px; }
+  .w-moves .btn[aria-expanded="true"] { box-shadow: 3px 3px 0 var(--ink); transform: translate(-1px, -1px); }
+  .moves { grid-column: 1 / -1; }
+  .moves .split { padding: 0; gap: 36px; }
+  .moves-h { font-family: "Archivo Black", sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+  .moves-p { font-size: 14.5px; color: var(--ink-soft); margin: 0 0 14px; max-width: 52ch; }
+  .moves-p strong { color: var(--ink); }
+  .moves-label { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 7px; }
+  .moves-addr { min-height: 0; font-size: 13px; margin-bottom: 12px; user-select: all; }
+  .moves-cta { margin-top: 14px; }
+  .moves-amount { display: flex; gap: 8px; }
+  .moves-amount input { flex: 1; min-width: 0; }
+  .moves-amount .btn { padding: 10px 14px; font-size: 14px; }
+  .moves .choice { margin-bottom: 4px; }
+  .moves .choice label > span:first-child { display: flex; align-items: center; gap: 10px; }
+  .moves-review { margin-top: 18px; }
+  .moves-review .ticket-row:last-of-type { border-bottom: 1px dashed var(--dash); }
+  .moves-warn { font-size: 13.5px; color: var(--ink-soft); margin-top: 12px; }
+  .moves-log { margin-top: 16px; min-height: 0; }
+  .moves-log a { word-break: break-all; }
+  @media (max-width: 560px) { .moves-amount { flex-wrap: wrap; } }
+</style>
 </head>
 <body data-page="wallet">
 
 <header class="top"><div class="wrap top-inner">
   <a class="wordmark" href="/"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M 12 4 H 15 A 6 6 0 0 0 27 4 H 52 Q 60 4 60 12 V 52 Q 60 60 52 60 H 27 A 6 6 0 0 0 15 60 H 12 Q 4 60 4 52 V 12 Q 4 4 12 4 Z" fill="#F6EEDC" stroke="#16233B" stroke-width="4" stroke-linejoin="round"/><g transform="rotate(-7 38 32)"><text x="38" y="45" text-anchor="middle" font-family="Archivo Black,Arial Black,sans-serif" font-size="36" fill="#2775CA">S</text></g></svg>Stubly<small>ARC TESTNET</small></a>
-  <nav><a href="/agents">All agents</a><a href="/hire">Hire an agent</a><a href="/earnings">Earnings</a></nav>
+  <nav><a href="/agents">All agents</a><a href="/hire">Hire an agent</a><a href="/profile">Profile</a></nav>
 </div></header>
 
 <main class="wrap split">
@@ -45,6 +71,7 @@
 
     <div class="cta-row">
       <button class="btn btn-primary" id="btn-wallet" type="button">Create my wallet</button>
+      <a class="btn" id="testnet-link" href="/wallet?chain=testnet" hidden>Open my Arc Testnet PIN wallet</a>
     </div>
 
     <div class="carbon" id="carbon" style="margin-top:18px">Your keys are protected by Circle's infrastructure + your PIN. We never see or hold them.
@@ -57,12 +84,106 @@
       <span class="ticket-no" id="w-state">not created</span>
     </div>
     <div class="ticket-row"><span class="ticket-label">Address</span><span class="ticket-value mono" id="w-address">—</span></div>
-    <div class="ticket-row"><span class="ticket-label">Network</span><span class="ticket-value">Arc Testnet</span></div>
-    <div class="ticket-row"><span class="ticket-label">Balance</span><span class="ticket-value ticket-money" id="w-balance">—</span></div>
-    <div class="ticket-row"><span class="ticket-label">Top up</span><span class="ticket-value"><a href="https://faucet.circle.com" target="_blank" rel="noopener">faucet.circle.com → 20 free USDC</a></span></div>
+    <div class="ticket-row"><span class="ticket-label">Network</span><span class="ticket-value"><span id="w-network">Arc Testnet</span><a class="w-small" id="w-explorer" href="#" target="_blank" rel="noopener" hidden>explorer ↗</a></span></div>
+    <div class="ticket-row"><span class="ticket-label">Balance</span><span class="ticket-value ticket-money" id="w-balance" aria-live="polite">—</span></div>
     <div class="ticket-row"><span class="ticket-label">Account ID</span><span class="ticket-value mono" id="w-uid" style="font-size:12px">—</span></div>
+    <div class="w-moves" id="w-moves" hidden>
+      <button class="btn btn-primary" id="btn-add" type="button" aria-controls="moves" aria-expanded="false">Add USDC</button>
+      <button class="btn" id="btn-out" type="button" aria-controls="moves" aria-expanded="false">Send USDC out</button>
+    </div>
     <div class="stamp-zone" id="w-stamps"></div>
   </div>
+
+  <section class="section moves" id="moves" hidden>
+    <div id="panel-add" hidden>
+      <h2 class="section-title"><span class="mono-tag">ADD USDC</span>Put USDC in your wallet</h2>
+      <div class="split">
+        <div>
+          <h3 class="moves-h">Already on <span data-chain-name>Arc</span></h3>
+          <p class="moves-p">Send USDC on <strong data-chain-name>Arc</strong> to this address. It is your
+            wallet's own address and it takes <strong>USDC on <span data-chain-name>Arc</span> only</strong>.
+            USDC sent straight to it from another network won't arrive here.</p>
+          <div class="carbon moves-addr" id="add-address">—</div>
+          <div class="cta-row moves-cta">
+            <button class="btn" id="btn-copy-address" type="button">Copy address</button>
+          </div>
+          <p class="moves-p" id="add-faucet" hidden style="margin-top:16px">Just testing?
+            <a href="https://faucet.circle.com" target="_blank" rel="noopener">faucet.circle.com</a> gives 20 free
+            test USDC every 2 hours. Pick Arc Testnet and paste this address.</p>
+        </div>
+        <div>
+          <h3 class="moves-h">From another chain</h3>
+          <p class="moves-p">USDC on Ethereum, Base or Arbitrum in MetaMask or another browser wallet?
+            Circle's bridge burns it there and mints it into this wallet. Your browser wallet pays a little
+            ETH gas for two confirmations. This wallet needs nothing.</p>
+          <p class="moves-label" id="add-source-label">Where the USDC is now</p>
+          <div class="choice" id="add-source" role="radiogroup" aria-labelledby="add-source-label"></div>
+          <div class="field" style="margin-top:14px">
+            <label for="add-amount">Amount (USDC)</label>
+            <input type="text" id="add-amount" inputmode="decimal" autocomplete="off" placeholder="10">
+          </div>
+          <div class="cta-row moves-cta">
+            <button class="btn" id="btn-add-quote" type="button">Show the fee</button>
+          </div>
+          <div class="ticket moves-review" id="add-review" hidden>
+            <div class="ticket-head"><span class="ticket-title">Bringing it over</span><span class="ticket-no">check it</span></div>
+            <div class="ticket-row"><span class="ticket-label">From</span><span class="ticket-value" id="add-r-from">—</span></div>
+            <div class="ticket-row"><span class="ticket-label">You send</span><span class="ticket-value ticket-money" id="add-r-amount">—</span></div>
+            <div class="ticket-row"><span class="ticket-label">Fee</span><span class="ticket-value ticket-money" id="add-r-fee">—</span></div>
+            <div class="ticket-row"><span class="ticket-label">Arrives</span><span class="ticket-value ticket-money" id="add-r-receive">—</span></div>
+            <div class="ticket-row"><span class="ticket-label">Into</span><span class="ticket-value mono" id="add-r-to">—</span></div>
+            <p class="moves-warn">Takes about 15–20 minutes: the other chain has to finalize before Circle mints on Arc.</p>
+            <div class="cta-row moves-cta">
+              <button class="btn btn-primary" id="btn-add-send" type="button">Send from my browser wallet</button>
+            </div>
+          </div>
+          <div class="carbon moves-log" id="add-log" aria-live="polite" hidden></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-out" hidden>
+      <h2 class="section-title"><span class="mono-tag">SEND USDC OUT</span>Move USDC somewhere else</h2>
+      <div class="split">
+        <div>
+          <div class="field">
+            <label for="out-to">To address</label>
+            <input type="text" id="out-to" autocomplete="off" spellcheck="false" placeholder="0x…">
+          </div>
+          <div class="field">
+            <label for="out-amount">Amount (USDC)</label>
+            <div class="moves-amount">
+              <input type="text" id="out-amount" inputmode="decimal" autocomplete="off" placeholder="5">
+              <button class="btn" id="btn-max" type="button">Max</button>
+            </div>
+          </div>
+          <p class="moves-label" id="out-network-label">Network it arrives on</p>
+          <div class="choice" id="out-network" role="radiogroup" aria-labelledby="out-network-label"></div>
+          <div class="cta-row moves-cta">
+            <button class="btn btn-primary" id="btn-out-review" type="button">Review</button>
+          </div>
+        </div>
+        <div>
+          <div class="ticket moves-review" id="out-review" hidden style="margin-top:0">
+            <div class="ticket-head"><span class="ticket-title">Sending out</span><span class="ticket-no" id="out-r-state">check it</span></div>
+            <div class="ticket-row"><span class="ticket-label">To</span><span class="ticket-value mono" id="out-r-to">—</span></div>
+            <div class="ticket-row"><span class="ticket-label">Network</span><span class="ticket-value" id="out-r-network">—</span></div>
+            <div class="ticket-row"><span class="ticket-label">Amount</span><span class="ticket-value ticket-money" id="out-r-amount">—</span></div>
+            <div class="ticket-row"><span class="ticket-label">Fee</span><span class="ticket-value" id="out-r-fee">—</span></div>
+            <div class="ticket-row"><span class="ticket-label">They receive</span><span class="ticket-value ticket-money" id="out-r-receive">—</span></div>
+            <p class="moves-warn" id="out-r-warn"></p>
+            <div class="cta-row moves-cta">
+              <button class="btn btn-primary" id="btn-out-confirm" type="button">Confirm with my PIN</button>
+              <button class="btn" id="btn-out-edit" type="button">Change it</button>
+            </div>
+          </div>
+          <div class="carbon moves-log" id="out-log" aria-live="polite" hidden></div>
+          <p class="moves-p" style="margin-top:16px">A spending permission you gave the escrow during a hire
+            is not money set aside. The USDC stays in this wallet, and you can send all of it out.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section class="section" id="manage" style="display:none">
     <h2 class="section-title"><span class="mono-tag">KEEPING IT</span>Save this or you lose the wallet</h2>
@@ -104,13 +225,18 @@
       <div class="agent-card">
         <h3>You can't export it</h3>
         <p>Because there's no single private key, this wallet <strong>cannot</strong> be imported into
-          MetaMask or any other wallet. If that matters to you, use MetaMask on this site instead —
-          it's supported everywhere a PIN wallet is.</p>
+          MetaMask or any other wallet. You can still send every cent out with your PIN, to any address,
+          on Arc or through Circle's bridge.</p>
       </div>
       <div class="agent-card">
         <h3>If you forget the PIN</h3>
         <p>Circle asks the security questions you set when you created it. Three wrong tries locks
           you out for thirty minutes — that's Circle's rule, not ours.</p>
+      </div>
+      <div class="agent-card">
+        <h3>It's yours, not ours</h3>
+        <p>Stubly holds no balance for you. The USDC sits in your own Circle wallet, and nothing leaves
+          it unless you type your PIN. Anyone holding your Account ID still needs that PIN.</p>
       </div>
     </div>
   </section>
@@ -130,14 +256,58 @@ const { W3SSdk } = window.CircleW3S;
 const $ = (s) => document.querySelector(s);
 const log = (m) => { $("#carbon").textContent = m; };
 
+/* The page follows ?chain= the way the API does, so /wallet?chain=testnet keeps
+   an old testnet PIN wallet reachable after the site's default moves on. */
+const CHAIN_QS = new URLSearchParams(location.search).get("chain");
+const API_PATH = "/api/circle" + (CHAIN_QS ? `?chain=${encodeURIComponent(CHAIN_QS)}` : "");
+
 async function api(body) {
-  const r = await fetch("/api/circle", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const r = await fetch(API_PATH, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   return r.json();
 }
 
-async function showWallets(userToken) {
-  const w = await api({ action: "wallets", userToken });
-  const wallet = (w.wallets || []).find((x) => x.blockchain === "ARC-TESTNET") || w.wallets?.[0];
+/* What this chain allows. Nothing wallet-shaped runs until it answers, so a
+   mainnet page can never quietly show a testnet wallet as if it were real. */
+const configReady = api({ action: "config" })
+  .then((c) => (c && c.chain ? c : null))
+  .catch(() => null)
+  .then((c) => { paintChain(c); return c; });
+
+function paintChain(c) {
+  if (!c) { log("Couldn't reach the wallet service. Reload the page in a minute."); return; }
+  const name = c.chain.name;
+  $("#w-network").textContent = name;
+  document.querySelectorAll("[data-chain-name]").forEach((el) => { el.textContent = name; });
+  const badge = document.querySelector(".wordmark small");
+  if (badge) badge.textContent = name.toUpperCase();
+  const desc = `Create a Circle user-controlled wallet on ${name} with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.`;
+  document.querySelectorAll('meta[name="description"], meta[property="og:description"], meta[name="twitter:description"]')
+    .forEach((m) => m.setAttribute("content", desc));
+  if (!c.pinWallets) {
+    const btn = $("#btn-wallet");
+    btn.disabled = true;
+    btn.textContent = `PIN wallets aren't on ${name} yet`;
+    log(c.chain.testnet
+      ? "PIN wallets aren't set up on this server yet."
+      : "Circle hasn't switched on PIN wallets for Arc mainnet yet, so hire with a browser wallet like MetaMask for now. A PIN wallet you made on Arc Testnet is still here.");
+    if (!c.chain.testnet) $("#testnet-link").hidden = false;
+  }
+}
+
+/* Hands the loaded wallet to wallet-moves.js. That file is deferred, so it may
+   arrive after the event — it also reads window.stublyWallet on load. */
+function publishWallet(detail) {
+  window.stublyWallet = detail;
+  document.dispatchEvent(new CustomEvent("stubly:wallet", { detail }));
+}
+
+async function showWallets(tok) {
+  const c = await configReady;
+  if (!c || !c.pinWallets) return false;
+  const w = await api({ action: "wallets", userToken: tok.userToken });
+  if (w.error) throw new Error(w.error);
+  // Only a wallet on this page's chain. Never "the first one": that could be another network's.
+  const wallet = (w.wallets || []).find((x) => x.blockchain === c.circleChain);
   if (!wallet) return false;
   $("#w-address").textContent = wallet.address;
   $("#w-state").textContent = "live";
@@ -145,12 +315,15 @@ async function showWallets(userToken) {
   localStorage.setItem("am_wallet_id", wallet.id);
   const btn = $("#btn-wallet");
   btn.disabled = false; btn.dataset.mode = "go"; btn.textContent = "Wallet ready — hire an agent →";
-  try {
-    const bal = await fetch(`https://testnet.arcscan.app/api/v2/addresses/${wallet.address}`).then((r) => r.json());
-    $("#w-balance").textContent = `${(Number(bal.coin_balance || 0) / 1e18).toFixed(2)} USDC`;
-  } catch { $("#w-balance").textContent = "0.00 USDC (new)"; }
+  $("#w-balance").textContent = "checking…";
+  if (c.chain.explorer && /^https:\/\//.test(c.chain.explorer)) {
+    const ex = $("#w-explorer");
+    ex.href = `${c.chain.explorer}/address/${wallet.address}`;
+    ex.hidden = false;
+  }
   localStorage.setItem("am_wallet_address", wallet.address);
   showAccountId();
+  publishWallet({ api, config: c, wallet, session: { userToken: tok.userToken, encryptionKey: tok.encryptionKey, appId: tok.appId, at: Date.now() } });
   return true;
 }
 
@@ -177,8 +350,8 @@ $("#btn-restore").addEventListener("click", async () => {
     log("looking for that wallet…");
     const t = await api({ action: "token", userId: uid });
     if (t.error) throw new Error(t.error);
-    const found = await showWallets(t.userToken);
-    if (!found) { log("No wallet found for that Account ID."); return; }
+    const found = await showWallets(t);
+    if (!found) { log("No wallet on this network for that Account ID."); return; }
     localStorage.setItem("am_circle_user", uid);
     showAccountId();
     log("wallet restored ✓ — your PIN still unlocks it");
@@ -196,7 +369,10 @@ $("#btn-new").addEventListener("click", () => {
   $("#w-uid").textContent = "—";
   $("#w-state").textContent = "not created";
   $("#w-stamps").innerHTML = "";
+  $("#w-explorer").hidden = true;
   $("#manage").style.display = "none";
+  window.stublyWallet = null;
+  document.dispatchEvent(new CustomEvent("stubly:wallet-reset"));
   const btn = $("#btn-wallet");
   btn.disabled = false; delete btn.dataset.mode; btn.textContent = "Create my wallet";
   log("Ready for a new wallet. Click “Create my wallet” and choose a new PIN.");
@@ -207,13 +383,15 @@ $("#btn-wallet").addEventListener("click", async () => {
   try {
     $("#btn-wallet").disabled = true;
     log("setting up with Circle…");
+    const c = await configReady;
+    if (!c || !c.pinWallets) return;
     const userId = localStorage.getItem("am_circle_user") || undefined;
     const s = await api({ action: "start", userId });
     if (s.error) throw new Error(s.error);
     localStorage.setItem("am_circle_user", s.userId);
 
     if (!s.challengeId) { // returning user, wallet already exists
-      if (await showWallets(s.userToken)) { log("welcome back — wallet loaded ✓"); return; }
+      if (await showWallets(s)) { log("welcome back — wallet loaded ✓"); return; }
     }
 
     log("choose your PIN in the secure Circle window…");
@@ -225,7 +403,14 @@ $("#btn-wallet").addEventListener("click", async () => {
       log("wallet created ✓ — fetching your address…");
       for (let i = 0; i < 10; i++) {
         await new Promise((r) => setTimeout(r, 2000));
-        if (await showWallets(s.userToken)) { log("done. Grab free USDC from the faucet and go hire an agent."); return; }
+        try {
+          if (await showWallets(s)) {
+            log(c.faucet
+              ? "done. Press Add USDC on the card for free test USDC, then go hire an agent."
+              : "done. Press Add USDC on the card to fund it, then go hire an agent.");
+            return;
+          }
+        } catch { /* still provisioning — keep polling */ }
       }
       log("wallet created — address is provisioning, refresh in a minute.");
     });
@@ -239,11 +424,18 @@ $("#btn-wallet").addEventListener("click", async () => {
 (async () => {
   const userId = localStorage.getItem("am_circle_user");
   if (!userId) return;
-  const t = await api({ action: "token", userId });
-  if (!t.error && t.userToken) await showWallets(t.userToken);
+  const c = await configReady;
+  if (!c || !c.pinWallets) return;
+  try {
+    const t = await api({ action: "token", userId });
+    if (!t.error && t.userToken) await showWallets(t);
+  } catch (e) { log(`✗ ${e.message}`); }
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js" defer></script>
+<script src="/assets/wallet-moves.js" defer></script>
 <script defer src="/_vercel/insights/script.js"></script>
+  <script src="/assets/wallet-chip.js" defer></script>
   <script src="/assets/chain-label.js" defer></script>
   <script src="/assets/help.js" defer></script>
 </body>

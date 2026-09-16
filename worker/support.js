@@ -27,7 +27,19 @@ const MailComposer = require("nodemailer/lib/mail-composer");
 const { simpleParser } = require("mailparser");
 const { generate } = require("./llm");
 const { fence, UNTRUSTED_NOTICE } = require("./untrusted");
-const { SITE, PUBLIC_SITE, FACTS, STATUS_MEANING, MONEY, extractRefs, checkText } = require("./brain");
+const { SITE, CHAIN, FACTS, STATUS_MEANING, MONEY, linkRule, orderUrl, extractRefs, orderChain, checkText } = require("./brain");
+
+/** A mail's own words: quoted lines ("> ...") and everything from the quoted-history header down are dropped. */
+function freshText(text) {
+  const lines = [];
+  for (const line of String(text || "").split(/\r?\n/)) {
+    // Gmail/Apple "On … wrote:", the classic "-----Original Message-----", and Outlook's rule line.
+    if (/^\s*On\b.{0,200}\bwrote:\s*$/i.test(line) || /^\s*-{2,}\s*(Original|Forwarded) Message\s*-{2,}/i.test(line) || /^\s*_{10,}\s*$/.test(line)) break;
+    if (/^\s*>/.test(line)) continue;
+    lines.push(line);
+  }
+  return lines.join("\n");
+}
 const desk = require("./desk");
 
 const ADDRESS = (process.env.SUPPORT_EMAIL || "support@stubly.org").toLowerCase();
@@ -85,21 +97,27 @@ function isAutomated(mail) {
   return null;
 }
 
-/** Read-only lookup, used when the help desk is not running (local tests, --once). */
-async function lookupOrders(ids) {
+/**
+ * Read-only lookup, used when the help desk is not running (local tests, --once). Takes order
+ * numbers, or { id, chain }. The site serves both chains, so the chain always goes with the
+ * number: the same number is a different order on the other chain.
+ */
+async function lookupOrders(orders) {
   const out = [];
-  for (const id of ids) {
+  for (const item of orders) {
+    const id = String(item && typeof item === "object" ? item.id : item);
+    const chain = (item && typeof item === "object" && item.chain) || CHAIN.key;
     try {
-      const r = await fetch(`${SITE}/api/job?id=${id}`, { signal: AbortSignal.timeout(20_000) });
+      const r = await fetch(`${SITE}/api/job?id=${id}&chain=${chain}`, { signal: AbortSignal.timeout(20_000) });
       const j = await r.json();
       if (!j || !j.live) { out.push({ id, found: false }); continue; }
       const overdue = (j.statusText === "Funded" || j.statusText === "Submitted") && Number(j.expiredAt) < Date.now() / 1000;
       let report = null;
       if (j.statusText === "Completed") {
-        const d = await fetch(`${SITE}/api/deliverable?id=${id}`, { signal: AbortSignal.timeout(20_000) }).catch(() => null);
+        const d = await fetch(`${SITE}/api/deliverable?id=${id}&chain=${chain}`, { signal: AbortSignal.timeout(20_000) }).catch(() => null);
         report = !!(d && d.ok && (d.headers.get("content-type") || "").includes("markdown"));
       }
-      out.push({ id, found: true, status: j.statusText, agent: j.agent, budget: j.budgetUsdc, overdue, report, page: `${PUBLIC_SITE}/job?id=${id}` });
+      out.push({ id, found: true, status: j.statusText, agent: j.agent, budget: j.budgetUsdc, overdue, report, page: orderUrl(id, chain) });
     } catch (e) {
       out.push({ id, found: false, error: e.message });
     }
@@ -148,7 +166,7 @@ async function decide(mail, lookups) {
     UNTRUSTED_NOTICE,
     "",
     "Choose exactly one action:",
-    '- "reply": for simple questions the facts fully answer (how it works, test USDC, where to find an order or',
+    `- "reply": for simple questions the facts fully answer (how it works, ${CHAIN.testnet ? "test USDC" : "getting USDC on Arc"}, where to find an order or`,
     "  report, PIN wallet basics, revoking permission, listing an agent), and for order problems the order check",
     "  above already resolved or fully explains (it was restarted, refunded, rebuilt, is in progress, or finished).",
     '- "escalate": money or order problems the order check did not resolve, anything saying something is broken',
@@ -156,8 +174,8 @@ async function decide(mail, lookups) {
     "  complaints, anything you cannot answer from the facts, or anything you are unsure about.",
     '- "ignore": spam, sales pitches, SEO or marketing offers, scams, gibberish, messages not meant for Stubly.',
     "",
-    "Rules for a reply: plain text, friendly, under 120 words, no markdown. Only link to stubly.org or",
-    "faucet.circle.com. Never ask for a seed phrase, private key, PIN, password or Account ID. Never promise",
+    `Rules for a reply: plain text, friendly, under 120 words, no markdown. Only link to ${linkRule()}.`,
+    "Never ask for a seed phrase, private key, PIN, password or Account ID. Never promise",
     "a refund, payment, amount or timeline beyond what the order check says was done. Never claim to be a",
     "human. Sign off: — Stubly support",
     "",
@@ -310,9 +328,14 @@ async function handleOne(client, sentPath, uid, source, log) {
     return { flag: [] };
   }
 
-  const { ids, wallets } = extractRefs(`${mail.subject || ""}\n${mail.text || ""}`);
+  /* Only what the customer wrote this time. A reply quotes our last answer, which names order
+     numbers and testnet links of its own, and those must not turn into orders or chains. */
+  const asked = `${mail.subject || ""}\n${freshText(mail.text)}`;
+  const { ids, wallets } = extractRefs(asked);
+  // "testnet order #12" is answered without touching this chain; a chain named elsewhere in the mail is not about the order.
+  const orders = ids.map((id) => ({ id, chain: orderChain(asked, id) }));
   // The same check-and-fix the chat runs. Without the worker attached (local tests), a read-only lookup.
-  const lookups = desk.ready() ? await desk.reviewForEmail(ids) : await lookupOrders(ids);
+  const lookups = desk.ready() ? await desk.reviewForEmail(orders) : await lookupOrders(orders);
   const d = await decide(mail, lookups);
   if (wallets.length) d.summary = `${d.summary} (wallets mentioned: ${wallets.join(", ")})`;
 
@@ -437,4 +460,4 @@ function startSupport(log = console.log) {
   setInterval(tick, POLL_MS);
 }
 
-module.exports = { startSupport, supportStatus, notifyTeam, _test: { isAutomated, extractRefs, lookupOrders, guardReply, decide } };
+module.exports = { startSupport, supportStatus, notifyTeam, _test: { isAutomated, extractRefs, freshText, lookupOrders, guardReply, decide } };

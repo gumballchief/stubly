@@ -13,7 +13,10 @@
  * charged. The model chooses; it does not quote.
  */
 
-const { CATALOG, keywordPick, sendJson } = require("./_shared");
+/* Every choice is made from the shelf of the chain this request is for (shelf()): mainnet
+   sells 50 of the agents, and routing a buyer to one it does not sell would only end in a
+   refused quote. */
+const { cfg, shelf, keywordPick, sendJson } = require("./_shared");
 
 const MAX = 2000;
 
@@ -62,10 +65,10 @@ const BUILD_SIGNAL =
  * what something IS and named nothing about how the site is built, so "audit x.com
  * for speed" and "is my landing page any good" are untouched.
  */
-function correctSiteMisroute(picked, text) {
+function correctSiteMisroute(picked, text, catalog) {
   if (!picked || !BUILD_AGENTS.has(picked.agent)) return picked;
   if (!ASKS_WHAT_IT_IS.test(text) || BUILD_SIGNAL.test(text)) return picked;
-  if (!CATALOG["research-brief"]) return picked;
+  if (!catalog["research-brief"]) return picked;
   return {
     agent: "research-brief",
     input: picked.input,
@@ -74,11 +77,11 @@ function correctSiteMisroute(picked, text) {
 }
 
 /** Ask the model to choose. Constrained to catalog keys; validated on the way out. */
-async function modelPick(text) {
+async function modelPick(text, catalog) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
 
-  const menu = Object.entries(CATALOG)
+  const menu = Object.entries(catalog)
     .map(([k, a]) => `${k} | ${a.title} | needs a ${a.input.field} | ${a.blurb}`)
     .join("\n");
 
@@ -134,7 +137,7 @@ async function modelPick(text) {
     if (!m) return null;
     const v = JSON.parse(m[0]);
     // The model does not get to invent agents.
-    if (!v.agent || !CATALOG[v.agent]) return null;
+    if (!v.agent || !catalog[v.agent]) return null;
     return { agent: v.agent, input: String(v.input || "").slice(0, 500), why: String(v.why || "").slice(0, 120) };
   } catch {
     return null;
@@ -148,12 +151,14 @@ module.exports = async (req, res) => {
     const text = sanitize(body.text);
     if (text.length < 4) return sendJson(res, 200, { ok: false, reason: "Tell me what you need in a sentence." });
 
+    const catalog = shelf(cfg(req));
     const picked = correctSiteMisroute(
-      (await modelPick(text)) || (() => {
-        const k = keywordPick(text);
+      (await modelPick(text, catalog)) || (() => {
+        const k = keywordPick(text, undefined, catalog);
         return k ? { agent: k, input: "", why: "matched on keywords" } : null;
       })(),
-      text
+      text,
+      catalog
     );
 
     if (!picked) {
@@ -163,7 +168,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    const a = CATALOG[picked.agent];
+    const a = catalog[picked.agent];
     return sendJson(res, 200, {
       ok: true,
       agent: picked.agent,

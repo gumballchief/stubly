@@ -3,7 +3,21 @@
 /** GET /api/job?id=161321 → live job state straight from the chain. */
 
 const { formatUnits } = require("ethers");
-const { cfg, JOB_STATUS, jobsContract, sendJson } = require("./_shared");
+const { cfg, CHAINS, JOB_STATUS, jobsContract, sendJson } = require("./_shared");
+
+const ZERO = "0x0000000000000000000000000000000000000000";
+
+/* null only for a definite "no such order": an empty slot or the contract's InvalidJob revert.
+   A network error still throws, so a flaky node never sends a reader to the wrong chain. */
+async function readJob(C, id) {
+  try {
+    const j = await jobsContract(C).getJob(BigInt(id));
+    return j.client === ZERO ? null : j;
+  } catch (e) {
+    if (e?.revert?.name === "InvalidJob" || /InvalidJob/.test(e.shortMessage || e.message || "")) return null;
+    throw e;
+  }
+}
 
 module.exports = async (req, res) => {
   try {
@@ -11,9 +25,17 @@ module.exports = async (req, res) => {
     const id = url.searchParams.get("id");
     if (!id || !/^\d+$/.test(id)) return sendJson(res, 400, { error: "pass ?id=<job number>" });
 
-    const C = cfg(req);
-    const j = await jobsContract(C).getJob(BigInt(id));
-    if (j.client === "0x0000000000000000000000000000000000000000") return sendJson(res, 404, { error: "no such job" });
+    let C = cfg(req);
+    let j = await readJob(C, id);
+    /* The article, the grant application and the demo link testnet orders with no ?chain.
+       Once the default is mainnet, an order mainnet has never heard of is looked up on
+       testnet before it is called missing. An explicit ?chain always means that chain. */
+    const bare = !url.searchParams.has("chain") && !url.searchParams.has("chainId");
+    if (!j && bare && C.KEY !== "testnet" && CHAINS.testnet) {
+      C = CHAINS.testnet;
+      j = await readJob(C, id);
+    }
+    if (!j) return sendJson(res, 404, { error: "no such job" });
 
     let spec = null;
     try { spec = JSON.parse(j.description); } catch { /* free-text job */ }
