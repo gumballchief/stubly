@@ -19,6 +19,7 @@
 const fs = require("fs");
 const path = require("path");
 const CATALOG = require("../worker/catalog");
+const { MAINNET_ROSTER, sells } = require("../site/api/_shared");
 
 const CHAINS = {
   5042002: { slug: "arc-testnet", dir: "agents", param: "" },
@@ -74,7 +75,10 @@ function main() {
   if (!chain) throw new Error("unknown chain " + chainId);
   const outDir = path.join(__dirname, "..", "site", arg("out", chain.dir));
   const named = process.argv.slice(2).filter((a, i, all) => !a.startsWith("--") && !all[i - 1]?.startsWith("--"));
-  const roster = named.length ? named : Object.keys(CATALOG);
+  /* With no names, the agents this chain sells: all of them on testnet, MAINNET_ROSTER on
+     mainnet. A card for an agent a chain does not sell invites someone to mint an identity
+     for it, so writing one is refused (checking an old one is not). */
+  const roster = named.length ? named : chainId === 5042002 ? Object.keys(CATALOG) : [...MAINNET_ROSTER];
 
   if (process.argv.includes("--check")) {
     let drift = 0;
@@ -88,6 +92,9 @@ function main() {
     console.log(drift ? "\n" + drift + " card(s) out of date" : "\nall cards match the catalog");
     process.exit(drift ? 1 : 0);
   }
+
+  const notSold = roster.filter((k) => !sells(chainId, k));
+  if (notSold.length) throw new Error("not sold on chain " + chainId + ", no card written: " + notSold.join(", "));
 
   fs.mkdirSync(outDir, { recursive: true });
   for (const key of roster) {

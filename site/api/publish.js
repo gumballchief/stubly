@@ -11,17 +11,21 @@
  * kind "refund" is different on purpose: it is written once and never
  * overwritten. The help desk claims a refund here BEFORE it sends one, so the
  * same finished order can never be paid back twice, even across worker restarts.
+ *
+ * chainId says whose order this is. Reports and judge records for any chain but
+ * testnet live under that chain's id (blobPath in _shared.js), so two chains' order
+ * number N never share a file. Left out, it means testnet, as it always has.
  */
 
-const { sendJson } = require("./_shared");
+const { blobPath, sendJson } = require("./_shared");
 const { put } = require("@vercel/blob");
 
 const MAX_BYTES = 400_000;
 const KINDS = {
-  deliverable: (id) => ({ path: `deliverables/${id}.md`, type: "text/markdown; charset=utf-8", overwrite: true }),
-  judge: (id) => ({ path: `judge/${id}.json`, type: "application/json; charset=utf-8", overwrite: true }),
+  deliverable: (id, chainId) => ({ path: blobPath("deliverable", id, chainId), type: "text/markdown; charset=utf-8", overwrite: true }),
+  judge: (id, chainId) => ({ path: blobPath("judge", id, chainId), type: "application/json; charset=utf-8", overwrite: true }),
   // The help desk putting back a lost report: same place, but never over a report that is there.
-  rebuild: (id) => ({ path: `deliverables/${id}.md`, type: "text/markdown; charset=utf-8", overwrite: false }),
+  rebuild: (id, chainId) => ({ path: blobPath("deliverable", id, chainId), type: "text/markdown; charset=utf-8", overwrite: false }),
   refund: (id, chainId) => ({ path: `refunds/${chainId}/${id}.json`, type: "application/json; charset=utf-8", overwrite: false }),
 };
 

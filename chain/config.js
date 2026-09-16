@@ -11,33 +11,43 @@ const { JsonRpcProvider, Wallet, NonceManager } = require("ethers");
 const fs = require("fs");
 const path = require("path");
 
+const TESTNET_CHAIN_ID = 5042002;
+const CHAIN_ID = Number(process.env.CHAIN_ID || TESTNET_CHAIN_ID);
+const ON_TESTNET = CHAIN_ID === TESTNET_CHAIN_ID;
+
+/* Testnet's addresses are settled public constants, so they may fill a gap. Any
+   other chain gets nothing it did not configure: a worker started with CHAIN_ID=5042
+   and a forgotten ERC8183_ADDRESS must refuse to sign (jobs.js checks for code at
+   an empty or wrong address), not quietly aim real money at testnet's contract. */
+const testnetDefault = (value) => (ON_TESTNET ? value : "");
+
 const CFG = {
-  RPC_URL: process.env.RPC_URL || "https://rpc.testnet.arc.io",
-  CHAIN_ID: Number(process.env.CHAIN_ID || 5042002),
-  ERC8183: process.env.ERC8183_ADDRESS || "0x0747EEf0706327138c69792bF28Cd525089e4583",
-  USDC: process.env.USDC_ADDRESS || "0x3600000000000000000000000000000000000000",
-  EXPLORER_API: process.env.EXPLORER_API || "https://testnet.arcscan.app/api/v2",
-  EXPLORER: process.env.EXPLORER || "https://testnet.arcscan.app",
+  RPC_URL: process.env.RPC_URL || testnetDefault("https://rpc.testnet.arc.io"),
+  CHAIN_ID,
+  TESTNET: ON_TESTNET,
+  ERC8183: process.env.ERC8183_ADDRESS || testnetDefault("0x0747EEf0706327138c69792bF28Cd525089e4583"),
+  USDC: process.env.USDC_ADDRESS || testnetDefault("0x3600000000000000000000000000000000000000"),
+  EXPLORER_API: process.env.EXPLORER_API || testnetDefault("https://testnet.arcscan.app/api/v2"),
+  EXPLORER: process.env.EXPLORER || testnetDefault("https://testnet.arcscan.app"),
   /* Which keystore each role signs with. Mainnet gets its own, because a key
      that has lived on a laptop and in CI does not get to sign for real money —
      and because asking for "provider" by name regardless of chain would quietly
      load the testnet key on mainnet. loadWallet turns these into the matching
      <NAME>_KEYSTORE_B64 env var on a host. */
-  PROVIDER_KEY: process.env.PROVIDER_KEY ||
-    (Number(process.env.CHAIN_ID || 5042002) === 5042 ? "provider_mainnet" : "provider"),
-  EVALUATOR_KEY: process.env.EVALUATOR_KEY ||
-    (Number(process.env.CHAIN_ID || 5042002) === 5042 ? "evaluator_mainnet" : "evaluator"),
-  CLIENT_KEY: process.env.CLIENT_KEY ||
-    (Number(process.env.CHAIN_ID || 5042002) === 5042 ? "client_mainnet" : "client"),
+  PROVIDER_KEY: process.env.PROVIDER_KEY || (ON_TESTNET ? "provider" : "provider_mainnet"),
+  EVALUATOR_KEY: process.env.EVALUATOR_KEY || (ON_TESTNET ? "evaluator" : "evaluator_mainnet"),
+  CLIENT_KEY: process.env.CLIENT_KEY || (ON_TESTNET ? "client" : "client_mainnet"),
   /* Circle deployed the ERC-8004 registries. Env-overridable so mainnet is a
      configuration change, and so a mismatched pair fails loudly rather than
      minting identities into the wrong registry. */
-  IDENTITY_REGISTRY: process.env.IDENTITY_REGISTRY || "0x8004A818BFB912233c491871b3d84c89A494BD9e",
-  REPUTATION_REGISTRY: process.env.REPUTATION_REGISTRY || "0x8004B663056A597Dffe9eCcC1965A193B7388713",
-  VALIDATION_REGISTRY: process.env.VALIDATION_REGISTRY || "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+  IDENTITY_REGISTRY: process.env.IDENTITY_REGISTRY || testnetDefault("0x8004A818BFB912233c491871b3d84c89A494BD9e"),
+  REPUTATION_REGISTRY: process.env.REPUTATION_REGISTRY || testnetDefault("0x8004B663056A597Dffe9eCcC1965A193B7388713"),
+  VALIDATION_REGISTRY: process.env.VALIDATION_REGISTRY || testnetDefault("0x8004Cb1BF31DAf7788923b405b754f57acEB4272"),
   /* Where this chain's agent cards are published. Mainnet cards live in their own
-     folder so testnet metadataURIs keep resolving to what was minted against them. */
-  CARD_PATH: process.env.CARD_PATH || "agents",
+     folder so testnet metadataURIs keep resolving to what was minted against them.
+     Defaulted by chain: registry.js builds each identity's permanent metadataURI from
+     this, and a mainnet mint pointed at a testnet card could never be re-pointed. */
+  CARD_PATH: process.env.CARD_PATH || (ON_TESTNET ? "agents" : "agents/mainnet"),
 };
 
 /* The offline fallback, used whenever the explorer can't be reached (abi.js). The verified ABI
@@ -90,15 +100,24 @@ function provider() {
 }
 
 /**
- * Load an encrypted keystore created by make-wallets.js. Testnet convenience only.
+ * Load an encrypted keystore: testnet ones from make-wallets.js, mainnet ones
+ * (names ending _mainnet) from make-mainnet-wallets.js.
  * The signer is wrapped in a NonceManager: the load-balanced public RPC can serve
  * a stale nonce right after a confirmation, which surfaces as malformed
  * "could not coalesce" errors — local nonce tracking sidesteps that entirely.
  */
 const decrypted = new Map(); // keystore name → decrypted Wallet, see below
 function loadWallet(name, prov) {
-  const pw = process.env.KEYSTORE_PASSWORD;
-  if (!pw) throw new Error("KEYSTORE_PASSWORD not set in .env");
+  /* Mainnet keystores open with their own password, which lives only in a host's
+     environment settings. Never the testnet KEYSTORE_PASSWORD from .env, so no one
+     leaked value opens both. */
+  const mainnet = /_mainnet$/.test(name);
+  const pw = process.env[mainnet ? "KEYSTORE_PASSWORD_MAINNET" : "KEYSTORE_PASSWORD"];
+  if (!pw) {
+    throw new Error(mainnet
+      ? "KEYSTORE_PASSWORD_MAINNET not set; it belongs in the host's environment settings, not in .env"
+      : "KEYSTORE_PASSWORD not set in .env");
+  }
 
   let w = decrypted.get(name);
   if (!w) {
@@ -138,6 +157,15 @@ function loadWallet(name, prov) {
  * talking to, which would make this compare a value against itself and pass.
  */
 async function assertChain(prov) {
+  /* Off testnet nothing is defaulted (see CFG), so a missing value is an empty
+     string. Name what is missing instead of failing later on a confusing read. */
+  if (!CFG.TESTNET) {
+    const missing = [["RPC_URL", CFG.RPC_URL], ["ERC8183_ADDRESS", CFG.ERC8183], ["USDC_ADDRESS", CFG.USDC],
+      ["EXPLORER", CFG.EXPLORER], ["EXPLORER_API", CFG.EXPLORER_API]].filter(([, v]) => !v).map(([k]) => k);
+    if (missing.length) {
+      throw new Error("chain " + CFG.CHAIN_ID + " is not configured (missing " + missing.join(", ") + ") - refusing to touch money");
+    }
+  }
   const live = Number(BigInt(await prov.send("eth_chainId", [])));
   if (live !== CFG.CHAIN_ID) {
     throw new Error(

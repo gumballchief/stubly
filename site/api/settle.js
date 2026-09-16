@@ -17,10 +17,15 @@
  * Safe to leave open. It only ever acts on a job that names our provider wallet
  * and a known agent, only while that job is Funded, and it cannot be pointed at
  * a different agent or a different price than the catalog says.
+ *
+ * Every write goes to the chain this request names (?chain=), and only to it: the
+ * signers, the escrow address, the agent's chain data and the stored report all
+ * come from that one config. A chain that is named but not configured is refused,
+ * never settled on testnet instead.
  */
 
 const { formatUnits } = require("ethers");
-const { cfg, CATALOG, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
+const { moneyCfg, sells, blobPath, JOB_STATUS, provider, jobsContract, sendJson } = require("./_shared");
 const { loadWallet } = require("../../chain/config");
 const jobsLib = require("../../chain/jobs");
 const { judge } = require("../../worker/judge");
@@ -34,18 +39,18 @@ async function readBody(req) {
 }
 
 /** Read a published deliverable back, so a second call can finish a first one. */
-async function readDeliverable(jobId) {
+async function readDeliverable(jobId, C) {
   try {
     const { get } = require("@vercel/blob");
-    const r = await get(`deliverables/${jobId}.md`, { access: "private" });
+    const r = await get(blobPath("deliverable", jobId, C.CHAIN_ID), { access: "private" });
     return r?.stream ? await new Response(r.stream).text() : null;
   } catch { return null; }
 }
 
 /** Same store the worker's publish path writes to, minus the HTTP hop. */
-async function store(kind, jobId, content) {
+async function store(kind, jobId, content, C) {
   try {
-    const path = kind === "judge" ? `judge/${jobId}.json` : `deliverables/${jobId}.md`;
+    const path = blobPath(kind === "judge" ? "judge" : "deliverable", jobId, C.CHAIN_ID);
     await put(path, content, {
       access: "private",
       addRandomSuffix: false,
@@ -64,7 +69,8 @@ module.exports = async (req, res) => {
     const { jobId } = await readBody(req);
     if (!/^\d+$/.test(String(jobId || ""))) return sendJson(res, 400, { error: "numeric jobId required" });
 
-    const C = cfg(req);
+    const C = moneyCfg(req);
+    if (!C) return sendJson(res, 503, { ok: false, reason: "that chain is not configured on this site yet" });
     const j = await jobsContract(C).getJob(BigInt(jobId));
     if (j.client === "0x0000000000000000000000000000000000000000") return sendJson(res, 404, { error: "no such job" });
     if (j.provider.toLowerCase() !== C.PROVIDER_WALLET.toLowerCase()) {
@@ -101,7 +107,9 @@ module.exports = async (req, res) => {
     if (spec?.sub) return sendJson(res, 200, { ok: false, reason: "subcontract, handled inline" });
     const agentKey = spec?.agent;
     const agent = agentKey && AGENTS[agentKey];
-    if (!agent || !CATALOG[agentKey]) return sendJson(res, 200, { ok: false, reason: "unknown agent" });
+    if (!agent) return sendJson(res, 200, { ok: false, reason: "unknown agent" });
+    // An agent this chain does not sell is left to the worker, which refunds the order.
+    if (!sells(C, agentKey)) return sendJson(res, 200, { ok: false, reason: "that agent is not sold on this chain" });
 
     const prov = provider(C);
     const providerSigner = loadWallet(C.PROVIDER_KEY, prov);
@@ -110,10 +118,11 @@ module.exports = async (req, res) => {
     /* Funded → do the work and submit it. */
     let content = null;
     if (status === "Funded") {
-      const out = await agent.run(spec.input || {});
+      // The agent gets this order's chain: a chain-reading report reads that chain, and Launch Kit's sub-orders go to its escrow.
+      const out = await agent.run(spec.input || {}, { chain: C, provider: prov, providerSigner, evaluatorSigner });
       content = out.content;
-      await store("deliverable", jobId, content);
-      await jobsLib.submit(providerSigner, jobId, content);
+      await store("deliverable", jobId, content, C);
+      await jobsLib.submit(providerSigner, jobId, content, C);
     }
 
     /* Submitted → judge it and move the money. If an earlier call did the work
@@ -121,7 +130,7 @@ module.exports = async (req, res) => {
        it back rather than stranding the job. Judging an empty string would
        reject work that was actually fine, so a missing deliverable hands off to
        the worker instead of guessing. */
-    if (!content) content = await readDeliverable(jobId);
+    if (!content) content = await readDeliverable(jobId, C);
     if (!content) {
       return sendJson(res, 200, {
         ok: true, submitted: true, judged: false,
@@ -133,10 +142,10 @@ module.exports = async (req, res) => {
     const verdict = judge(jobId, agentKey, content);
     // Publish the record before settling, so the digest committed on-chain
     // always points at something a third party can already fetch and recompute.
-    await store("judge", jobId, JSON.stringify(verdict.record, null, 2));
+    await store("judge", jobId, JSON.stringify(verdict.record, null, 2), C);
 
-    if (verdict.ok) await jobsLib.completeRaw(evaluatorSigner, jobId, verdict.digest);
-    else await jobsLib.rejectRaw(evaluatorSigner, jobId, verdict.digest);
+    if (verdict.ok) await jobsLib.completeRaw(evaluatorSigner, jobId, verdict.digest, C);
+    else await jobsLib.rejectRaw(evaluatorSigner, jobId, verdict.digest, C);
 
     return sendJson(res, 200, {
       ok: true,

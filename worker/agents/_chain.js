@@ -3,19 +3,29 @@
 /**
  * Shared read-only chain access for the Arc-native agents. Everything here is
  * free public data from the Blockscout explorer — no paid APIs, no keys.
+ *
+ * Which chain is the order's, not the process's. /api/settle runs these agents on
+ * Vercel for whichever chain the order was paid on, where the worker's env vars are
+ * unset or name testnet, so reading env there sold a mainnet buyer a report about
+ * testnet. Each run asks forChain(ctx.chain) for its order's explorer; only a run
+ * given no chain (the worker, or a script) uses chain/config's.
  */
 
-const EXPLORER_API = process.env.EXPLORER_API || "https://testnet.arcscan.app/api/v2";
-const EXPLORER = process.env.EXPLORER || "https://testnet.arcscan.app";
+const { CFG } = require("../../chain/config");
+const { blockscoutApi } = require("../../chain/abi");
+
+const TESTNET_ID = 5042002;
 
 /* What these agents call the chain in the report a buyer reads. Deriving it from
-   CHAIN_ID means a deliverable can never claim to be about testnet while the job
-   that paid for it settled on mainnet. */
-const CHAIN_LABEL =
-  process.env.CHAIN_LABEL || (Number(process.env.CHAIN_ID || 5042002) === 5042 ? "Arc" : "Arc testnet");
+   the chain id means a deliverable can never claim to be about testnet while the job
+   that paid for it settled on mainnet. CHAIN_LABEL only renames the worker's own chain. */
+function labelFor(chainId) {
+  if (process.env.CHAIN_LABEL && Number(chainId) === CFG.CHAIN_ID) return process.env.CHAIN_LABEL;
+  return Number(chainId) === TESTNET_ID ? "Arc testnet" : "Arc";
+}
 
-async function get(path, { timeout = 12_000 } = {}) {
-  const r = await fetch(`${EXPLORER_API}${path}`, { signal: AbortSignal.timeout(timeout) });
+async function fetchJson(api, path, { timeout = 12_000 } = {}) {
+  const r = await fetch(`${api}${path}`, { signal: AbortSignal.timeout(timeout) });
   if (!r.ok) return null;
   return r.json().catch(() => null);
 }
@@ -46,4 +56,34 @@ function ago(iso) {
 
 const short = (a) => (a ? `${a.slice(0, 8)}…${a.slice(-6)}` : "—");
 
-module.exports = { get, isAddress, isTxHash, nat, amt, ago, short, EXPLORER, EXPLORER_API, CHAIN_LABEL };
+/**
+ * Explorer access for one chain. chain is a config from chain/config.js (the worker)
+ * or site/api/_shared.js (a request); both name EXPLORER and EXPLORER_API. A chain with
+ * no explorer configured throws: better a failed order, which is refunded, than a
+ * report that read testnet's explorer and called it this chain.
+ */
+function forChain(chain) {
+  const c = chain || CFG;
+  const api = blockscoutApi(c);
+  if (!api || !c.EXPLORER) throw new Error(`the explorer for chain ${c.CHAIN_ID} is not configured`);
+  const id = Number(c.CHAIN_ID);
+  return {
+    get: (path, opts) => fetchJson(api, path, opts),
+    EXPLORER: String(c.EXPLORER).replace(/\/+$/, ""),
+    EXPLORER_API: api,
+    CHAIN_ID: id,
+    TESTNET: id === TESTNET_ID,
+    CHAIN_LABEL: labelFor(id),
+    isAddress, isTxHash, nat, amt, ago, short,
+  };
+}
+
+/* The worker's own chain, for anything that still reads these directly. Never throws at
+   load: an unconfigured chain fails when an agent runs, not when the worker boots. */
+const OWN_API = blockscoutApi(CFG);
+const get = (path, opts) => fetchJson(OWN_API, path, opts);
+
+module.exports = {
+  forChain, get, isAddress, isTxHash, nat, amt, ago, short,
+  EXPLORER: CFG.EXPLORER, EXPLORER_API: OWN_API, CHAIN_LABEL: labelFor(CFG.CHAIN_ID),
+};

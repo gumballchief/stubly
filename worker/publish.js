@@ -9,11 +9,23 @@
  *
  * Without SITE_URL + PUBLISH_SECRET this is a no-op and the local file stays
  * the only copy, which is correct for purely local runs.
+ *
+ * Every post names the worker's chain. The site files each chain's reports apart
+ * (testnet's at the bare paths it always used), so mainnet order N cannot land on
+ * top of testnet order N's report, which the worker would then judge and pay on.
  */
+
+const { CFG } = require("../chain/config");
+
+/** Where the site serves this worker's copy of an order's report. */
+function deliverableUrl(jobId, chainId = CFG.CHAIN_ID) {
+  const base = String(process.env.SITE_URL || "").replace(/\/$/, "");
+  return `${base}/api/deliverable?id=${jobId}&chainId=${Number(chainId)}`;
+}
 
 /* { rebuild: true } is for the help desk putting back a lost report. It never overwrites:
    if a report is there after all, it stays, and the answer says so ({ exists: true }). */
-async function publishDeliverable(jobId, content, { rebuild = false } = {}) {
+async function publishDeliverable(jobId, content, { rebuild = false, chainId = CFG.CHAIN_ID } = {}) {
   const base = process.env.SITE_URL;
   const secret = process.env.PUBLISH_SECRET;
   if (!base || !secret) return { published: false, reason: "SITE_URL/PUBLISH_SECRET not set — local copy only" };
@@ -22,7 +34,7 @@ async function publishDeliverable(jobId, content, { rebuild = false } = {}) {
     const r = await fetch(`${base.replace(/\/$/, "")}/api/publish`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jobId: String(jobId), content, secret, ...(rebuild ? { kind: "rebuild" } : {}) }),
+      body: JSON.stringify({ jobId: String(jobId), chainId: String(chainId), content, secret, ...(rebuild ? { kind: "rebuild" } : {}) }),
       signal: AbortSignal.timeout(30_000),
     });
     const data = await r.json().catch(() => ({}));
@@ -35,7 +47,7 @@ async function publishDeliverable(jobId, content, { rebuild = false } = {}) {
 }
 
 /** Publish the judge record so a third party can recompute its digest. */
-async function publishJudgeRecord(jobId, record) {
+async function publishJudgeRecord(jobId, record, { chainId = CFG.CHAIN_ID } = {}) {
   const base = process.env.SITE_URL;
   const secret = process.env.PUBLISH_SECRET;
   if (!base || !secret) return { published: false, reason: "SITE_URL/PUBLISH_SECRET not set" };
@@ -43,7 +55,7 @@ async function publishJudgeRecord(jobId, record) {
     const r = await fetch(`${base.replace(/\/$/, "")}/api/publish`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jobId: String(jobId), kind: "judge", content: JSON.stringify(record, null, 2), secret }),
+      body: JSON.stringify({ jobId: String(jobId), chainId: String(chainId), kind: "judge", content: JSON.stringify(record, null, 2), secret }),
       signal: AbortSignal.timeout(30_000),
     });
     const data = await r.json().catch(() => ({}));
@@ -79,4 +91,4 @@ async function recordRefund(jobId, record) {
   }
 }
 
-module.exports = { publishDeliverable, publishJudgeRecord, recordRefund };
+module.exports = { publishDeliverable, publishJudgeRecord, recordRefund, deliverableUrl };

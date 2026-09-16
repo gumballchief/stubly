@@ -1,15 +1,24 @@
 /* Stubly help desk: a chat panel that talks to the support agent on the worker.
    The agent can look an order up on Arc, retry it, or refund it; this file only
    shows what it says and did. Everything it returns is rendered as text, never as
-   HTML, and links are only made clickable for our own site, Circle's faucet and
-   the Arc explorer. */
+   HTML, and links are only made clickable for our own site, the page chain's
+   explorer, and the one place that chain's facts send people for USDC (Circle's
+   faucet on testnet, arc.io on mainnet). */
 (() => {
   "use strict";
   if (window.StublyDesk) return;
 
   const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
   const DESK = ((LOCAL && new URLSearchParams(location.search).get("desk")) || "https://stubly-worker.onrender.com").replace(/\/$/, "");
-  const LINK_HOSTS = new Set(["stubly.org", "www.stubly.org", "faucet.circle.com", "testnet.arcscan.app"]);
+  /* The page's chain: ?chain in the address, else whatever /api/catalog says it served.
+     Until that answers, only stubly.org links go live, so a mainnet page never briefly
+     offers the testnet faucet or the testnet explorer. */
+  const PAGE_CHAIN = (() => {
+    const c = new URLSearchParams(location.search).get("chain");
+    return c === "testnet" || c === "mainnet" ? c : null;
+  })();
+  let chain = null; // { key, testnet } once /api/catalog answers
+  const LINK_HOSTS = new Set(["stubly.org", "www.stubly.org"]);
   const TONES = new Set(["green", "blue", "red", "ink"]);
   const MAX_CHARS = 800;
   const MAX_BYTES = 24_000; // the desk refuses bodies over 64KB; stay well under it
@@ -188,7 +197,12 @@
     } catch { return null; }
   };
   const isOurs = (u) => /(^|\.)stubly\.org$/i.test(u.hostname);
-  const URL_RE = /\bsupport@stubly\.org\b|\bhttps?:\/\/[^\s<>"']+|\b(?:www\.)?(?:stubly\.org|faucet\.circle\.com|testnet\.arcscan\.app)(?:\/[^\s<>"']*)?/gi;
+  // Rebuilt whenever the allowed hosts change, so bare "arc.io" or an explorer host is found without https://.
+  const urlPattern = () => new RegExp(
+    "\\bsupport@stubly\\.org\\b|\\bhttps?:\\/\\/[^\\s<>\"']+|\\b(?:www\\.)?(?:" +
+    [...LINK_HOSTS].filter((h) => !h.startsWith("www.")).map((h) => h.replace(/\./g, "\\.")).join("|") +
+    ")(?:\\/[^\\s<>\"']*)?", "gi");
+  let URL_RE = urlPattern();
 
   function richText(node, text) {
     let last = 0;
@@ -203,7 +217,8 @@
         node.append(a);
         continue;
       }
-      const u = text[m.index - 1] === "@" ? null : safeUrl(raw);
+      // Part of an email address or a longer host ("docs.arc.io" is not arc.io): leave it as text.
+      const u = /[@\w.-]/.test(text[m.index - 1] || "") ? null : safeUrl(raw);
       if (!u) { node.append(raw); continue; }
       const a = el("a", null, raw);
       a.href = u.href;
@@ -355,7 +370,7 @@
       ...(pageOrder ? [`Check order #${pageOrder}`] : []),
       "My order is stuck",
       "I paid but got nothing",
-      "How do I get test USDC?",
+      ...(chain ? [chain.testnet ? "How do I get test USDC?" : "How do I get USDC on Arc?"] : []),
       "How does the escrow work?",
     ].slice(0, 4);
     for (const q of asks) {
@@ -458,7 +473,9 @@
       .map((m) => (m.role === "user"
         ? { role: "user", text: String(m.text || "").slice(0, MAX_CHARS) }
         : { role: "agent", text: String(m.text || ""), sig: typeof m.sig === "string" ? m.sig : "" }));
-    const build = () => JSON.stringify({ conversation: state.id, context: { page: location.pathname.slice(0, 60), orderId: pageOrder }, messages });
+    // The chain tells the desk which contract the page's order lives in; the same number can be two different orders.
+    const pageChain = PAGE_CHAIN || (chain && chain.key) || null;
+    const build = () => JSON.stringify({ conversation: state.id, context: { page: location.pathname.slice(0, 60), orderId: pageOrder, chain: pageChain }, messages });
     while (messages.length > 1 && enc.encode(build()).length > MAX_BYTES) messages = messages.slice(1);
     return build();
   }
@@ -488,7 +505,7 @@
       } else {
         reply = { role: "agent", text: said, sig: typeof j.sig === "string" ? j.sig.slice(0, 128) : "", steps: cleanSteps(j.steps) };
         const w = j.watch;
-        if (w && /^\d{1,12}$/.test(String(w.orderId || ""))) startWatch(String(w.orderId), typeof w.status === "string" ? w.status : null, w.since);
+        if (w && /^\d{1,12}$/.test(String(w.orderId || ""))) startWatch(String(w.orderId), typeof w.status === "string" ? w.status : null, w.since, w.chain);
       }
     } catch {
       reply = { role: "agent", local: true, kind: "error", retry: true, text: "Couldn't reach the help desk. Check your connection and try again, or email support@stubly.org with your order number." };
@@ -506,20 +523,21 @@
   let watchTimer = null;
   let watchGen = 0; // bumping it retires any poll already in flight
 
-  function startWatch(orderId, status, since) {
-    state.watch = { orderId, status, since: Number(since) || 0, until: Date.now() + 20 * 60_000 };
+  function startWatch(orderId, status, since, chainKey) {
+    const onChain = chainKey === "testnet" || chainKey === "mainnet" ? chainKey : null;
+    state.watch = { orderId, status, chain: onChain, since: Number(since) || 0, until: Date.now() + 20 * 60_000 };
     save();
     const gen = ++watchGen;
     clearTimeout(watchTimer);
     watchTimer = setTimeout(() => pollWatch(gen), 8_000);
   }
 
-  function watchNote(id, st) {
-    const page = `https://stubly.org/job?id=${id}`;
+  function watchNote(id, st, chainKey) {
+    const page = `https://stubly.org/job?id=${id}${chainKey ? `&chain=${chainKey}` : ""}`;
     const notes = {
       Submitted: [`Order #${id}: the agent delivered. The judge is checking the work now.`, "Delivered", "blue", "Waiting on the judge"],
       Completed: [`Order #${id} is finished and your report is ready.`, "Completed", "green", "Report ready", "read the report"],
-      Rejected: [`Order #${id} was closed, and Circle's escrow returned the USDC to the wallet that paid.`, "Refunded", "green", "Returned by the escrow"],
+      Rejected: [`Order #${id} was closed, and the escrow returned the USDC to the wallet that paid.`, "Refunded", "green", "Returned by the escrow"],
       Expired: [`Order #${id} passed its deadline, and the USDC went back to the wallet that paid.`, "Expired", "ink", "USDC returned"],
     }[st];
     if (!notes) return null;
@@ -555,7 +573,7 @@
         if (typeof j.status === "string" && j.status !== w.status) {
           const prev = w.status;
           w.status = j.status;
-          const note = prev && !events.length ? watchNote(w.orderId, j.status) : null;
+          const note = prev && !events.length ? watchNote(w.orderId, j.status, w.chain) : null;
           if (note) push(note);
         }
         if (j.settled) state.watch = null;
@@ -618,6 +636,24 @@
     e.preventDefault();
     setOpen(true);
   });
+
+  /* Learn the page's chain. It decides which links go live and which USDC question the
+     starter chips offer; a failed fetch leaves only stubly.org links clickable. */
+  fetch(`/api/catalog${PAGE_CHAIN ? `?chain=${PAGE_CHAIN}` : ""}`)
+    .then((r) => r.json())
+    .then((cat) => {
+      const c = cat && cat.chain;
+      if (!c) return;
+      chain = { key: c.testnet ? "testnet" : "mainnet", testnet: !!c.testnet };
+      try {
+        const host = new URL(String(cat.explorer || "")).hostname.toLowerCase();
+        if (host && (chain.testnet || !/testnet/.test(host))) LINK_HOSTS.add(host);
+      } catch { /* no explorer: its links stay plain text */ }
+      LINK_HOSTS.add(chain.testnet ? "faucet.circle.com" : "arc.io");
+      URL_RE = urlPattern();
+      if (!panel.hidden) renderAll();
+    })
+    .catch(() => { /* stubly.org links still work; nothing else is made clickable */ });
 
   syncSend();
   if (state.open) setOpen(true, false);

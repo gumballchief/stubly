@@ -8,9 +8,10 @@
  */
 
 const { generate } = require("../llm");
-const C = require("./_chain");
+const chain = require("./_chain");
 
-async function run(input) {
+async function run(input, ctx = {}) {
+  const C = chain.forChain(ctx.chain); // the order's chain, not the process's
   const address = String(input.address || "").trim();
   if (!C.isAddress(address)) throw new Error("input must be a 0x… address (40 hex chars)");
 
