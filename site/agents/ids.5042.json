@@ -1,0 +1,603 @@
+{
+  "__chain": 5042,
+  "research-brief": {
+    "agentId": "16",
+    "uri": "https://stubly.org/agents/mainnet/research-brief.json",
+    "tx": "0x0aae26db9d3106c80fd987bb6f712430d6b183e45d6628f59c7b60141daf6fe2",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "site-audit": {
+    "agentId": "17",
+    "uri": "https://stubly.org/agents/mainnet/site-audit.json",
+    "tx": "0xb106e51d6ff3ce960f6b7c50525c34129edd3316340530daab9998404278136f",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "contract-check": {
+    "agentId": "18",
+    "uri": "https://stubly.org/agents/mainnet/contract-check.json",
+    "tx": "0x69a42e2677b70dd51486a6bb8aedd223fcf3cbc6c159d5e5827bba3be32393d8",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "copy-pack": {
+    "agentId": "19",
+    "uri": "https://stubly.org/agents/mainnet/copy-pack.json",
+    "tx": "0x4036963c906b813cbe19f45bb9d631c0477937c6d8192a1ba22bb5382baf5a34",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "thread-writer": {
+    "agentId": "20",
+    "uri": "https://stubly.org/agents/mainnet/thread-writer.json",
+    "tx": "0x16696e3ea3b56072f121887b97bac3753e0e4ca2743aa7c8cf5f352889995cf4",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "data-extract": {
+    "agentId": "21",
+    "uri": "https://stubly.org/agents/mainnet/data-extract.json",
+    "tx": "0x7e1596751c983358c9941a80067893cb2de0f9b5bc52e247660dbd513b343660",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "launch-kit": {
+    "agentId": "22",
+    "uri": "https://stubly.org/agents/mainnet/launch-kit.json",
+    "tx": "0xeeedd5107ec76e90cc3c53efef50e5dc307dcf39bbd113a4583edabf2ad00452",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "wallet-report": {
+    "agentId": "23",
+    "uri": "https://stubly.org/agents/mainnet/wallet-report.json",
+    "tx": "0x92acd8090deffa2403c191a65e88a1976921da1daccded40a8b40026e001da1a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "token-report": {
+    "agentId": "24",
+    "uri": "https://stubly.org/agents/mainnet/token-report.json",
+    "tx": "0xe003c84290b23868be2d2d07489ecf18960d98e8702a01beaab7c74c2241e208",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tx-explain": {
+    "agentId": "25",
+    "uri": "https://stubly.org/agents/mainnet/tx-explain.json",
+    "tx": "0xe569ebc4b5acd1fce2de66662db6183d2eecf391c809284018c07265ebb65f77",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "chain-pulse": {
+    "agentId": "26",
+    "uri": "https://stubly.org/agents/mainnet/chain-pulse.json",
+    "tx": "0xd1088705039390d5bd6949e867dae7543493c59d2ffd6adb34ed603584a34ac3",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "agent-lookup": {
+    "agentId": "27",
+    "uri": "https://stubly.org/agents/mainnet/agent-lookup.json",
+    "tx": "0xbe5f7d7013b50af7fcc845a8e88f808972745eaa2a3d2d1af43a56615e9a4d2a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "name-check": {
+    "agentId": "28",
+    "uri": "https://stubly.org/agents/mainnet/name-check.json",
+    "tx": "0x24dc90f109e126af4e98b04e1fa03b02f84f8907c6e14dc91a2800c06843a487",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "readme-writer": {
+    "agentId": "29",
+    "uri": "https://stubly.org/agents/mainnet/readme-writer.json",
+    "tx": "0x20aa75513483aa651818215e5af17a303795fabcdc0ce466abcdc29b3d93cbc6",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "doc-digest": {
+    "agentId": "30",
+    "uri": "https://stubly.org/agents/mainnet/doc-digest.json",
+    "tx": "0x6fa96fd15fc1d1ef47d56e7f9ccdba0661941b2a5b26d7d2815850d95f72a0bd",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "translate": {
+    "agentId": "31",
+    "uri": "https://stubly.org/agents/mainnet/translate.json",
+    "tx": "0x967df639ebadc2d022d9d0297401301be1f63d0eec75a395717464103470f986",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "pitch-critic": {
+    "agentId": "32",
+    "uri": "https://stubly.org/agents/mainnet/pitch-critic.json",
+    "tx": "0x36c823d71f1cb339ce8febb9d423d6eee2400b0dca4ad6e4c727ffb2a8b75e27",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "headers-check": {
+    "agentId": "33",
+    "uri": "https://stubly.org/agents/mainnet/headers-check.json",
+    "tx": "0x31d55452f3b8c2666d30661dff183805a5b7a185db8d08963d7ac6f6ef4ea1a9",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "meta-tags": {
+    "agentId": "34",
+    "uri": "https://stubly.org/agents/mainnet/meta-tags.json",
+    "tx": "0xd25531e69d39db4a69375d19f8fa9ca554cb6bf8c235d9df3801a029977f9148",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "cold-email": {
+    "agentId": "35",
+    "uri": "https://stubly.org/agents/mainnet/cold-email.json",
+    "tx": "0x0cc2fa6ee02c891255fc1ccba16cae7fe373c8618748a53c1ca1bfc970d8156a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "regex-builder": {
+    "agentId": "36",
+    "uri": "https://stubly.org/agents/mainnet/regex-builder.json",
+    "tx": "0x6edc5ffc4eb76158260e2fcdc7989e544e98359763fde6ecd7e9c29aa105ec70",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "error-explain": {
+    "agentId": "37",
+    "uri": "https://stubly.org/agents/mainnet/error-explain.json",
+    "tx": "0x157766d438a80f642c97d0348e82edf38082009b0a3dc14c921cdab75ae6f7e5",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "sql-explain": {
+    "agentId": "38",
+    "uri": "https://stubly.org/agents/mainnet/sql-explain.json",
+    "tx": "0x244d79b36b91028d899c86e8d8feef2d23fd6899132e3587d32ae320fa822fe7",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "test-plan": {
+    "agentId": "39",
+    "uri": "https://stubly.org/agents/mainnet/test-plan.json",
+    "tx": "0x61be6737a07d7727d8f1a9f7c3ee9b6c7ec3ec0a6d9f040a3ed2544b3e4b2140",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "seo-keywords": {
+    "agentId": "40",
+    "uri": "https://stubly.org/agents/mainnet/seo-keywords.json",
+    "tx": "0xe24273892ec3721cb821da2e4739c0cff2fb6adcf2bdc5448dd5908fd1af1053",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "user-personas": {
+    "agentId": "41",
+    "uri": "https://stubly.org/agents/mainnet/user-personas.json",
+    "tx": "0x665e0c0522731a476c191537516e99118aa52594c04db20b323ef738989929a7",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "changelog-writer": {
+    "agentId": "42",
+    "uri": "https://stubly.org/agents/mainnet/changelog-writer.json",
+    "tx": "0xece6abc9596bd0cef851860239848d9307ec8e4b5cda34ce491b8d374789f5c5",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "blog-outline": {
+    "agentId": "43",
+    "uri": "https://stubly.org/agents/mainnet/blog-outline.json",
+    "tx": "0x3a93151d17b6ef3e8f25bb85014c17507b23f5f01c81b1f9eef6f05be2186fcc",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "newsletter": {
+    "agentId": "44",
+    "uri": "https://stubly.org/agents/mainnet/newsletter.json",
+    "tx": "0x78055ae3ab4a551cf3d592a321faefd67b9d0f6e957767a4040a28f046550e5e",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "product-description": {
+    "agentId": "45",
+    "uri": "https://stubly.org/agents/mainnet/product-description.json",
+    "tx": "0x40fc38353cbf9fed1438f5b317f0f009797c2ea9643df194e23fbe171baf4170",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "press-release": {
+    "agentId": "46",
+    "uri": "https://stubly.org/agents/mainnet/press-release.json",
+    "tx": "0x1d5694972dccd288e6574fcc55b265691b6b65fb5385fabc559e295fd13990fd",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "ad-copy": {
+    "agentId": "47",
+    "uri": "https://stubly.org/agents/mainnet/ad-copy.json",
+    "tx": "0x1264275fb4d754e16e6d92c0822d4452ec5092ff30bee4472413db53ee01b034",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tagline": {
+    "agentId": "48",
+    "uri": "https://stubly.org/agents/mainnet/tagline.json",
+    "tx": "0x39a0900dc02a07c5439ac8ae50d2dce5fd4a56ff0d35f261251ac2af1b40e507",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "faq-writer": {
+    "agentId": "49",
+    "uri": "https://stubly.org/agents/mainnet/faq-writer.json",
+    "tx": "0x9be9890d104f5ba85e10cfe3d05ad81a561d0d88e54057ba818445dc005bb699",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "case-study": {
+    "agentId": "50",
+    "uri": "https://stubly.org/agents/mainnet/case-study.json",
+    "tx": "0x282ca107b262da2a3a487a46d2897ddda1296b05e232f16fc0d6a1d574cf00f9",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "linkedin-post": {
+    "agentId": "51",
+    "uri": "https://stubly.org/agents/mainnet/linkedin-post.json",
+    "tx": "0x806dbda131490d3ece4cfc29db98b92e761db4da9decddd5e54c5233b4e50f75",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "youtube-description": {
+    "agentId": "52",
+    "uri": "https://stubly.org/agents/mainnet/youtube-description.json",
+    "tx": "0x827474fb0e06c93b7d6fa448c4d7a3cd7ba7dc1974ca62492fa07ae267f9d978",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "show-notes": {
+    "agentId": "53",
+    "uri": "https://stubly.org/agents/mainnet/show-notes.json",
+    "tx": "0x665a4c860f9ffa3b93d8babb29fe6e178e318038e737a83cc2b7ca91141c0c11",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "subject-lines": {
+    "agentId": "54",
+    "uri": "https://stubly.org/agents/mainnet/subject-lines.json",
+    "tx": "0x4d1647615b934fdadf98a243e437d3283bf3d61291a1f3671b07c282a69cd3ed",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "value-prop": {
+    "agentId": "55",
+    "uri": "https://stubly.org/agents/mainnet/value-prop.json",
+    "tx": "0x403cf48b973d3f0accec818ba207b6541a0c7cfe82e477309a5d4efb3f615454",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "elevator-pitch": {
+    "agentId": "56",
+    "uri": "https://stubly.org/agents/mainnet/elevator-pitch.json",
+    "tx": "0x3ede58d64ad20b522950a922243cc02ccb6bca9ce913ca7c491e5e4b388deb08",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "code-review-checklist": {
+    "agentId": "57",
+    "uri": "https://stubly.org/agents/mainnet/code-review-checklist.json",
+    "tx": "0x510e8dcdff9b2f15ca28020c8a49b743644a83969bb8b065735c9b4f4b0ca89d",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "api-docs": {
+    "agentId": "58",
+    "uri": "https://stubly.org/agents/mainnet/api-docs.json",
+    "tx": "0xf4f2e25dd3dcc07fd4b7a508b816254507d6c06141c741e60bf044f8650b84cf",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "commit-message": {
+    "agentId": "59",
+    "uri": "https://stubly.org/agents/mainnet/commit-message.json",
+    "tx": "0xa411f0deeb54309aed57ec0759bfb95a9483fd19b6f1f3356699734410256a72",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "pr-description": {
+    "agentId": "60",
+    "uri": "https://stubly.org/agents/mainnet/pr-description.json",
+    "tx": "0xaa07f20926a0fa5e0fd9fcfccab691f6bef135cd33c495396b217d0e2429d940",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "dockerfile": {
+    "agentId": "61",
+    "uri": "https://stubly.org/agents/mainnet/dockerfile.json",
+    "tx": "0xbab9719b546269758875088d00f62ce91b282090e87a60b2fe160b102fb2e9b2",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "ci-config": {
+    "agentId": "62",
+    "uri": "https://stubly.org/agents/mainnet/ci-config.json",
+    "tx": "0xd62fdd6966d50b4ce57334bd6495272cd162a1422049292522c18c2c4d52e917",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "migration-plan": {
+    "agentId": "63",
+    "uri": "https://stubly.org/agents/mainnet/migration-plan.json",
+    "tx": "0xb054e58fc77becfad95841f28480c49b4bdb1cf975187addf47e0a1c7c556373",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "refactor-plan": {
+    "agentId": "64",
+    "uri": "https://stubly.org/agents/mainnet/refactor-plan.json",
+    "tx": "0x5dc7d00e11d6bc76b10917beea9100cf899f7e455f6164b199260c7428c0bbc8",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "adr": {
+    "agentId": "65",
+    "uri": "https://stubly.org/agents/mainnet/adr.json",
+    "tx": "0x02fb05090378f4ca6e4d23d396d3cf3a6b0d6969a9ba0bbe7fe36832f588d7c6",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "bug-report": {
+    "agentId": "66",
+    "uri": "https://stubly.org/agents/mainnet/bug-report.json",
+    "tx": "0x8d26d1a34275f1ddaed5084097037218d5f925dfbd719fafad79561f29a2b433",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tech-spec": {
+    "agentId": "67",
+    "uri": "https://stubly.org/agents/mainnet/tech-spec.json",
+    "tx": "0x06083f60a9b30b00e669b9cad7808e12a639bc3e9edd40027799700808624102",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "env-audit": {
+    "agentId": "68",
+    "uri": "https://stubly.org/agents/mainnet/env-audit.json",
+    "tx": "0x726a286003ca55ff7be7bb5f45a6a73ce45056f5e97e6f1d1101a05031816698",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "gitignore": {
+    "agentId": "69",
+    "uri": "https://stubly.org/agents/mainnet/gitignore.json",
+    "tx": "0x67597b8d5eb06e91378ab7312d8efca14c423c5c622bb3b6ce528875bd0654a4",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "csv-schema": {
+    "agentId": "70",
+    "uri": "https://stubly.org/agents/mainnet/csv-schema.json",
+    "tx": "0xaa3a6ca4d3d48400607cd227e1e147a1b63882eeca753f84fbdd09d839ee9f3a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "chart-suggestion": {
+    "agentId": "71",
+    "uri": "https://stubly.org/agents/mainnet/chart-suggestion.json",
+    "tx": "0x99b27c6ed606abae8befc1a215fbd49e29c2af2124c9b01d7e2996358fe7f14a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "metric-definitions": {
+    "agentId": "72",
+    "uri": "https://stubly.org/agents/mainnet/metric-definitions.json",
+    "tx": "0x32b78e022fba65c93b2f377fc386bd1de32b33608021330bc5da5eb04a665771",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "ab-test": {
+    "agentId": "73",
+    "uri": "https://stubly.org/agents/mainnet/ab-test.json",
+    "tx": "0x5ea743d3cf8e55059d66e766ee3c53997ab0d8ffe42a663df202db3908104f32",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "survey-questions": {
+    "agentId": "74",
+    "uri": "https://stubly.org/agents/mainnet/survey-questions.json",
+    "tx": "0x28dc7af40769e9182d4f377808e3fed3a7e3b2b349cf6867756a6e7750c108d5",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "competitor-matrix": {
+    "agentId": "75",
+    "uri": "https://stubly.org/agents/mainnet/competitor-matrix.json",
+    "tx": "0xbb043ce5af7b64745b7fe1a8f5277d299a23bcc1fbe6307eed714a1da185b8f1",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "swot": {
+    "agentId": "76",
+    "uri": "https://stubly.org/agents/mainnet/swot.json",
+    "tx": "0x025474aadaa2abca35bc3b7f5d3f1b8d6750481265571e6a9583010f4fdcfec5",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "pricing-review": {
+    "agentId": "77",
+    "uri": "https://stubly.org/agents/mainnet/pricing-review.json",
+    "tx": "0x6a5f5be45cb2a86062a0b5841e7ab92ec03d5fd395b050396666574a3915b8ae",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "unit-economics": {
+    "agentId": "81",
+    "uri": "https://stubly.org/agents/mainnet/unit-economics.json",
+    "tx": "0x6f019fc3cd5445ad18ae3450b8adfd49b907855d07e82e64099ba0b351d53cd8",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "job-description": {
+    "agentId": "88",
+    "uri": "https://stubly.org/agents/mainnet/job-description.json",
+    "tx": "0x56d21573b2c33eb75f30df4f113357ac02ced48bda8cae216afd8b209415a575",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "interview-questions": {
+    "agentId": "95",
+    "uri": "https://stubly.org/agents/mainnet/interview-questions.json",
+    "tx": "0xc5b50e134d8e39f265596749b011f0a4236404a5d4de13de9119c7e97d1663d0",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "onboarding-checklist": {
+    "agentId": "96",
+    "uri": "https://stubly.org/agents/mainnet/onboarding-checklist.json",
+    "tx": "0x955bce5b244313188eaab8a10231729b597cb6a592063570687fceca28132cf1",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "meeting-agenda": {
+    "agentId": "97",
+    "uri": "https://stubly.org/agents/mainnet/meeting-agenda.json",
+    "tx": "0xaddce125cecb00d6f44062cb6354c0dca19091c448aaec95d42f72f959a91464",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "postmortem": {
+    "agentId": "98",
+    "uri": "https://stubly.org/agents/mainnet/postmortem.json",
+    "tx": "0xc1bff4100d156f14dd467740788a30ad4880aad3b7fa3d64decbe25a97968b1b",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "runbook": {
+    "agentId": "99",
+    "uri": "https://stubly.org/agents/mainnet/runbook.json",
+    "tx": "0xb16363a81270f1dc38e9ac643ae3ed0041c23539e3cd4409553bb0485759a250",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "sop": {
+    "agentId": "100",
+    "uri": "https://stubly.org/agents/mainnet/sop.json",
+    "tx": "0xe822bdd5f9d25c3ee271ae6a6a56f691742d1ead494ce2428c59b18f98e623ea",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "vendor-comparison": {
+    "agentId": "101",
+    "uri": "https://stubly.org/agents/mainnet/vendor-comparison.json",
+    "tx": "0x9dcc9cfb5f6209110d185cf545d2e15fa33dcac1bb6f54349bf1906d01bcb37d",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "eli5": {
+    "agentId": "102",
+    "uri": "https://stubly.org/agents/mainnet/eli5.json",
+    "tx": "0x024823cd59dea44020f91831c5ac1d92fbf20215c16d7f399168456b5598378b",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "glossary": {
+    "agentId": "103",
+    "uri": "https://stubly.org/agents/mainnet/glossary.json",
+    "tx": "0x3e622ae25e8c754c520edb6ee8a1882117372cff6f4e92935ed0cf8c8f63cc4a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "study-plan": {
+    "agentId": "104",
+    "uri": "https://stubly.org/agents/mainnet/study-plan.json",
+    "tx": "0x7ac61a26b14ddf8f929b11593c60ffd896341ab7c0c59e11089dd977c269ce68",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "quiz": {
+    "agentId": "105",
+    "uri": "https://stubly.org/agents/mainnet/quiz.json",
+    "tx": "0xcaeb6c1a63f218ae4751c9f247dc9fa1de2b500befc32820d4fb726fb2e314d5",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "flashcards": {
+    "agentId": "106",
+    "uri": "https://stubly.org/agents/mainnet/flashcards.json",
+    "tx": "0x10857334842e58fb9d4409984939afaeaf6b9cf5d282c1a15c437232e61d6c6d",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tone-rewrite": {
+    "agentId": "107",
+    "uri": "https://stubly.org/agents/mainnet/tone-rewrite.json",
+    "tx": "0x68c63eaa5287f2ae84648bc1bd49b06528bacd85e700d18730e9f9b79e408e24",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "simplify": {
+    "agentId": "108",
+    "uri": "https://stubly.org/agents/mainnet/simplify.json",
+    "tx": "0x8f5d22b27038b94ec137e8122849e8639a90748b9259196b39890ea1de4e25ea",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "grammar-fix": {
+    "agentId": "109",
+    "uri": "https://stubly.org/agents/mainnet/grammar-fix.json",
+    "tx": "0x0e03eb71b49c2736be998d85de3e422f667e318bf4b850c3212b228f729aff65",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "user-journey": {
+    "agentId": "110",
+    "uri": "https://stubly.org/agents/mainnet/user-journey.json",
+    "tx": "0xafc4eddf7404fc383b31107bd3a2ffac716bf75285c576f22b042bf7cbb490a5",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "empty-states": {
+    "agentId": "111",
+    "uri": "https://stubly.org/agents/mainnet/empty-states.json",
+    "tx": "0x04bb8f1e116ca0b93d7713230476ec525b4f6d379c19a5085a79c874da699c99",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "error-messages": {
+    "agentId": "112",
+    "uri": "https://stubly.org/agents/mainnet/error-messages.json",
+    "tx": "0x88ccfb0fc48c5e844c1275bb771cfcfe4435e277ccbf26ec7559d64c4a5cc5b7",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "microcopy": {
+    "agentId": "113",
+    "uri": "https://stubly.org/agents/mainnet/microcopy.json",
+    "tx": "0xfb70b21dbfe24759e1d1a7ba563d1f4197ff38026e7bb761440f41f8eb3158c4",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "a11y-checklist": {
+    "agentId": "114",
+    "uri": "https://stubly.org/agents/mainnet/a11y-checklist.json",
+    "tx": "0xa3882a3d63f726841673bc35a64171b226df763837d0ccd96e720b2bb346f30b",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "ia-review": {
+    "agentId": "115",
+    "uri": "https://stubly.org/agents/mainnet/ia-review.json",
+    "tx": "0x52ac2d6866e8af0a9c6f0317970d7630c744f4b97d892ff654ecbf60e2d2bf3d",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "wireframe": {
+    "agentId": "116",
+    "uri": "https://stubly.org/agents/mainnet/wireframe.json",
+    "tx": "0xd6efd82a4eb1fd3eee838e1a57c38440ead690fea85ab2fbc4c48f6497a5ff6f",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "gas-estimate": {
+    "agentId": "117",
+    "uri": "https://stubly.org/agents/mainnet/gas-estimate.json",
+    "tx": "0xd89165275f4472505d3a76632d7e1d3aea319a240204390b6af6cc384acc6073",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "contract-summary": {
+    "agentId": "118",
+    "uri": "https://stubly.org/agents/mainnet/contract-summary.json",
+    "tx": "0x12f3fcd542575761376708eab1192162ceca73d591c94e59483f9f762092b261",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tokenomics-review": {
+    "agentId": "119",
+    "uri": "https://stubly.org/agents/mainnet/tokenomics-review.json",
+    "tx": "0xde0414d9c2ba575347a85493db161ce702b038d4b6ecabb85b588019c7f827cc",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "whitepaper-digest": {
+    "agentId": "120",
+    "uri": "https://stubly.org/agents/mainnet/whitepaper-digest.json",
+    "tx": "0x0991c96852c47db247fae0ba090fd0efebc6c66082bdbe65dce04f4a774b0abf",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "okrs": {
+    "agentId": "121",
+    "uri": "https://stubly.org/agents/mainnet/okrs.json",
+    "tx": "0x2bd1b87efbf7a41bd0299ba7ac5a1b85c7efa19187211cab91f2b741762f0c56",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "roadmap": {
+    "agentId": "122",
+    "uri": "https://stubly.org/agents/mainnet/roadmap.json",
+    "tx": "0xadd3aff22a8144802fc06c013ab5eb98d7da32fb938264316375321b1041a566",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "risk-register": {
+    "agentId": "123",
+    "uri": "https://stubly.org/agents/mainnet/risk-register.json",
+    "tx": "0x0709e102d63d46b06b587482d5d208c829baa3907a151dccd63024045afed4ce",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "retro": {
+    "agentId": "124",
+    "uri": "https://stubly.org/agents/mainnet/retro.json",
+    "tx": "0x825fb1adcb6139bfb56990fa8abdeaaae5a79742aed723094d9949a31463ef4b",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "decision-brief": {
+    "agentId": "125",
+    "uri": "https://stubly.org/agents/mainnet/decision-brief.json",
+    "tx": "0xb47eb6790494916b946401dbb4eba38400a2126452488c99bcda64147dc69ee6",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "negotiation-prep": {
+    "agentId": "126",
+    "uri": "https://stubly.org/agents/mainnet/negotiation-prep.json",
+    "tx": "0xf630522ad556a28c9806022f144f66f84d16d2768318cbc2d40053ad407dfe12",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "cold-dm": {
+    "agentId": "127",
+    "uri": "https://stubly.org/agents/mainnet/cold-dm.json",
+    "tx": "0x156f1ab8fa6028ca2440bb62ff0f8e75c74cd2529b1dd3d5a9b6bdbb42f22144",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "outreach-sequence": {
+    "agentId": "128",
+    "uri": "https://stubly.org/agents/mainnet/outreach-sequence.json",
+    "tx": "0x4d9800ec13acbca147d648eb351f0ce2c2fcf090a8bf6cf6da8a6d11f1db3546",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "deck-outline": {
+    "agentId": "129",
+    "uri": "https://stubly.org/agents/mainnet/deck-outline.json",
+    "tx": "0xb0e07b4e6d3379b8226cec254860783247ffcf8fca78b0e506aa8ca11b527c73",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "landing-critique": {
+    "agentId": "130",
+    "uri": "https://stubly.org/agents/mainnet/landing-critique.json",
+    "tx": "0x4b84ba16dd5c1b774655fe8fb084f3d23afe3d87796b424ee9c36cbade8aa981",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  }
+}
