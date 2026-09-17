@@ -278,6 +278,18 @@ h1 .money { color: var(--usdc); }
 /* two-column utility */
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; padding: 48px 0 64px; }
 
+/* $STUBLY band: the contract address is the serial number on the ticket. Selectable in one click, never split. */
+.token-split { padding: 0; align-items: center; }
+.token-ca-label { display: block; margin-top: 4px; }
+.token-ca {
+  font-family: "IBM Plex Mono", monospace; font-size: 15px; line-height: 1.5; color: var(--ink);
+  background: var(--paper); border: 1.5px dashed var(--ink); border-radius: 4px;
+  padding: 12px 14px; margin: 8px 0 12px; word-break: break-all; user-select: all;
+}
+.token-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.btn-sm { padding: 9px 14px; font-size: 13.5px; }
+.token-copied { background: var(--ink); color: var(--paper); }
+
 /* deliverable paper */
 .paper-doc {
   background: var(--paper); border: 1px solid var(--hairline); border-radius: 6px;

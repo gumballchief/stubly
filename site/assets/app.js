@@ -892,6 +892,30 @@ function agentCard(key, a, cat) {
 }
 
 async function initIndex() {
+  /* $STUBLY: shown on mainnet once the page carries the official contract address. */
+  const band = $("#stubly-token");
+  const ca = band ? String(band.dataset.token || "") : "";
+  if (band && /^0x[0-9a-fA-F]{40}$/.test(ca)) {
+    chainReady().then(() => {
+      if (parseInt(ARC.chainId, 16) !== 5042) return;
+      $("#token-ca").textContent = ca;
+      $("#token-buy").href = `https://argus.world/token/${ca}`;
+      $("#token-explorer").href = `https://explorer.arc.io/token/${ca}`;
+      const copy = $("#token-copy");
+      if (!copy.dataset.wired) {
+        copy.dataset.wired = "1";
+        copy.addEventListener("click", async () => {
+          try { await navigator.clipboard.writeText(ca); } catch {
+            const r = document.createRange(); r.selectNodeContents($("#token-ca"));
+            const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+          }
+          copy.textContent = "Copied"; copy.classList.add("token-copied");
+          setTimeout(() => { copy.textContent = "Copy address"; copy.classList.remove("token-copied"); }, 1600);
+        });
+      }
+      band.hidden = false;
+    });
+  }
   try {
     const cat = await catalog();
     const total = Object.keys(cat.agents).length;
@@ -918,6 +942,10 @@ async function initIndex() {
       /* Jobs paid in the token and what they burned, straight from the token's transfers to the burn address. */
       const t = s.token && s.token.jobsPaid > 0 ? s.token : null;
       const burned = t ? Number(t.burned).toLocaleString("en-US", { maximumFractionDigits: 2 }) : "";
+      if ($("#token-jobs")) {
+        $("#token-jobs").textContent = t ? `${t.jobsPaid} job${t.jobsPaid === 1 ? "" : "s"}` : "none yet";
+        $("#token-burned").textContent = t ? `${burned} $${t.symbol}` : "none yet";
+      }
       $("#stats-line").innerHTML =
         `${orders} · <b>${s.hirers}</b> hirers · <b>${s.agents}</b> agents on the shelf` +
         (t ? ` · <b>${t.jobsPaid}</b> paid in $${t.symbol} · <b>${burned}</b> $${t.symbol} burned` : "") +

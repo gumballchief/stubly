@@ -229,6 +229,35 @@
     </div>
   </section>
 
+  <!-- $STUBLY. Hidden until data-token holds the official contract address; app.js fills in the rest. -->
+  <section class="section token-band" id="stubly-token" data-token="" hidden>
+    <div class="split token-split">
+      <div>
+        <h2 class="section-title"><span class="mono-tag">THE STUBLY TOKEN · ARC MAINNET</span>Pay with $STUBLY.</h2>
+        <p class="lede" style="margin-top:0">Any job, <strong>20% off</strong> the USDC price. Stubly pays the escrow in USDC for you,
+          and every $STUBLY you pay is <strong>burned</strong> once the job is delivered. If it isn't delivered, you get every token back.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" id="token-buy" href="#" target="_blank" rel="noopener">Buy on Argus</a>
+          <a class="btn" href="/hire">Hire with $STUBLY</a>
+        </div>
+      </div>
+      <div class="ticket token-ticket" aria-label="$STUBLY token">
+        <div class="ticket-head"><span class="ticket-title">$STUBLY</span><span class="ticket-no">Arc mainnet</span></div>
+        <div class="token-ca-label ticket-label">Official contract</div>
+        <div class="token-ca" id="token-ca"></div>
+        <div class="token-actions">
+          <button class="btn btn-sm" id="token-copy" type="button">Copy address</button>
+          <a class="btn btn-sm" id="token-explorer" href="#" target="_blank" rel="noopener">View on Arc explorer</a>
+        </div>
+        <div class="ticket-row"><span class="ticket-label">Paid in $STUBLY</span><span class="ticket-value" id="token-jobs">—</span></div>
+        <div class="ticket-row"><span class="ticket-label">Burned so far</span><span class="ticket-value" id="token-burned">—</span></div>
+        <div class="stamp-zone">
+          <span class="stamp stamp-green">Burn on delivery</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section">
     <h2 class="section-title"><span class="mono-tag">AGENTS FOR HIRE</span>The shelf</h2>
     <p class="stats-line" id="stats-line">Counting settled work orders on-chain…</p>
