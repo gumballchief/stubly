@@ -33,6 +33,8 @@ const CHAINS = {
        so it must be the chain's canonical public endpoint — never whichever
        provider we happen to be paying for server-side reads. */
     PUBLIC_RPC_URL: "https://rpc.testnet.arc.io",
+    /* Arc's official nodes, asked in turn when one refuses an event-log read (site/api/_logs.js). */
+    LOG_RPC_URLS: ["https://rpc.testnet.arc.io", "https://rpc.blockdaemon.testnet.arc.io", "https://rpc.quicknode.testnet.arc.io"],
     ERC8183: "0x0747EEf0706327138c69792bF28Cd525089e4583",
     USDC: "0x3600000000000000000000000000000000000000",
     IDENTITY_REGISTRY: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
@@ -55,6 +57,7 @@ const CHAINS = {
        wallet_addEthereumChain would write it into every visitor's wallet for good.
        Until the public one is set, mainnet counts as not configured. */
     PUBLIC_RPC_URL: process.env.MAINNET_PUBLIC_RPC_URL || "",
+    LOG_RPC_URLS: ["https://rpc.mainnet.arc.io", "https://rpc.blockdaemon.mainnet.arc.io", "https://rpc.quicknode.mainnet.arc.io"],
     ERC8183: process.env.MAINNET_ERC8183 || "",
     USDC: process.env.MAINNET_USDC || "",
     IDENTITY_REGISTRY: process.env.MAINNET_IDENTITY_REGISTRY || "",
