@@ -45,6 +45,9 @@ const CHAINS = {
     EVALUATOR_WALLET: "0x6F5A2E61DA4C779c6b4119F3BfEC8ec53Db488C7",
     PROVIDER_KEY: "provider",
     EVALUATOR_KEY: "evaluator",
+    /* Stubly's pay wallet for orders paid in tokens (worker/tokenpay.js). Only used to credit those
+       orders to the buyer named in them: an order names a buyer only if this wallet created it. */
+    PAY_WALLET: process.env.TESTNET_PAY_WALLET || "",
     START_BLOCK: 0,
   },
   mainnet: {
@@ -72,6 +75,7 @@ const CHAINS = {
        laptop and in three CI environments does not get to sign for real money. */
     PROVIDER_KEY: "provider_mainnet",
     EVALUATOR_KEY: "evaluator_mainnet",
+    PAY_WALLET: process.env.MAINNET_PAY_WALLET || "",
     /* The block the escrow was deployed in. Log reads that fall back to the RPC start
        here, because no Stubly order can be older than the contract it lives in. */
     START_BLOCK: Number(process.env.MAINNET_START_BLOCK || 0),

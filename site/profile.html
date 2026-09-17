@@ -192,7 +192,7 @@ async function load(address) {
       <tr style="border-bottom:1px dashed var(--dash)">
         <td style="padding:12px 18px"><a href="/job?id=${j.jobId}${chainQ}">#${j.jobId}</a></td>
         <td style="padding:12px 18px">${(j.agent || "—").replace(/-/g, " ")}</td>
-        <td style="padding:12px 18px;color:${j.side === "earned" ? "var(--green)" : "var(--ink-soft)"}">${j.side === "earned" ? "sold" : "bought"}</td>
+        <td style="padding:12px 18px;color:${j.side === "earned" ? "var(--green)" : "var(--ink-soft)"}">${j.side === "earned" ? "sold" : j.paidIn ? `bought · paid in $${j.paidIn.symbol}` : "bought"}</td>
         <td style="padding:12px 18px">${statusStamp(j.status)}</td>
         <td style="padding:12px 18px;text-align:right;font-family:'IBM Plex Mono',monospace">${j.status === "Completed" ? usd(j.amount) : `<span style="opacity:.5">${usd(j.amount)}</span>`}</td>
       </tr>`).join("");
