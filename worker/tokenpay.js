@@ -200,6 +200,27 @@ const witnessHash = (o) => TypedDataEncoder.hashStruct("StublyOrder", { StublyOr
   { agent: o.agent, brief: briefHash(o.agent, o.input), priceUsdc: BigInt(o.priceRaw) });
 const jsonSafe = (v) => JSON.parse(JSON.stringify(v, (_, x) => (typeof x === "bigint" ? x.toString() : x)));
 
+/**
+ * Launch day without touching the host: with TOKENPAY=on and no TOKENPAY_TOKEN, the worker reads the
+ * token and pool from its own site's /token.json (SITE_URL, https only). Settings in the host's env always
+ * win. The file is only accepted whole and well-formed, and the orchestrator takes it once: a later edit
+ * to the file never switches the token under orders in flight (that takes a restart).
+ */
+async function siteConfig(siteUrl = process.env.SITE_URL, fetchImpl = fetch) {
+  const base = String(siteUrl || "").replace(/\/+$/, "");
+  if (!/^https:\/\/[^/]+$/.test(base)) return null;
+  try {
+    const r = await fetchImpl(`${base}/token.json?t=${Date.now()}`, { signal: AbortSignal.timeout(10_000), headers: { accept: "application/json" } });
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!isAddress(j?.token || "")) return null;
+    if (!/^(v4:\d+:\d+:0x[0-9a-fA-F]{40}|v3:\d+)$/.test(String(j.pool || ""))) return null;
+    const out = { TOKENPAY_TOKEN: getAddress(j.token), TOKENPAY_POOL: String(j.pool) };
+    if (Number.isInteger(j.startBlock) && j.startBlock > 0) out.TOKENPAY_START_BLOCK = String(j.startBlock);
+    return out;
+  } catch { return null; }
+}
+
 /* ————— the attached worker ————— */
 
 let W = null;            // what the orchestrator hands over; see attach()
@@ -216,6 +237,13 @@ let lastTickAt = null;
 function attach(ctx, env = process.env) {
   const cfg = payConfig(env, CFG.CHAIN_ID);
   W = { cfg, reason: cfg.enabled ? null : cfg.reason };
+  /* Switched on but waiting for the token's address (from the site on launch day): say whether the pay wallet
+     opened, so a wrong keystore or password shows on the health page before launch, not during it. */
+  if (!cfg.enabled && env.TOKENPAY === "on" && !isAddress(env.TOKENPAY_TOKEN || "")) {
+    W.reason = ctx.treasurySigner
+      ? `waiting for the token address; pay wallet ${getAddress(ctx.treasurySigner.address)} is ready`
+      : `waiting for the token address; ${ctx.treasuryError || "no pay wallet keystore"}`;
+  }
   if (!cfg.enabled) return W.reason;
   if (!ctx.treasurySigner) { W.reason = ctx.treasuryError || "no pay wallet keystore"; W.cfg = { enabled: false }; return W.reason; }
   const treasuryAddr = getAddress(ctx.treasurySigner.address);
@@ -852,7 +880,7 @@ function handleHttp(req, res, http) {
 }
 
 module.exports = {
-  payConfig, attach, tick, status, handleHttp, quote, placeOrder, orderStatus, refillOwedUsdc,
+  payConfig, attach, tick, status, handleHttp, quote, placeOrder, orderStatus, refillOwedUsdc, siteConfig,
   PERMIT2, BURN, TYPES, WITNESS_TYPE_STRING, UNISWAP, FINAL,
   _test: { tokensForUsdc, witnessHash, messageFor, domainFor, briefHash, stepOrder, advance, scanChain, get W() { return W; }, quotes, reset: () => { W = null; quotes.clear(); running.clear(); lastError = null; Object.assign(ledger, { key: "", scannedTo: 0, jobs: new Map(), refilledRaw: 0n }); refillView = { owedRaw: 0n, waiting: 0 }; lastRefill = null; refillNote = null; }, readLedger, maybeRefill },
 };
