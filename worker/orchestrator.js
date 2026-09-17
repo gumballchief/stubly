@@ -356,7 +356,7 @@ async function makeContext() {
      that feature off with a reason on the health page; it never stops settlement. */
   let treasurySigner = null;
   let treasuryError = null;
-  if (tokenpay.payConfig(process.env, CFG.CHAIN_ID).enabled) {
+  if (process.env.TOKENPAY === "on") { // on, even while it waits for the token's address from the site
     try { treasurySigner = loadWallet(CFG.TREASURY_KEY, prov); } catch (e) { treasuryError = `pay wallet: ${e.message}`; }
   }
   return { prov, jobs, providerSigner, evaluatorSigner, treasurySigner, treasuryError, state: STATE };
@@ -436,7 +436,7 @@ function attachDesk(ctx) {
 }
 
 /** Hand the token checkout the same signers, state and locks. runNow starts a newly funded order at once, as the desk's tryRun does. */
-function attachTokenpay(ctx) {
+function attachTokenpay(ctx, env = process.env) {
   const why = tokenpay.attach({
     prov: ctx.prov,
     jobs: () => ctx.jobs,
@@ -457,8 +457,38 @@ function attachTokenpay(ctx) {
         .then(() => saveState(STATE))
         .catch((e) => console.log(`[tokenpay run] job ${jobId}: ${e.shortMessage || e.message}`));
     },
-  });
+  }, env);
   console.log(why ? `[tokenpay] off: ${why}` : "[tokenpay] on");
+  return why;
+}
+
+/* Launch day: TOKENPAY=on with no TOKENPAY_TOKEN set waits for stubly.org/token.json, checked every
+   15 seconds on its own timer (a pass can spend minutes running an agent), and switches paying in the
+   token on without a restart. Taken once: a later change to the file needs a restart. */
+let siteTokenTaken = false;
+function watchSiteToken(ctx) {
+  if (ONCE || DRY || process.env.TOKENPAY !== "on" || process.env.TOKENPAY_TOKEN) return;
+  let busy = false;
+  const timer = setInterval(async () => {
+    if (siteTokenTaken || busy) return;
+    busy = true;
+    try {
+      const overlay = await tokenpay.siteConfig();
+      if (!overlay) return;
+      const why = attachTokenpay(ctx, { ...process.env, ...overlay });
+      if (!why) {
+        siteTokenTaken = true;
+        clearInterval(timer);
+        console.log(`[tokenpay] switched on from ${process.env.SITE_URL}/token.json: ${overlay.TOKENPAY_TOKEN}`);
+        tokenpay.tick().catch(() => {});
+      }
+    } catch (e) {
+      console.log(`[tokenpay] site token check: ${e.message}`);
+    } finally {
+      busy = false;
+    }
+  }, 15_000);
+  timer.unref?.();
 }
 
 /**
@@ -543,6 +573,7 @@ async function main() {
         ctx = await makeContext();
         if (!ONCE && !DRY) attachDesk(ctx);
         attachTokenpay(ctx);
+        watchSiteToken(ctx);
       }
       const r = await pass(ctx);
       /* Per-order errors are caught so one bad order can't hold up the rest. But when every order

@@ -3,7 +3,11 @@
 /**
  * Launch day for "pay with $STUBLY": from the token's address to the exact worker settings. Read-only.
  *
- *   npm run pay:launch -- 0xTOKEN
+ *   npm run pay:launch -- 0xTOKEN            checks and prints
+ *   npm run pay:launch -- 0xTOKEN --write    also writes the site's launch files (then commit, push, deploy):
+ *        site/token.json      the token and pool; a worker with TOKENPAY=on picks it up within 15 seconds
+ *        site/index.html      the homepage $STUBLY section's contract address (data-token)
+ *        site/llms.txt        the official contract, for AI search
  *
  * 1. Checks the token: it has code, and 12 to 36 decimals (worker/tokenpay.js needs the last six digits
  *    of an amount to name an order).
@@ -29,7 +33,10 @@ const SV = new Interface(["function getLiquidity(bytes32 poolId) view returns (u
 const coder = AbiCoder.defaultAbiCoder();
 
 async function deployBlock(p, addr, latest) {
-  let lo = 0, hi = latest;
+  /* A token launched minutes ago is found in a short window; only an old one needs the whole chain. */
+  const recent = Math.max(0, latest - 200_000);
+  const hasCodeThen = await p.send("eth_getCode", [addr, "0x" + recent.toString(16)]);
+  let lo = hasCodeThen && hasCodeThen !== "0x" ? 0 : recent, hi = latest;
   while (lo < hi) {
     const mid = Math.floor((lo + hi) / 2);
     const code = await p.send("eth_getCode", [addr, "0x" + mid.toString(16)]);
@@ -44,8 +51,10 @@ async function findPool(p, token, fromBlock, latest) {
   const candidates = [];
   for (let start = fromBlock; start <= latest; start += 5000) {
     const end = Math.min(start + 4999, latest);
-    for (const topics of [[topic, null, pad], [topic, null, null, pad]]) {
-      for (const l of await p.getLogs({ address: POOL_MANAGER, topics, fromBlock: start, toBlock: end })) {
+    // The token as currency0 and as currency1, asked together: on launch day every second counts.
+    const found = await Promise.all([[topic, null, pad], [topic, null, null, pad]].map((topics) => p.getLogs({ address: POOL_MANAGER, topics, fromBlock: start, toBlock: end })));
+    {
+      for (const l of found.flat()) {
         const ev = PM.parseLog(l);
         const [c0, c1] = [getAddress(ev.args.currency0), getAddress(ev.args.currency1)];
         if (![c0, c1].includes(getAddress(USDC))) continue;
@@ -72,7 +81,9 @@ async function main() {
   console.log(`\n✓ token ${name} ($${symbol}) at ${getAddress(token)}, ${decimals} decimals`);
   if (Number(decimals) < 12 || Number(decimals) > 36) throw new Error(`the token has ${decimals} decimals; paying in it needs 12 to 36`);
 
-  const born = await deployBlock(p, token, latest);
+  const fromArg = process.argv.indexOf("--from");
+  // --from <block> skips finding the token's deploy block, for when the launch block is already known.
+  const born = fromArg > 0 && /^\d+$/.test(process.argv[fromArg + 1] || "") ? Number(process.argv[fromArg + 1]) : await deployBlock(p, token, latest);
   const pools = await findPool(p, getAddress(token), born, latest);
   if (!pools.length) throw new Error(`no Uniswap v4 pool pairs $${symbol} with USDC yet (searched from block ${born})`);
   for (const c of pools) console.log(`  pool fee ${c.fee} · tickSpacing ${c.tickSpacing} · hooks ${c.hooks} · liquidity ${c.liquidity} (block ${c.block})`);
@@ -108,10 +119,36 @@ async function main() {
     `  MAINNET_PAY_TOKEN=${getAddress(token)}`,
     payWallet ? `  MAINNET_PAY_WALLET=${payWallet}` : "  MAINNET_PAY_WALLET=<the pay wallet address>",
   ].join("\n"));
+
+  if (process.argv.includes("--write")) {
+    writeLaunchFiles(require("path").join(__dirname, "..", "site"), { token, symbol, decimals: Number(decimals), pool: POOL, startBlock: latest });
+    console.log("\n✓ wrote site/token.json, the homepage contract address and the llms.txt line. Next: commit, push, deploy.");
+  }
+}
+
+/** The three site edits launch day needs. Safe to run twice: the same address is never written twice. */
+function writeLaunchFiles(site, { token, symbol, decimals, pool, startBlock }) {
+  const fs = require("fs");
+  const path = require("path");
+  const ca = getAddress(token);
+  fs.writeFileSync(path.join(site, "token.json"), JSON.stringify({ token: ca, symbol, decimals, pool, startBlock, chainId: 5042 }, null, 2) + "\n");
+
+  const indexPath = path.join(site, "index.html");
+  const index = fs.readFileSync(indexPath, "utf8");
+  if (!/id="stubly-token" data-token="[^"]*"/.test(index)) throw new Error("site/index.html has no #stubly-token section to fill in");
+  fs.writeFileSync(indexPath, index.replace(/(id="stubly-token" data-token=")[^"]*(")/, (_, a, b) => a + ca + b));
+
+  const llmsPath = path.join(site, "llms.txt");
+  const llms = fs.readFileSync(llmsPath, "utf8");
+  if (!llms.includes(ca)) {
+    const nl = llms.includes("\r\n") ? "\r\n" : "\n";
+    fs.writeFileSync(llmsPath, llms.replace(/\s*$/, "") + nl + nl + `## $${symbol}` + nl + nl +
+      `$${symbol} is Stubly's token on Arc mainnet. Official contract: ${ca}. Any job on stubly.org can be paid in $${symbol} for 20% off; the escrow still pays the agent in USDC, and the $${symbol} paid is burned once the job is delivered (returned if it is not). Buy on Argus: https://argus.world/token/${ca}` + nl);
+  }
 }
 
 if (require.main === module) {
   main().catch((e) => { console.error("\nSTOPPED:", e.shortMessage || e.message); process.exit(1); });
 }
 
-module.exports = { findPool, deployBlock };
+module.exports = { findPool, deployBlock, writeLaunchFiles };
