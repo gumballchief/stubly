@@ -22,7 +22,7 @@ const jobsLib = require("../chain/jobs");
 const CATALOG = require("./catalog");
 const { publishDeliverable, publishJudgeRecord } = require("./publish");
 const { judge } = require("./judge");
-const { maybeSweep } = require("./sweep");
+const { maybeSweep, requiredFloatUsdc } = require("./sweep");
 const { startSupport, supportStatus, notifyTeam } = require("./support");
 const desk = require("./desk");
 const tokenpay = require("./tokenpay");
@@ -400,7 +400,7 @@ async function pass(ctx) {
   // Earnings do not sit on the signing wallet. No-op until SWEEP_TO is set.
   // The sweep signs from the provider key too, so it waits its turn behind any refund or delivery.
   try {
-    const r = await jobsLib.withKeyLock(ctx.providerSigner.address, () => maybeSweep(ctx.providerSigner));
+    const r = await jobsLib.withKeyLock(ctx.providerSigner.address, () => maybeSweep(ctx.providerSigner, console.log, { reserveUsdc: tokenpay.refillOwedUsdc() }));
     if (r.swept) STATE.lastSweep = { at: new Date().toISOString(), amount: r.amount, tx: r.tx };
     saveState(STATE);
   } catch (e) {
@@ -442,6 +442,8 @@ function attachTokenpay(ctx) {
     jobs: () => ctx.jobs,
     providerSigner: ctx.providerSigner,
     evaluatorSigner: ctx.evaluatorSigner,
+    // What the agent wallet must keep for gas and sub-orders: a refill never takes it below this.
+    providerFloorUsdc: () => requiredFloatUsdc(),
     treasurySigner: ctx.treasurySigner,
     treasuryError: ctx.treasuryError,
     state: STATE,

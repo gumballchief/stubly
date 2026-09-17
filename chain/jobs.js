@@ -257,7 +257,7 @@ async function rejectRaw(evaluatorSigner, jobId, digest32, C = CFG) {
  * be mined twice. Any failure after broadcast carries the hash, so whoever looks at
  * it can see whether the money moved instead of guessing.
  */
-async function transferUsdc(signer, to, amount, { claim, reserve = 0n } = {}, C = CFG) {
+async function transferUsdc(signer, to, amount, { claim, reserve = 0n, label = "refund transfer" } = {}, C = CFG) {
   const { usdc } = await contracts(signer, C);
   const from = await signerAddress(usdc);
   await assertWritable(usdc.runner.provider, C);
@@ -291,7 +291,7 @@ async function transferUsdc(signer, to, amount, { claim, reserve = 0n } = {}, C 
       try { rc = await prov.waitForTransaction(hash, 1, WAIT_MS); } catch (e) { throw Object.assign(e, { txHash: hash }); }
       if (!rc) throw Object.assign(new Error("refund not confirmed yet"), { txHash: hash });
       if (rc.status !== 1) throw Object.assign(new Error("refund transaction reverted"), { txHash: hash });
-      console.log(`  refund transfer: ${C.EXPLORER}/tx/${hash}`);
+      console.log(`  ${label}: ${C.EXPLORER}/tx/${hash}`);
       return { claimed: true, hash, rc };
     } finally {
       signer.reset?.(); // this nonce was used outside the counter

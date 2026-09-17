@@ -33,6 +33,10 @@
  * Paying in the token is TOKENPAY_DISCOUNT_BPS cheaper than the USDC price (20% unless set), so
  * there is a reason to hold it and spend it.
  *
+ * The USDC the pay wallet puts into an escrow is paid, on delivery, to Stubly's agent wallet. Every
+ * TOKENPAY_REFILL_EVERY delivered token orders (20 unless set), the agent wallet sends that USDC back to
+ * the pay wallet, so the tax income it started with keeps funding orders instead of draining away.
+ *
  * Off unless TOKENPAY=on with TOKENPAY_TOKEN and TOKENPAY_POOL set, and a pay wallet keystore
  * (treasury_mainnet on mainnet).
  */
@@ -64,6 +68,7 @@ const TAG_UNIT = 1_000_000n;       // the last six digits of every token amount 
 const MAX_BRIEF = 300;             // the hire page's field allows 300 characters
 const KEEP_DAYS = 30;              // finished orders stay in state this long, for limits and the status page
 const FINAL = ["abandoned", "paid-out", "returned"];
+const REFILL_LOW_RAW = 3_000_000n; // a pay wallet under 3 USDC is refilled with whatever is owed, without waiting for the count
 
 const ERC20 = new Interface([
   "function decimals() view returns (uint8)",
@@ -146,6 +151,7 @@ function payConfig(env = process.env, chainId = CFG.CHAIN_ID) {
     TOKENPAY_QUOTE_SEC: num("TOKENPAY_QUOTE_SEC", 180, 60, 300),
     TOKENPAY_LOOKBACK_BLOCKS: num("TOKENPAY_LOOKBACK_BLOCKS", 200_000, 1_000, 5_000_000),
     TOKENPAY_START_BLOCK: num("TOKENPAY_START_BLOCK", 0, 0, Number.MAX_SAFE_INTEGER),
+    TOKENPAY_REFILL_EVERY: num("TOKENPAY_REFILL_EVERY", 20, 0, 10_000),
   };
   for (const [k, v] of Object.entries(values)) if (Number.isNaN(v)) return off(`${k} is out of range`);
 
@@ -161,6 +167,7 @@ function payConfig(env = process.env, chainId = CFG.CHAIN_ID) {
     quoteSec: Math.floor(values.TOKENPAY_QUOTE_SEC),
     lookback: Math.floor(values.TOKENPAY_LOOKBACK_BLOCKS),
     startBlock: Math.floor(values.TOKENPAY_START_BLOCK),
+    refillEvery: Math.floor(values.TOKENPAY_REFILL_EVERY),
   };
 }
 
@@ -417,7 +424,7 @@ function orderStatus(id) {
 
 async function getJob(jobId) {
   const j = await jobsLib.withRetry(() => W.jobs().getJob(jobId));
-  return { status: JOB_STATUS[Number(j.status ?? j[7])] || "?", expiredAt: Number(j.expiredAt ?? j[6]), description: j.description ?? j[4], client: j.client ?? j[1] };
+  return { status: JOB_STATUS[Number(j.status ?? j[7])] || "?", expiredAt: Number(j.expiredAt ?? j[6]), description: j.description ?? j[4], client: j.client ?? j[1], budget: j.budget ?? j[5] };
 }
 
 /** Transfers of the token from one address to another since a block, oldest first. */
@@ -662,6 +669,92 @@ function pruneOrders() {
   for (const [id, o] of Object.entries(orders())) if (FINAL.includes(o.phase) && o.at < cutoff) delete orders()[id];
 }
 
+/* ————— refilling the pay wallet from the agent wallet —————
+   Nothing here lives only in state.json, which every redeploy wipes: a count kept there would forget jobs,
+   and a recovered order would be counted twice. So what is owed is read from the chain. Delivered token
+   orders are the escrow's Completed jobs whose client is the pay wallet; what has been paid back is the
+   agent wallet's USDC transfers to the pay wallet. Orders are covered oldest first, and the ones the
+   refills have not reached yet are the ones waiting. */
+const ledger = { key: "", scannedTo: 0, jobs: new Map(), refilledRaw: 0n };
+let refillView = { owedRaw: 0n, waiting: 0 };
+let lastRefill = null;
+let refillNote = null;
+
+async function readLedger() {
+  const key = `${W.treasuryAddr}:${W.providerSigner.address}`.toLowerCase();
+  if (ledger.key !== key) Object.assign(ledger, { key, scannedTo: 0, jobs: new Map(), refilledRaw: 0n });
+  const latest = await jobsLib.withRetry(() => W.prov.getBlockNumber());
+  const from = ledger.scannedTo ? ledger.scannedTo + 1 : Math.max(W.cfg.startBlock || latest - W.cfg.lookback, 0);
+  const jobTopics = [JOB_CREATED.getEvent("JobCreated").topicHash, null, zeroPadValue(W.treasuryAddr, 32)];
+  const payTopics = [ERC20.getEvent("Transfer").topicHash, zeroPadValue(W.providerSigner.address, 32), zeroPadValue(W.treasuryAddr, 32)];
+  for (let start = from; start <= latest; start += 5000) {
+    const end = Math.min(start + 4999, latest);
+    const [created, paid] = await Promise.all([
+      jobsLib.withRetry(() => W.prov.getLogs({ address: CFG.ERC8183, topics: jobTopics, fromBlock: start, toBlock: end })),
+      jobsLib.withRetry(() => W.prov.getLogs({ address: CFG.USDC, topics: payTopics, fromBlock: start, toBlock: end })),
+    ]);
+    for (const l of created) {
+      const id = BigInt(l.topics[1]).toString();
+      if (!ledger.jobs.has(id)) ledger.jobs.set(id, { final: false, completed: false, budget: 0n });
+    }
+    for (const l of paid) ledger.refilledRaw += BigInt(l.data);
+    ledger.scannedTo = end;
+  }
+  for (const [id, j] of ledger.jobs) {
+    if (j.final) continue;
+    const got = await getJob(id);
+    if (got.status === "Completed") Object.assign(j, { final: true, completed: true, budget: BigInt(got.budget) });
+    else if (got.status === "Rejected" || got.status === "Expired") j.final = true;
+  }
+  const done = [...ledger.jobs].filter(([, j]) => j.completed).sort(([a], [b]) => (BigInt(a) < BigInt(b) ? -1 : 1));
+  let covered = ledger.refilledRaw;
+  let owedRaw = 0n;
+  let waiting = 0;
+  for (const [, j] of done) {
+    if (covered >= j.budget) { covered -= j.budget; continue; }
+    owedRaw += j.budget;
+    waiting++;
+  }
+  refillView = { owedRaw, waiting };
+  return refillView;
+}
+
+async function maybeRefill() {
+  if (!W.cfg.refillEvery) return;
+  const { owedRaw, waiting } = await readLedger();
+  refillNote = null;
+  if (owedRaw <= 0n) return;
+  const usdc = new Contract(CFG.USDC, ERC20, W.prov);
+  const low = (await jobsLib.withRetry(() => usdc.balanceOf(W.treasuryAddr))) < REFILL_LOW_RAW;
+  if (waiting < W.cfg.refillEvery && !low) return;
+  // A refill still waiting to be mined is not in the logs yet; sending now could pay the same orders twice.
+  const agent = W.providerSigner.address;
+  const [pending, mined] = await Promise.all([
+    jobsLib.withRetry(() => W.prov.getTransactionCount(agent, "pending")),
+    jobsLib.withRetry(() => W.prov.getTransactionCount(agent, "latest")),
+  ]);
+  if (pending > mined) { refillNote = "waiting for the agent wallet's pending transaction"; return; }
+  const floor = Number(W.providerFloorUsdc ? W.providerFloorUsdc() : 0.5);
+  const reserve = parseUnits((Number.isFinite(floor) && floor > 0 ? floor : 0.5).toFixed(6), 6);
+  try {
+    const r = await jobsLib.transferUsdc(W.providerSigner, W.treasuryAddr, owedRaw, { reserve, label: "pay wallet refill" }, CFG);
+    lastRefill = { tx: r.hash, usdc: formatUnits(owedRaw, 6), orders: waiting, at: new Date().toISOString() };
+    console.log(`[tokenpay] refilled the pay wallet with ${lastRefill.usdc} USDC for ${waiting} delivered order(s)`);
+    /* Not added to the ledger here: the next scan reads this transfer back from the chain, together with any
+       order created while it was being mined. Until then nothing is shown as owed, and the sweep holds nothing back. */
+    refillView = { owedRaw: 0n, waiting: 0 };
+  } catch (e) {
+    if (e.code === "SHORT") { refillNote = "waiting: the agent wallet is at its float"; return; }
+    lastError = `refill: ${errText(e)}`;
+    console.log(`[tokenpay] ${lastError}`);
+  }
+}
+
+/** USDC the agent wallet holds that belongs back in the pay wallet. The sweep leaves it alone. */
+function refillOwedUsdc() {
+  return on() ? Number(formatUnits(refillView.owedRaw, 6)) : 0;
+}
+
 /** One pass over every unfinished order. Called from the worker's loop; never runs twice at once. */
 async function tick() {
   if (!on() || ticking) return;
@@ -678,6 +771,7 @@ async function tick() {
     pruneOrders();
     pruneQuotes();
     W.save();
+    try { await maybeRefill(); } catch (e) { lastError = `refill: ${errText(e)}`; } // orders never wait on a refill
     lastTickAt = Date.now();
   } catch (e) {
     lastError = `tick: ${errText(e)}`;
@@ -698,6 +792,7 @@ function status() {
     discountBps: Number(W.cfg.discountBps),
     open: open.length,
     stuck: open.filter((o) => o.attempts >= 3).length,
+    refill: { every: W.cfg.refillEvery, ordersWaiting: refillView.waiting, owedUsdc: formatUnits(refillView.owedRaw, 6), last: lastRefill, note: refillNote },
     lastTickSecondsAgo: lastTickAt ? Math.round((Date.now() - lastTickAt) / 1000) : null,
     lastError,
   };
@@ -757,7 +852,7 @@ function handleHttp(req, res, http) {
 }
 
 module.exports = {
-  payConfig, attach, tick, status, handleHttp, quote, placeOrder, orderStatus,
+  payConfig, attach, tick, status, handleHttp, quote, placeOrder, orderStatus, refillOwedUsdc,
   PERMIT2, BURN, TYPES, WITNESS_TYPE_STRING, UNISWAP, FINAL,
-  _test: { tokensForUsdc, witnessHash, messageFor, domainFor, briefHash, stepOrder, advance, scanChain, get W() { return W; }, quotes, reset: () => { W = null; quotes.clear(); running.clear(); lastError = null; } },
+  _test: { tokensForUsdc, witnessHash, messageFor, domainFor, briefHash, stepOrder, advance, scanChain, get W() { return W; }, quotes, reset: () => { W = null; quotes.clear(); running.clear(); lastError = null; Object.assign(ledger, { key: "", scannedTo: 0, jobs: new Map(), refilledRaw: 0n }); refillView = { owedRaw: 0n, waiting: 0 }; lastRefill = null; refillNote = null; }, readLedger, maybeRefill },
 };

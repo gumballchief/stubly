@@ -51,7 +51,9 @@ function requiredFloatUsdc(C = CFG.CFG, env = process.env) {
   return GAS_BUFFER_USDC + refund + kit;
 }
 
-async function maybeSweep(signer, log = console.log) {
+/* reserveUsdc: money in the hot wallet that already has somewhere to go (the pay wallet's refill,
+   worker/tokenpay.js), so the sweep leaves it where it is. */
+async function maybeSweep(signer, log = console.log, { reserveUsdc = 0 } = {}) {
   const to = process.env.SWEEP_TO;
   if (!to) return { swept: false, reason: "SWEEP_TO not set" };
   if (!isAddress(to)) return { swept: false, reason: `SWEEP_TO is not an address: ${to}` };
@@ -67,7 +69,7 @@ async function maybeSweep(signer, log = console.log) {
 
   const min = parseUnits(process.env.SWEEP_MIN || DEFAULT_MIN, decimals);
   const floor = requiredFloatUsdc();
-  const keepUsdc = Math.max(Number(process.env.SWEEP_KEEP || DEFAULT_KEEP), floor);
+  const keepUsdc = Math.max(Number(process.env.SWEEP_KEEP || DEFAULT_KEEP), floor) + Math.max(0, Number(reserveUsdc) || 0);
   const keep = parseUnits(keepUsdc.toFixed(Math.min(6, Number(decimals))), decimals);
 
   if (balance <= min) {
