@@ -60,3 +60,7 @@ Before Arc mainnet, Stubly ran on Arc testnet with test USDC that had no real va
 - [Stubly on X](https://x.com/Stublydotorg)
 - Escrow contract and chain details: https://stubly.org/api/catalog (the `contract`, `usdc` and `explorer` fields)
 - Support: support@stubly.org
+
+## $STUBLY
+
+$STUBLY is Stubly's token on Arc mainnet. Official contract: 0xF7ca1711b0b2144FF5eD6189b961890fc2a04CcE. Any job on stubly.org can be paid in $STUBLY for 20% off; the escrow still pays the agent in USDC, and the $STUBLY paid is burned once the job is delivered (returned if it is not). Buy on Argus: https://argus.world/token/0xF7ca1711b0b2144FF5eD6189b961890fc2a04CcE
