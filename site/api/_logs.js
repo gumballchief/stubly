@@ -12,11 +12,17 @@
  *
  * A walk that had to stop short of the requested start says so (partial = true), so a
  * page can say "recent history" instead of presenting a cut-off list as everything.
+ *
+ * Arc's public node limits log reads per IP, and a serverless host shares its IPs with everyone
+ * else's functions: on mainnet launch day stubly.org's profile got "rate limit exceeded" on its
+ * very first eth_getLogs while the same query answered instantly from anywhere else. So each piece
+ * a node refuses is asked of the chain's next official node (LOG_RPC_URLS), and the walk keeps
+ * using whichever node last answered.
  */
 
 const RPC_SPAN = 5000;
 const MAX_RPC_CHUNKS = 120; // 600,000 blocks, about three and a half days at Arc's half-second blocks
-const RPC_CONCURRENCY = 6;
+const RPC_CONCURRENCY = 3; // bursts are what trip a node's per-IP limit
 
 async function explorerLogs(C, q) {
   if (!C.EXPLORER_API) return null;
@@ -36,21 +42,42 @@ async function explorerLogs(C, q) {
   return null;
 }
 
-async function rpc(C, method, params) {
-  const r = await fetch(C.RPC_URL, {
+async function rpc(C, method, params, url = C.RPC_URL) {
+  const r = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
     signal: AbortSignal.timeout(15_000),
   });
-  const j = await r.json();
+  const j = await r.json().catch(() => ({ error: { message: `HTTP ${r.status}` } }));
   if (j.error) throw new Error(`rpc ${method}: ${j.error.message || "error"}`);
   return j.result;
 }
 
+/** The configured node first, then the chain's other official nodes, each once. */
+function logNodes(C) {
+  return [...new Set([C.RPC_URL, ...(C.LOG_RPC_URLS || [])].filter(Boolean))];
+}
+
+/** One call, moved along the node list until a node answers. `at` is shared, so later calls start at the node that worked. */
+async function rpcAny(C, nodes, at, method, params) {
+  let last;
+  for (let tried = 0; tried < nodes.length; tried++) {
+    const i = (at.i + tried) % nodes.length;
+    try {
+      const out = await rpc(C, method, params, nodes[i]);
+      at.i = i;
+      return out;
+    } catch (e) { last = e; }
+  }
+  throw last;
+}
+
 async function rpcLogs(C, q) {
   if (!C.RPC_URL) throw new Error("no RPC configured for this chain");
-  const latest = parseInt(await rpc(C, "eth_blockNumber", []), 16);
+  const nodes = logNodes(C);
+  const at = { i: 0 };
+  const latest = parseInt(await rpcAny(C, nodes, at, "eth_blockNumber", []), 16);
   const wanted = Math.max(Number(q.fromBlock) || 0, Number(C.START_BLOCK) || 0);
   const floor = Math.max(0, latest - RPC_SPAN * MAX_RPC_CHUNKS + 1);
   const start = Math.max(wanted, floor);
@@ -64,7 +91,7 @@ async function rpcLogs(C, q) {
     while (next < ranges.length) {
       const i = next++;
       const [from, to] = ranges[i];
-      pieces[i] = await rpc(C, "eth_getLogs", [{
+      pieces[i] = await rpcAny(C, nodes, at, "eth_getLogs", [{
         address: q.address,
         fromBlock: "0x" + from.toString(16),
         toBlock: "0x" + to.toString(16),
