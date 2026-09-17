@@ -29,6 +29,8 @@ async function logsFor(C, address, position, latest) {
 }
 
 const jobIdOf = (log) => BigInt(log.topics[1]).toString();
+/* Orders paid in tokens are read one by one to find their buyer, so only the pay wallet's most recent ones are. */
+const MAX_PAY_ORDERS = 300;
 
 module.exports = async (req, res) => {
   try {
@@ -40,25 +42,36 @@ module.exports = async (req, res) => {
 
     const C = cfg(req);
     const latest = await provider(C).getBlockNumber();
-    const [asProvider, asClient] = await Promise.all([
+    /* Orders this wallet paid for in tokens have Stubly's pay wallet as the escrow's client, and name the buyer inside. */
+    const payWallet = /^0x[a-fA-F0-9]{40}$/.test(C.PAY_WALLET || "") && C.PAY_WALLET.toLowerCase() !== address.toLowerCase() ? C.PAY_WALLET : null;
+    const [asProvider, asClient, viaPay] = await Promise.all([
       logsFor(C, address, 3, latest), // topic3 = provider
       logsFor(C, address, 2, latest), // topic2 = client
+      payWallet ? logsFor(C, payWallet, 2, latest) : Promise.resolve([]),
     ]);
 
     const ids = [
       ...asProvider.map((l) => ({ id: jobIdOf(l), side: "earned" })),
       ...asClient.map((l) => ({ id: jobIdOf(l), side: "spent" })),
+      ...viaPay.slice(-MAX_PAY_ORDERS).map((l) => ({ id: jobIdOf(l), side: "spent", viaPay: true })),
     ];
 
     const jobs = jobsContract(C);
     const rows = [];
-    for (const { id, side } of ids) {
+    for (const { id, side, viaPay } of ids) {
       try {
         const j = await jobs.getJob(BigInt(id));
         const status = JOB_STATUS[Number(j.status)] || "?";
-        let agent = null;
-        try { agent = JSON.parse(j.description)?.agent || null; } catch { /* free-text job */ }
+        let spec = null;
+        try { spec = JSON.parse(j.description); } catch { /* free-text job */ }
+        const agent = spec?.agent || null;
+        let paidIn = null;
+        if (viaPay) {
+          if (String(spec?.pay?.buyer || "").toLowerCase() !== address.toLowerCase()) continue;
+          paidIn = { symbol: String(spec.pay.symbol || "TOKEN").replace(/[^\w$.-]/g, "").slice(0, 12) || "TOKEN" };
+        }
         rows.push({
+          ...(paidIn ? { paidIn } : {}),
           jobId: id,
           side,
           agent,
@@ -105,7 +118,7 @@ module.exports = async (req, res) => {
       byAgent: Object.values(byAgent).sort((a, b) => b.earned - a.earned),
       jobs: rows.sort((a, b) => Number(b.jobId) - Number(a.jobId)).slice(0, 100),
       notes: [
-        ...(asProvider.partial || asClient.partial ? ["Showing recent orders only: the block explorer is not answering, so this was read straight from the chain, which only reaches back a few days."] : []),
+        ...(asProvider.partial || asClient.partial || viaPay.partial ? ["Showing recent orders only: the block explorer is not answering, so this was read straight from the chain, which only reaches back a few days."] : []),
         "Earned and spent count only jobs that reached Completed. Rejected and expired jobs are excluded — that money was refunded.",
         "Amounts are the escrow budget. Circle's contract deducts a small protocol fee on settlement, so the amount that lands in a wallet is fractionally lower.",
       ],

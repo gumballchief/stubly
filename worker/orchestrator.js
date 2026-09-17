@@ -25,6 +25,7 @@ const { judge } = require("./judge");
 const { maybeSweep } = require("./sweep");
 const { startSupport, supportStatus, notifyTeam } = require("./support");
 const desk = require("./desk");
+const tokenpay = require("./tokenpay");
 /* What this chain sells and whether it is taking new orders: the same rules /api/quote applies,
    so the worker cannot price an order the site would refuse. Mainnet sells MAINNET_ROSTER only. */
 const { sells, ordersOpen, blobPath } = require("../site/api/_shared");
@@ -351,7 +352,14 @@ async function makeContext() {
   const providerSigner = loadWallet(CFG.PROVIDER_KEY, prov);
   const evaluatorSigner = loadWallet(CFG.EVALUATOR_KEY, prov);
   const { jobs } = await jobsLib.contracts(prov, CFG);
-  return { prov, jobs, providerSigner, evaluatorSigner, state: STATE };
+  /* The pay wallet only exists when paying in the token is switched on. A missing keystore turns
+     that feature off with a reason on the health page; it never stops settlement. */
+  let treasurySigner = null;
+  let treasuryError = null;
+  if (tokenpay.payConfig(process.env, CFG.CHAIN_ID).enabled) {
+    try { treasurySigner = loadWallet(CFG.TREASURY_KEY, prov); } catch (e) { treasuryError = `pay wallet: ${e.message}`; }
+  }
+  return { prov, jobs, providerSigner, evaluatorSigner, treasurySigner, treasuryError, state: STATE };
 }
 
 async function pass(ctx) {
@@ -385,6 +393,9 @@ async function pass(ctx) {
   }
   STATE.lastBlock = latest;
   saveState(STATE);
+
+  // Orders paid in the token: collect, fund, and send the tokens on once the order settles. Off unless TOKENPAY=on.
+  if (!DRY) await tokenpay.tick();
 
   // Earnings do not sit on the signing wallet. No-op until SWEEP_TO is set.
   // The sweep signs from the provider key too, so it waits its turn behind any refund or delivery.
@@ -424,6 +435,30 @@ function attachDesk(ctx) {
   });
 }
 
+/** Hand the token checkout the same signers, state and locks. runNow starts a newly funded order at once, as the desk's tryRun does. */
+function attachTokenpay(ctx) {
+  const why = tokenpay.attach({
+    prov: ctx.prov,
+    jobs: () => ctx.jobs,
+    providerSigner: ctx.providerSigner,
+    evaluatorSigner: ctx.evaluatorSigner,
+    treasurySigner: ctx.treasurySigner,
+    treasuryError: ctx.treasuryError,
+    state: STATE,
+    save: () => saveState(STATE),
+    withJobLock,
+    busy: jobBusy,
+    runNow: (jobId) => {
+      if (DRY || jobBusy(jobId)) return;
+      if (!STATE.jobs[jobId]) STATE.jobs[jobId] = { phase: "seen" };
+      withJobLock(jobId, () => processJob(jobId, ctx))
+        .then(() => saveState(STATE))
+        .catch((e) => console.log(`[tokenpay run] job ${jobId}: ${e.shortMessage || e.message}`));
+    },
+  });
+  console.log(why ? `[tokenpay] off: ${why}` : "[tokenpay] on");
+}
+
 /**
  * Free hosting tiers only keep a *web* service alive, and they idle it out
  * after a spell with no requests. So when PORT is set we answer HTTP as well as
@@ -457,6 +492,7 @@ function serveHealth() {
          does is allowed to throw out of here and take it down. */
       try {
         if (desk.handleHttp(req, res)) return;
+        if (tokenpay.handleHttp(req, res, desk.http)) return;
       } catch (e) {
         console.log(`[http] ${e.message}`);
         if (!res.headersSent) { res.writeHead(500, { "content-type": "application/json" }); res.end('{"error":"internal"}'); }
@@ -479,6 +515,7 @@ function serveHealth() {
         lastError: lastPassError,
         support: supportStatus(),
         desk: desk.deskStatus(),
+        pay: tokenpay.status(),
       }));
     })
     .listen(port, () => console.log(`health endpoint on :${port}`));
@@ -503,6 +540,7 @@ async function main() {
       if (!ctx) {
         ctx = await makeContext();
         if (!ONCE && !DRY) attachDesk(ctx);
+        attachTokenpay(ctx);
       }
       const r = await pass(ctx);
       /* Per-order errors are caught so one bad order can't hold up the rest. But when every order

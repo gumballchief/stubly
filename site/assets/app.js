@@ -164,6 +164,25 @@ async function api(path) {
   const r = await fetch(onChain(path));
   return r.ok || r.headers.get("content-type")?.includes("json") ? r.json() : Promise.reject(new Error(`${r.status}`));
 }
+/* Paying in tokens is run by the worker, beside the help desk (worker/tokenpay.js). Locally, ?desk= points at a local worker. */
+const PAY_API = ((/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).get("desk")) || "https://stubly-worker.onrender.com").replace(/\/$/, "");
+async function payApi(path, body) {
+  const r = await fetch(PAY_API + path, {
+    method: body ? "POST" : "GET",
+    headers: body ? { "content-type": "application/json" } : {},
+    body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(30_000),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || `the payment service answered ${r.status}`);
+  return d;
+}
+const tokenText = (raw, decimals) => {
+  const [whole, frac = ""] = ethers.formatUnits(raw, decimals).split(".");
+  const cut = frac.slice(0, 4).replace(/0+$/, "");
+  return `${Number(whole).toLocaleString("en-US")}${cut ? `.${cut}` : ""}`;
+};
+
 /* PIN wallets exist only on chains Circle supports; ask once before showing the button. */
 async function hidePinIfUnsupported() {
   const b = $("#btn-pin");
@@ -481,6 +500,76 @@ async function initHire() {
     setTimeout(() => { location.href = onChain(`/job?id=${jobId}`); }, 1200);
   }
 
+  /* ————— paying in tokens —————
+     Shown only when the worker says it is on for this page's chain. The buyer signs one Permit2
+     message (no gas) after a one-time approval; the worker opens the order, collects the tokens and
+     pays the escrow in USDC from Stubly's pay wallet. If the order isn't finished, the tokens go back. */
+  const payBtn = $("#btn-pay-token");
+  if (payBtn && !closed) {
+    Promise.all([payApi("/pay/config"), chainReady()]).then(([pc]) => {
+      if (!pc.on || Number(pc.chainId) !== parseInt(ARC.chainId, 16)) return;
+      payBtn.textContent = `Pay with $${pc.symbol}`;
+      payBtn.title = `Pay in $${pc.symbol} at the pool's price. Stubly pays the escrow in USDC for you.`;
+      payBtn.hidden = false;
+    }).catch(() => { /* no worker, no button: USDC still works */ });
+
+    payBtn.addEventListener("click", async () => {
+      try {
+        if (mode !== "extension" || !walletEth || !account) return log("✗ connect a browser wallet first: paying in tokens needs a wallet that can sign", "bad");
+        const val = inputField.value.trim();
+        if (!val) return log("✗ fill in the job field first", "bad");
+        payBtn.disabled = true; $("#btn-create").disabled = true;
+
+        log("1/3 getting a price from the pool…");
+        const q = await payApi("/pay/quote", { agent: selected, text: val, buyer: account });
+        const mins = Math.max(1, Math.floor((q.deadline - Date.now() / 1000) / 60));
+        log(`   ${q.amountText} $${q.symbol} for this ${q.priceUsdc} USDC order, held for ${mins} minutes`, "ok");
+
+        const signer = await new ethers.BrowserProvider(walletEth).getSigner();
+        if (q.needsApproval) {
+          /* A bounded approval, as with USDC: enough for about twenty orders at today's price. Permit2 still
+             needs a fresh signature for every order, so the approval alone moves nothing. */
+          log(`2/3 one-time step: let Permit2 move $${q.symbol} for your Stubly orders (confirm in wallet)…`);
+          const token = new ethers.Contract(q.token, ["function approve(address spender, uint256 value) returns (bool)"], signer);
+          const tx = await token.approve(q.permit2, BigInt(q.amount) * 20n);
+          await tx.wait(1);
+          log("   approved ✓", "ok");
+        } else {
+          log("2/3 approval already in place ✓", "ok");
+        }
+
+        log("3/3 sign the order in your wallet (no gas)…");
+        const { domain, types, message } = q.typedData;
+        const signature = await signer.signTypedData(domain, types, message);
+        const placed = await payApi("/pay/order", { quoteId: q.quoteId, signature });
+        log("   signed ✓ opening your work order…", "ok");
+
+        let said = "";
+        for (let i = 0; i < 120; i++) {
+          await new Promise((r) => setTimeout(r, 2500));
+          let s;
+          try { s = await payApi(`/pay/order?id=${placed.orderId}`); } catch { continue; }
+          if (s.failed) throw new Error(`${s.title}. ${s.note || ""}`.trim());
+          if (s.placed && s.jobId) {
+            log(`   order #${s.jobId} paid ✓ the agent is starting`, "ok");
+            fetch(onChain("/api/settle"), {
+              method: "POST", headers: { "content-type": "application/json" },
+              body: JSON.stringify({ jobId: s.jobId }),
+            }).catch(() => { /* the worker is the backstop */ });
+            setTimeout(() => { location.href = onChain(`/job?id=${s.jobId}`); }, 900);
+            return;
+          }
+          if (s.title !== said) { log(`   ${s.title.toLowerCase()}…`); said = s.title; }
+        }
+        throw new Error("this is taking longer than usual. Check your profile in a few minutes: if the order isn't placed, your tokens come back on their own");
+      } catch (e) {
+        log(`✗ ${e.shortMessage || e.message}`, "bad");
+        payBtn.disabled = false;
+        $("#btn-create").disabled = !account;
+      }
+    });
+  }
+
   $("#btn-create").addEventListener("click", async () => {
     try {
       if (closed) return log(`✗ ${closed}`, "bad");
@@ -615,7 +704,8 @@ async function initJob() {
     $("#t-agent").textContent = await agentTitle(j.agent);
     $("#t-input").textContent = j.input ? Object.values(j.input)[0] : "—";
     $("#t-price").textContent = j.hasBudget ? `${Number(j.budgetUsdc).toFixed(2)} USDC` : "quote pending";
-    $("#t-client").textContent = fmt(j.client);
+    $("#t-client").textContent = j.pay ? `${fmt(j.pay.buyer)} · paid in $${j.pay.symbol}` : fmt(j.client);
+    if (j.pay && j.hasBudget) $("#t-price").textContent = `${Number(j.budgetUsdc).toFixed(2)} USDC · paid as ${tokenText(j.pay.amount, j.pay.decimals)} $${j.pay.symbol}`;
     $("#t-provider").textContent = fmt(j.provider);
 
     const zone = $("#stamps");
@@ -644,7 +734,9 @@ async function initJob() {
     /* Both of these mean the client already has their money back. Expired is not
        a state the chain reaches on its own — claimRefund is what sets it. */
     if (j.status === 4 || j.status === 5) {
-      $("#refund-note").textContent = j.status === 4
+      $("#refund-note").textContent = j.pay
+        ? `This order was ${j.status === 4 ? "rejected by the judge" : "not delivered in time"}. It was paid in $${j.pay.symbol}, so the tokens go back to the wallet that paid automatically.`
+        : j.status === 4
         ? "This order was rejected by the judge — the escrow returned to the client automatically."
         : "This order passed its deadline without being delivered, and the client withdrew the escrow. Nothing is owed.";
       $("#refund-note").style.display = "block";
@@ -653,8 +745,9 @@ async function initJob() {
     // order created but escrow not funded → offer funding right here
     const fundZone = $("#fund-zone");
     if (fundZone) {
-      fundZone.style.display = j.status === 0 && j.hasBudget ? "block" : "none";
-      if (j.status === 0 && j.hasBudget && !fundZone.dataset.wired) {
+      // An order paid in tokens is funded by Stubly's pay wallet, never from this page.
+      fundZone.style.display = j.status === 0 && j.hasBudget && !j.pay ? "block" : "none";
+      if (j.status === 0 && j.hasBudget && !j.pay && !fundZone.dataset.wired) {
         fundZone.dataset.wired = "1";
         $("#btn-fund").addEventListener("click", async () => {
           const note = $("#carbon");
@@ -689,7 +782,12 @@ async function initJob() {
       const locked = [1, 2].includes(j.status);
       const left = (j.expiredAt || 0) - Math.floor(Date.now() / 1000);
       refundZone.style.display = locked ? "block" : "none";
-      if (locked) {
+      /* Paid in tokens: Stubly's pay wallet is the escrow's client, so there is nothing for the buyer to claim.
+         If the order isn't finished, the worker takes the escrow back and sends the tokens back itself. */
+      if (locked && j.pay) {
+        $("#refund-copy").textContent = `You paid in $${j.pay.symbol}. If this order isn't delivered and judged in time, your tokens go back to your wallet automatically. There's nothing to claim.`;
+        $("#btn-refund").style.display = "none";
+      } else if (locked) {
         const btn = $("#btn-refund");
         if (left > 0) {
           const h = Math.floor(left / 3600), m = Math.floor((left % 3600) / 60);
