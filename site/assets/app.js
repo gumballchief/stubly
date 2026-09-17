@@ -586,7 +586,7 @@ const STEPS = [
 
 async function initJob() {
   const id = new URLSearchParams(location.search).get("id");
-  if (!id) { $("#job-main").innerHTML = "<p>No job number in the address. Open a work order like <code>/job?id=161321&amp;chain=testnet</code>.</p>"; return; }
+  if (!id) { $("#job-main").innerHTML = "<p>No job number in the address. Open a work order like <code>/job?id=1&amp;chain=mainnet</code>.</p>"; return; }
   $("#t-no").textContent = `#${id}`;
   // The label prints the chain id, so it waits for the server to say which chain this order is on.
   const bc = $("#barcode");
