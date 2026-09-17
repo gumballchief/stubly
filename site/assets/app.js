@@ -508,8 +508,12 @@ async function initHire() {
   if (payBtn && !closed) {
     Promise.all([payApi("/pay/config"), chainReady()]).then(([pc]) => {
       if (!pc.on || Number(pc.chainId) !== parseInt(ARC.chainId, 16)) return;
-      payBtn.textContent = `Pay with $${pc.symbol}`;
-      payBtn.title = `Pay in $${pc.symbol} at the pool's price. Stubly pays the escrow in USDC for you.`;
+      const off = Math.round(Number(pc.discountBps || 0) / 100);
+      payBtn.textContent = off ? `Pay with $${pc.symbol} · ${off}% off` : `Pay with $${pc.symbol}`;
+      payBtn.title = `Pay in $${pc.symbol}${off ? ` for ${off}% less than the USDC price` : ""}. Stubly pays the escrow in USDC for you` +
+        (pc.burns ? `, and the $${pc.symbol} you pay is burned once the job is delivered.` : ".");
+      const soon = $("#pay-soon");
+      if (soon) soon.remove(); // the "coming soon" placeholder gives way to the real thing
       payBtn.hidden = false;
     }).catch(() => { /* no worker, no button: USDC still works */ });
 
@@ -523,7 +527,8 @@ async function initHire() {
         log("1/3 getting a price from the pool…");
         const q = await payApi("/pay/quote", { agent: selected, text: val, buyer: account });
         const mins = Math.max(1, Math.floor((q.deadline - Date.now() / 1000) / 60));
-        log(`   ${q.amountText} $${q.symbol} for this ${q.priceUsdc} USDC order, held for ${mins} minutes`, "ok");
+        const pct = Math.round(Number(q.discountBps || 0) / 100);
+        log(`   ${q.amountText} $${q.symbol} for this ${q.priceUsdc} USDC order${pct ? ` (${pct}% off)` : ""}, held for ${mins} minutes`, "ok");
 
         const signer = await new ethers.BrowserProvider(walletEth).getSigner();
         if (q.needsApproval) {
@@ -910,9 +915,13 @@ async function initIndex() {
       const orders = typeof s.settled === "number"
         ? `<b>${s.settled}</b> work orders settled`
         : `<b>${s.jobs}</b> work orders on-chain`;
+      /* Jobs paid in the token and what they burned, straight from the token's transfers to the burn address. */
+      const t = s.token && s.token.jobsPaid > 0 ? s.token : null;
+      const burned = t ? Number(t.burned).toLocaleString("en-US", { maximumFractionDigits: 2 }) : "";
       $("#stats-line").innerHTML =
-        `${orders} · <b>${s.hirers}</b> hirers · <b>${s.agents}</b> agents on the shelf ` +
-        `<a href="${s.explorer}" target="_blank" rel="noopener">— counted on-chain</a>`;
+        `${orders} · <b>${s.hirers}</b> hirers · <b>${s.agents}</b> agents on the shelf` +
+        (t ? ` · <b>${t.jobsPaid}</b> paid in $${t.symbol} · <b>${burned}</b> $${t.symbol} burned` : "") +
+        ` <a href="${s.explorer}" target="_blank" rel="noopener">— counted on-chain</a>`;
     }
   } catch { /* numbers are a bonus, not the page */ }
 }

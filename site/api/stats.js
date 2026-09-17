@@ -18,8 +18,8 @@
  * Returns live:false rather than inventing numbers when it can't read.
  */
 
-const { Interface, zeroPadValue } = require("ethers");
-const { cfg, sendJson, jobsContract } = require("./_shared");
+const { Contract, Interface, zeroPadValue, formatUnits } = require("ethers");
+const { cfg, sendJson, jobsContract, provider } = require("./_shared");
 const { getLogs } = require("./_logs");
 
 const IFACE = new Interface([
@@ -32,6 +32,26 @@ const IFACE = new Interface([
 const STATS_CACHE = "public, s-maxage=120, stale-while-revalidate=600";
 
 const COMPLETED = 3; // index into JOB_STATUS
+const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+const BURN = "0x000000000000000000000000000000000000dEaD";
+
+/* Orders paid in the token (worker/tokenpay.js). The pay wallet sends a delivered order's tokens to the burn
+   address in one transfer, so every such transfer is one job paid in the token, and their sum is what paying
+   in it has burned. Read from the token's own logs: nothing here is a number we keep. */
+async function tokenStats(C) {
+  const addr = /^0x[0-9a-fA-F]{40}$/;
+  if (!addr.test(C.PAY_TOKEN || "") || !addr.test(C.PAY_WALLET || "")) return null;
+  const logs = await getLogs(C, { address: C.PAY_TOKEN, topics: [TRANSFER, zeroPadValue(C.PAY_WALLET, 32), zeroPadValue(BURN, 32)], fromBlock: 0, timeoutMs: 20_000 });
+  const token = new Contract(C.PAY_TOKEN, ["function decimals() view returns (uint8)", "function symbol() view returns (string)"], provider(C));
+  const [decimals, symbol] = await Promise.all([token.decimals(), token.symbol().catch(() => "TOKEN")]);
+  const burnedRaw = logs.reduce((s, l) => s + BigInt(l.data), 0n);
+  return {
+    symbol: String(symbol).replace(/[^\w$.-]/g, "").slice(0, 12) || "TOKEN",
+    jobsPaid: logs.length,
+    burned: formatUnits(burnedRaw, decimals),
+    partial: !!logs.partial,
+  };
+}
 const STATUS_CONCURRENCY = 10;
 const STATUS_BUDGET_MS = 25_000; // root vercel.json allows 60s for the whole call
 
@@ -75,9 +95,13 @@ module.exports = async (req, res) => {
       settled = null;
     }
 
+    let token = null;
+    try { token = await tokenStats(C); } catch { token = null; } // the order counts still stand without it
+
     sendJson(res, 200, {
       live: true,
       settled,
+      token,
       jobs: logs.length, // work orders created, all time
       hirers: clients.size,
       agents: Object.keys(require("./_catalog.json")).length,
