@@ -113,6 +113,10 @@ h1 .money { color: var(--usdc); }
 .btn-primary { background: var(--usdc); border-color: var(--usdc-deep); color: #fff; }
 .btn-primary:hover { box-shadow: 3px 3px 0 var(--usdc-deep); color: #fff; }
 .btn[disabled] { opacity: 0.45; pointer-events: none; }
+/* A checkout option that is announced but not open yet: shaped like a button, does nothing. */
+.btn-soon { display: inline-flex; align-items: center; gap: 12px; cursor: default; border-style: dashed; border-color: var(--dash); color: var(--ink-soft); }
+.btn-soon:hover, .btn-soon:active { transform: none; box-shadow: none; }
+.btn-soon .stamp { transform: rotate(-4deg); }
 
 /* ————— the ticket (signature element) ————— */
 .ticket {
