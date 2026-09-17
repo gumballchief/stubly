@@ -7,6 +7,8 @@
  *   npm run mainnet:flip -- --dry-run       show every step, change nothing
  *   npm run mainnet:flip -- --make-default  after your first real order settles:
  *                                           make mainnet what stubly.org opens by default
+ *   npm run mainnet:flip -- --worker        only move the worker to mainnet (steps 6 and 7),
+ *                                           for a flip that stopped after the site went live
  *
  * It follows launch/MAINNET-FLIP.md in order and stops at the first thing that is not
  * right. Nothing starts until `npm run mainnet:check` passes: Circle's escrow and identity
@@ -33,7 +35,7 @@ const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
 const { spawnSync } = require("child_process");
-const { Wallet } = require("ethers");
+const { Wallet, JsonRpcProvider, Contract } = require("ethers");
 const { runChecks, rpc } = require("./mainnet-check");
 const { askHidden, copyToClipboard } = require("./make-mainnet-wallets");
 
@@ -74,9 +76,39 @@ function run(cmd, args, { input, env, quiet = false, allowFail = false } = {}) {
   return r;
 }
 
-async function getJson(url, init) {
-  const r = await fetch(url, { ...init, signal: AbortSignal.timeout(30_000) });
-  return { status: r.status, body: await r.json().catch(() => ({})) };
+async function getJson(url, init, tries = 5) {
+  for (let i = 1; ; i++) {
+    try {
+      const r = await fetch(url, { ...init, signal: AbortSignal.timeout(30_000) });
+      return { status: r.status, body: await r.json().catch(() => ({})) };
+    } catch (e) {
+      if (i >= tries) throw new Error(`${url} did not answer: ${e.message}`);
+      await new Promise((res) => setTimeout(res, 10_000));
+    }
+  }
+}
+
+/* Testnet orders still paid and unsettled. The worker leaves testnet when it moves, so it waits for these
+   rather than a fixed time: none open means nothing is left behind. */
+async function testnetOrdersOpen() {
+  const { CHAINS } = require(path.join(ROOT, "site/api/_shared.js"));
+  const { ERC8183_ABI_MIN } = require("./config");
+  const T = CHAINS.testnet;
+  /* Circle's public testnet RPC, not RPC_URL: a keyed provider's free plan (dRPC) refuses log queries outright. */
+  const prov = new JsonRpcProvider("https://rpc.testnet.arc.io", T.CHAIN_ID, { staticNetwork: true });
+  const jobs = new Contract(T.ERC8183, ERC8183_ABI_MIN, prov);
+  const latest = await prov.getBlockNumber();
+  const ids = new Set();
+  for (let start = latest - 20_000; start <= latest; start += 5000) {
+    const logs = await jobs.queryFilter(jobs.filters.JobCreated(null, null, T.PROVIDER_WALLET), start, Math.min(start + 4999, latest));
+    for (const l of logs) ids.add(l.args.jobId.toString());
+  }
+  let open = 0;
+  for (const id of ids) {
+    const j = await jobs.getJob(id);
+    if ([1, 2].includes(Number(j.status ?? j[7]))) open++;
+  }
+  return open;
 }
 
 async function openWallets(values) {
@@ -126,6 +158,10 @@ async function renderSet(vars, remove) {
 /* The worker blueprint pins the chain. After the switch it must pin mainnet, or a later
    push would put the worker back on testnet. Secrets stay sync:false (dashboard only). */
 function renderYamlForMainnet(text, v) {
+  /* render.yaml is checked out with Windows line endings. Every pattern below matches on \n, so on the
+     CRLF copy none of them matched and the pin silently changed nothing. Match on LF, then restore. */
+  const crlf = text.includes("\r\n");
+  text = text.replace(/\r\n/g, "\n");
   const set = (k, val) => {
     const re = new RegExp(`(- key: ${k}\\n\\s+value: )"[^"]*"`);
     return re.test(text) ? (text = text.replace(re, `$1"${val}"`)) : text;
@@ -140,7 +176,7 @@ function renderYamlForMainnet(text, v) {
   if (!/- key: IDENTITY_REGISTRY/.test(text)) {
     text = text.replace(/(- key: EXPLORER_API\n\s+value: "[^"]*")/, `$1\n      - key: IDENTITY_REGISTRY\n        value: "${v.IDENTITY_REGISTRY}"\n      - key: EXPLORER\n        value: "${v.EXPLORER}"`);
   }
-  return text;
+  return crlf ? text.replace(/\n/g, "\r\n") : text;
 }
 
 async function makeDefault() {
@@ -238,11 +274,34 @@ async function flip() {
     if (noId) throw new Error(`${noId} mainnet agents have no identity yet`);
   }
 
+  await moveWorker({ V, block, rosterOff, password });
+
+  say("\nStubly is on Arc mainnet. stubly.org still opens testnet by default until you prove one real order:");
+  say(`  1. Buy one: ${SITE}/hire?agent=research-brief&chain=mainnet (1 USDC, from your own wallet)`);
+  say("  2. When it shows Completed, run: npm run mainnet:flip -- --make-default");
+}
+
+async function moveWorker({ V, block, rosterOff, password, waitForOrders = false }) {
   step(6, "Let testnet's last orders finish, then move the worker");
-  say("   Orders have a 10-minute deadline. Waiting 20 minutes so none is left behind.");
-  if (!DRY) {
-    for (let m = 20; m > 0; m--) { process.stdout.write(`\r   ${m} min left `); await new Promise((r) => setTimeout(r, 60_000)); }
-    say("\r   done waiting        ");
+  if (waitForOrders) {
+    for (let i = 0; ; i++) {
+      let open = 0;
+      try { open = DRY ? 0 : await testnetOrdersOpen(); } catch (e) {
+        /* Not a reason to stop: testnet stopped taking orders when the site moved, and every order has a 10-minute deadline. */
+        say(`   could not read testnet orders (${String(e.shortMessage || e.message).slice(0, 80)}); testnet stopped taking orders when the site moved, so none can still be running`);
+        break;
+      }
+      if (!open) { say("   no testnet orders are still in progress"); break; }
+      if (i >= 50) throw new Error(`${open} testnet orders are still in progress after 25 minutes. Run this again later`);
+      process.stdout.write(`\r   ${open} testnet order(s) still in progress, checking again in 30 seconds `);
+      await new Promise((r) => setTimeout(r, 30_000));
+    }
+  } else {
+    say("   Orders have a 10-minute deadline. Waiting 20 minutes so none is left behind.");
+    if (!DRY) {
+      for (let m = 20; m > 0; m--) { process.stdout.write(`\r   ${m} min left `); await new Promise((r) => setTimeout(r, 60_000)); }
+      say("\r   done waiting        ");
+    }
   }
   const workerVars = {
     CHAIN_ID: "5042", RPC_URL: V.RPC_URL, ERC8183_ADDRESS: V.ERC8183, USDC_ADDRESS: V.USDC,
@@ -298,10 +357,30 @@ async function flip() {
     if (seen !== 5042) throw new Error("the worker has not come up on mainnet after 10 minutes; check its Render logs");
     say("   worker is on Arc mainnet");
   }
+}
 
-  say("\nStubly is on Arc mainnet. stubly.org still opens testnet by default until you prove one real order:");
-  say(`  1. Buy one: ${SITE}/hire?agent=research-brief&chain=mainnet (1 USDC, from your own wallet)`);
-  say("  2. When it shows Completed, run: npm run mainnet:flip -- --make-default");
+/* For a flip that stopped after step 5: the site is already on mainnet, only the worker is left. */
+async function workerOnly() {
+  step(1, "Check the site is already on mainnet");
+  const { values: V, block: now, explorerOpen, checks } = await runChecks({ needFunds: false });
+  for (const c of checks) say(`   ${c.ok ? "✓" : c.blocking ? "✗" : "!"} ${c.name}: ${c.detail}`);
+  const waiting = checks.filter((c) => !c.ok && c.blocking);
+  if (waiting.length && !DRY) throw new Error(`not ready, waiting on: ${waiting.map((c) => c.name).join("; ")}`);
+  const cat = await getJson(`${SITE}/api/catalog?chain=mainnet`);
+  if (cat.body?.chainId !== 5042 && !DRY) throw new Error("stubly.org does not serve mainnet yet: run the full npm run mainnet:flip");
+  say(`   stubly.org serves mainnet: ${Object.keys(cat.body?.agents || {}).length} agents`);
+  /* The worker reads orders from this block on. Stubly's escrow cannot hold an order older than itself. */
+  let block = now;
+  try { block = JSON.parse(fs.readFileSync(path.join(__dirname, "escrow-mainnet.json"), "utf8")).escrowBlock || now; } catch { /* Circle's escrow: start now */ }
+  const rosterOff = explorerOpen ? [] : CHAIN_AGENTS;
+
+  const go = DRY ? "MOVE" : await ask("\nType MOVE to move the worker to mainnet: ");
+  if (go !== "MOVE") throw new Error("stopped: nothing was changed");
+  step(2, "Open the mainnet wallets");
+  const password = DRY ? "dry-run" : await openWallets(V);
+  await moveWorker({ V, block, rosterOff, password, waitForOrders: true });
+  say("\nThe worker is on Arc mainnet. Place one real order to prove it:");
+  say(`  ${SITE}/hire?agent=research-brief&chain=mainnet (1 USDC, from your own wallet)`);
 }
 
 if (require.main === module) {
@@ -309,7 +388,7 @@ if (require.main === module) {
     console.error("Run this in its own terminal window; it asks for a password.");
     process.exit(1);
   }
-  (process.argv.includes("--make-default") ? makeDefault() : flip())
+  (process.argv.includes("--make-default") ? makeDefault() : process.argv.includes("--worker") ? workerOnly() : flip())
     .then(() => process.exit(0))
     .catch((e) => { console.error(`\nSTOPPED: ${e.message}`); process.exit(1); });
 }

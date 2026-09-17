@@ -45,18 +45,22 @@ services:
       - key: POLL_MS
         value: "10000"
       - key: CHAIN_ID
-        value: "5042002"
+        value: "5042"
       - key: ERC8183_ADDRESS
-        value: "0x0747EEf0706327138c69792bF28Cd525089e4583"
+        value: "0x21285e5F3D79717bAA73F1Fccdc101DfE0be4B9D"
       - key: USDC_ADDRESS
         value: "0x3600000000000000000000000000000000000000"
       - key: EXPLORER_API
-        value: "https://testnet.arcscan.app/api/v2"
+        value: "https://explorer.arc.io/api/v2"
+      - key: IDENTITY_REGISTRY
+        value: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+      - key: EXPLORER
+        value: "https://explorer.arc.io"
       - key: GEMINI_MODEL
         value: "gemini-3.5-flash"
       - key: RPC_URL
         sync: false
-      - key: KEYSTORE_PASSWORD
+      - key: KEYSTORE_PASSWORD_MAINNET
         sync: false
       - key: GEMINI_API_KEY
         sync: false
@@ -65,9 +69,9 @@ services:
       - key: PUBLISH_SECRET
         sync: false
       # The two signing wallets, base64 of their encrypted keystore files.
-      - key: PROVIDER_KEYSTORE_B64
+      - key: PROVIDER_MAINNET_KEYSTORE_B64
         sync: false
-      - key: EVALUATOR_KEYSTORE_B64
+      - key: EVALUATOR_MAINNET_KEYSTORE_B64
         sync: false
       # Cold address that earnings above the working float are swept to. The
       # provider key both signs payouts and receives them, and it now lives in a
