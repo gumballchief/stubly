@@ -8,7 +8,8 @@
  * up with USDC (the token's trading-tax income), and it pays each order's USDC into the
  * escrow exactly as a buyer would. The buyer's tokens wait in the pay wallet until the
  * order settles:
- *   delivered and paid out -> the tokens go to TOKENPAY_PAYOUT (the owner's wallet), never sold;
+ *   delivered and paid out -> the tokens are burned (sent to 0x…dEaD), or go to TOKENPAY_PAYOUT if
+ *                             that names a wallet; never sold;
  *   refunded or expired    -> the escrow hands the USDC back to the pay wallet, and the
  *                             tokens go back to the buyer.
  * Every agent is Stubly's own, so the USDC the pay wallet puts in lands in Stubly's provider
@@ -29,8 +30,11 @@
  * the token's Transfer logs before it is sent: the last six digits of each amount belong to
  * that order alone, so a move that already happened is recognised and never made twice.
  *
- * Off unless TOKENPAY=on with TOKENPAY_TOKEN, TOKENPAY_POOL and TOKENPAY_PAYOUT set, and a
- * pay wallet keystore (treasury_mainnet on mainnet).
+ * Paying in the token is TOKENPAY_DISCOUNT_BPS cheaper than the USDC price (20% unless set), so
+ * there is a reason to hold it and spend it.
+ *
+ * Off unless TOKENPAY=on with TOKENPAY_TOKEN and TOKENPAY_POOL set, and a pay wallet keystore
+ * (treasury_mainnet on mainnet).
  */
 
 const crypto = require("crypto");
@@ -44,6 +48,9 @@ const CATALOG = require("./catalog");
 const { sells, ordersOpen } = require("../site/api/_shared");
 
 const PERMIT2 = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+/* Where delivered orders' tokens go unless TOKENPAY_PAYOUT names a wallet. Not address(0): launchpad
+   tokens (Argus's LaunchToken among them) refuse transfers to it. */
+const BURN = "0x000000000000000000000000000000000000dEaD";
 /* Uniswap's published quoters on Arc (chain 5042), each confirmed to have code on mainnet. */
 const UNISWAP = {
   5042: { v4Quoter: "0x8dc178efb8111bb0973dd9d722ebeff267c98f94", v3Quoter: "0x7dfd4f31be6814d2906bde155c3e1b146eac1468" },
@@ -111,7 +118,9 @@ function payConfig(env = process.env, chainId = CFG.CHAIN_ID) {
   const uni = UNISWAP[Number(chainId)];
   if (!uni) return off(`no Uniswap quoter known for chain ${chainId}`);
   if (!isAddress(env.TOKENPAY_TOKEN || "")) return off("TOKENPAY_TOKEN is not set to a token address");
-  if (!isAddress(env.TOKENPAY_PAYOUT || "") || BigInt(env.TOKENPAY_PAYOUT) === 0n) return off("TOKENPAY_PAYOUT is not set to a wallet address");
+  const payoutSetting = String(env.TOKENPAY_PAYOUT || "burn").trim();
+  const burns = payoutSetting.toLowerCase() === "burn" || payoutSetting.toLowerCase() === BURN.toLowerCase();
+  if (!burns && (!isAddress(payoutSetting) || BigInt(payoutSetting) === 0n)) return off('TOKENPAY_PAYOUT must be "burn" or a wallet address');
 
   const parts = String(env.TOKENPAY_POOL || "").split(":");
   let pool;
@@ -130,7 +139,7 @@ function payConfig(env = process.env, chainId = CFG.CHAIN_ID) {
     return Number.isFinite(v) && v >= lo && v <= hi ? v : NaN;
   };
   const values = {
-    TOKENPAY_DISCOUNT_BPS: num("TOKENPAY_DISCOUNT_BPS", 0, 0, 5000),
+    TOKENPAY_DISCOUNT_BPS: num("TOKENPAY_DISCOUNT_BPS", 2000, 0, 5000),
     TOKENPAY_MAX_USDC_PER_DAY: num("TOKENPAY_MAX_USDC_PER_DAY", 25, 0.01, 1_000_000),
     TOKENPAY_MAX_USDC_PER_BUYER_PER_DAY: num("TOKENPAY_MAX_USDC_PER_BUYER_PER_DAY", 10, 0.01, 1_000_000),
     TOKENPAY_MAX_OPEN: num("TOKENPAY_MAX_OPEN", 5, 1, 100),
@@ -143,7 +152,8 @@ function payConfig(env = process.env, chainId = CFG.CHAIN_ID) {
   return {
     enabled: true, uni, pool,
     token: getAddress(env.TOKENPAY_TOKEN),
-    payout: getAddress(env.TOKENPAY_PAYOUT),
+    payout: burns ? BURN : getAddress(payoutSetting),
+    burns,
     discountBps: BigInt(Math.floor(values.TOKENPAY_DISCOUNT_BPS)),
     capDayRaw: parseUnits(String(values.TOKENPAY_MAX_USDC_PER_DAY), 6),
     capBuyerRaw: parseUnits(String(values.TOKENPAY_MAX_USDC_PER_BUYER_PER_DAY), 6),
@@ -684,6 +694,8 @@ function status() {
     on: true,
     token: W.cfg.token,
     payWallet: W.treasuryAddr,
+    burns: W.cfg.burns,
+    discountBps: Number(W.cfg.discountBps),
     open: open.length,
     stuck: open.filter((o) => o.attempts >= 3).length,
     lastTickSecondsAgo: lastTickAt ? Math.round((Date.now() - lastTickAt) / 1000) : null,
@@ -716,7 +728,7 @@ function handleHttp(req, res, http) {
       if (!on()) return http.send(res, 200, { on: false, chainId: CFG.CHAIN_ID });
       try {
         const { symbol, decimals } = await tokenMeta();
-        return http.send(res, 200, { on: true, chainId: CFG.CHAIN_ID, token: W.cfg.token, symbol, decimals, permit2: PERMIT2, spender: W.treasuryAddr, discountBps: Number(W.cfg.discountBps) });
+        return http.send(res, 200, { on: true, chainId: CFG.CHAIN_ID, token: W.cfg.token, symbol, decimals, permit2: PERMIT2, spender: W.treasuryAddr, discountBps: Number(W.cfg.discountBps), burns: W.cfg.burns });
       } catch {
         return http.send(res, 200, { on: false, chainId: CFG.CHAIN_ID });
       }
@@ -746,6 +758,6 @@ function handleHttp(req, res, http) {
 
 module.exports = {
   payConfig, attach, tick, status, handleHttp, quote, placeOrder, orderStatus,
-  PERMIT2, TYPES, WITNESS_TYPE_STRING, UNISWAP, FINAL,
+  PERMIT2, BURN, TYPES, WITNESS_TYPE_STRING, UNISWAP, FINAL,
   _test: { tokensForUsdc, witnessHash, messageFor, domainFor, briefHash, stepOrder, advance, scanChain, get W() { return W; }, quotes, reset: () => { W = null; quotes.clear(); running.clear(); lastError = null; } },
 };
