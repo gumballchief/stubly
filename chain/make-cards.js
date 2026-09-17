@@ -85,7 +85,9 @@ function main() {
     for (const key of roster) {
       const f = path.join(outDir, key + ".json");
       if (!fs.existsSync(f)) { console.log(key + ": no card"); drift++; continue; }
-      const on = fs.readFileSync(f, "utf8").trim();
+      /* Line endings are not content: git on Windows (core.autocrlf) checks cards out with CRLF,
+         which made all 90 unchanged cards read as out of date after a branch switch. */
+      const on = fs.readFileSync(f, "utf8").replace(/\r\n/g, "\n").trim();
       const want = JSON.stringify(card(key, chainId), null, 2);
       if (on !== want) { console.log(key + ": card does not match the catalog"); drift++; }
     }
