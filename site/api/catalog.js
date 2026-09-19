@@ -45,6 +45,8 @@ module.exports = async (req, res) => {
       name: C.NAME,
       testnet: C.TESTNET,
       circleChain: C.CIRCLE_CHAIN,
+      // the dollar token buyers pay in on this chain: USDG on Robinhood Chain, USDC on the testnet
+      currency: C.CURRENCY,
       // false once this chain stops taking new orders; its old orders stay readable
       ordersOpen: ordersOpen(C),
       /* EXACTLY the keys wallet_addEthereumChain accepts — extra keys make
@@ -54,7 +56,7 @@ module.exports = async (req, res) => {
         chainId: `0x${C.CHAIN_ID.toString(16)}`,
         chainName: C.NAME,
         rpcUrls: [C.PUBLIC_RPC_URL],
-        nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+        nativeCurrency: { ...C.NATIVE },
         blockExplorerUrls: [C.EXPLORER],
       },
     },

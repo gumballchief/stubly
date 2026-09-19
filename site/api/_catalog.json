@@ -50,7 +50,7 @@
     "input": {
       "field": "announcement",
       "label": "What are you announcing?",
-      "placeholder": "e.g. We just shipped escrowed agent jobs on Arc testnet"
+      "placeholder": "e.g. We just shipped escrowed agent jobs on Robinhood Chain"
     },
     "blurb": "An X thread that hooks, a single-post version, and a LinkedIn version — builder voice, zero cringe."
   },
@@ -182,7 +182,7 @@
     "input": {
       "field": "pitch",
       "label": "Describe your idea",
-      "placeholder": "e.g. a marketplace where AI agents do jobs for USDC"
+      "placeholder": "e.g. a marketplace where AI agents do jobs for USDG"
     },
     "blurb": "The critique your friends will not give you: who actually pays, the one number it all rests on, who is already doing it, and the cheapest test that would prove you wrong."
   },
@@ -215,7 +215,7 @@
     "input": {
       "field": "offer",
       "label": "What you sell, and to whom",
-      "placeholder": "e.g. escrowed AI agent jobs, to Arc developers"
+      "placeholder": "e.g. escrowed AI agent jobs, to Robinhood Chain developers"
     },
     "blurb": "Three cold emails from three angles, each with a subject line under 45 characters. No flattery, no fake urgency."
   },
@@ -336,7 +336,7 @@
     "input": {
       "field": "announcement",
       "label": "What are you announcing?",
-      "placeholder": "e.g. we launched on Arc mainnet"
+      "placeholder": "e.g. we launched on Robinhood Chain"
     },
     "blurb": "A release in the shape editors expect, with a headline that survives being cut and quotes that say something."
   },
@@ -347,7 +347,7 @@
     "input": {
       "field": "offer",
       "label": "What are you advertising?",
-      "placeholder": "e.g. hire an AI agent, pay in escrowed USDC"
+      "placeholder": "e.g. hire an AI agent, pay in escrowed USDG"
     },
     "blurb": "Five ad variants built on different hooks, with the audience each is aimed at and what makes it stop the scroll."
   },
@@ -369,7 +369,7 @@
     "input": {
       "field": "product",
       "label": "Describe your product",
-      "placeholder": "e.g. escrowed AI agent jobs on Arc"
+      "placeholder": "e.g. escrowed AI agent jobs on Robinhood Chain"
     },
     "blurb": "The questions people actually ask before paying, including the awkward ones most FAQs dodge."
   },
@@ -677,7 +677,7 @@
     "input": {
       "field": "pricing",
       "label": "Describe your pricing",
-      "placeholder": "e.g. 1 USDC per job, no subscription"
+      "placeholder": "e.g. 1 USDG per job, no subscription"
     },
     "blurb": "A read on what your price signals, where it leaves money, and what to test first."
   },
@@ -688,7 +688,7 @@
     "input": {
       "field": "business",
       "label": "Describe the business",
-      "placeholder": "e.g. 1 USDC per job, one agent per job"
+      "placeholder": "e.g. 1 USDG per job, one agent per job"
     },
     "blurb": "Cost and margin per unit laid out, with the assumptions listed so wrong ones are visible."
   },
@@ -798,7 +798,7 @@
     "input": {
       "field": "field",
       "label": "What field or product?",
-      "placeholder": "e.g. escrowed agent jobs on Arc"
+      "placeholder": "e.g. escrowed agent jobs on Robinhood Chain"
     },
     "blurb": "Terms defined in plain English, with the ones people routinely confuse placed side by side."
   },
@@ -897,7 +897,7 @@
     "input": {
       "field": "errors",
       "label": "What can go wrong?",
-      "placeholder": "e.g. wallet not connected, not enough USDC"
+      "placeholder": "e.g. wallet not connected, not enough USDG"
     },
     "blurb": "Messages that say what happened and what to do, written without blaming the user."
   },
@@ -952,7 +952,7 @@
     "input": {
       "field": "action",
       "label": "What action?",
-      "placeholder": "e.g. funding a 1 USDC escrow on Arc"
+      "placeholder": "e.g. funding a 1 USDG escrow on Robinhood Chain"
     },
     "blurb": "What an on-chain action costs on Arc, priced in USDC because that is the gas token."
   },
@@ -1062,7 +1062,7 @@
     "input": {
       "field": "target",
       "label": "Who are you messaging and why?",
-      "placeholder": "e.g. an Arc developer about listing their agent"
+      "placeholder": "e.g. a Robinhood Chain developer about listing their agent"
     },
     "blurb": "Short direct messages that read like a person, not a sequence step."
   },
