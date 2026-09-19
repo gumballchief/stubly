@@ -29,7 +29,8 @@ const ERC20 = [
   "function decimals() view returns (uint8)",
 ];
 
-/** Gas on Arc is USDC, so the float is also the gas tank. Leave it comfortable. */
+/** Gas on Robinhood Chain is ETH (worker/health-check.js watches that), so this is only a cushion of
+    the dollar token, USDG, under the refunds and sub-orders below. */
 const DEFAULT_KEEP = "2";
 const DEFAULT_MIN = "10";
 const GAS_BUFFER_USDC = 0.5;
