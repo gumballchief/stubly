@@ -21,7 +21,7 @@ const TESTNET_ID = 5042002;
    that paid for it settled on mainnet. CHAIN_LABEL only renames the worker's own chain. */
 function labelFor(chainId) {
   if (process.env.CHAIN_LABEL && Number(chainId) === CFG.CHAIN_ID) return process.env.CHAIN_LABEL;
-  return Number(chainId) === TESTNET_ID ? "Arc testnet" : "Arc";
+  return Number(chainId) === TESTNET_ID ? "Arc testnet" : Number(chainId) === 5042 ? "Arc" : "Robinhood Chain";
 }
 
 async function fetchJson(api, path, { timeout = 12_000 } = {}) {

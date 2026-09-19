@@ -38,8 +38,10 @@ const AGENT_ATTEMPTS = 3;
 const SUBMIT_ATTEMPTS = 3;
 const RUNS_PER_ORDER_PER_HOUR = 3;
 const RECOVERY_EVERY_MS = 86_400_000; // one report rebuild per order per day, however often it is asked about
-const GAS_MARGIN = 100_000n;     // 0.1 USDC kept back for gas on top of a refund transfer
+const GAS_MARGIN = CFG.GAS_IN_PAYMENT_TOKEN ? 100_000n : 0n; // where gas is the dollar token, 0.1 kept back on top of a refund transfer
 const TESTNET = CFG.CHAIN_ID === 5042002;
+const CUR = CFG.CURRENCY;  // what buyers pay in on this chain, as replies name it
+const ON = CFG.CHAIN_NAME; // the chain, as replies name it
 /* Refunding a finished order means sending our own USDC. On testnet that is play money;
    anywhere else it stays off until someone turns it on deliberately. */
 const TRANSFER_REFUNDS = process.env.DESK_TRANSFER_REFUNDS ? process.env.DESK_TRANSFER_REFUNDS === "on" : TESTNET;
@@ -80,7 +82,7 @@ const errText = (e) => String(e?.shortMessage || e?.message || e).replace(/https
 function refundReason({ status, now, expiredAt, attempts = 0, submitFails = 0, report = null }) {
   if (status === "Funded") {
     if (attempts >= AGENT_ATTEMPTS) return `the agent failed ${attempts} times`;
-    if (submitFails >= SUBMIT_ATTEMPTS) return "its delivery could not be recorded on Arc";
+    if (submitFails >= SUBMIT_ATTEMPTS) return `its delivery could not be recorded on ${ON}`;
     if (now > expiredAt + LATE_GRACE_SEC) return "it passed its deadline without a delivery";
   }
   if (status === "Submitted" && report === false && now > expiredAt) return "the delivered report was lost before it could be checked";
@@ -275,7 +277,7 @@ function needsPerson(cf, why, detail = "") {
   if (detail) console.log(`[desk] #${cf.id} detail: ${detail}`);
   Promise.resolve()
     .then(() => W.notify?.(`order #${cf.id} needs a person`, [
-      `Order #${cf.id}: ${agentName(cf.agent)}, ${cf.budgetUsdc} USDC, ${cf.status}`,
+      `Order #${cf.id}: ${agentName(cf.agent)}, ${cf.budgetUsdc} ${CUR}, ${cf.status}`,
       `Buyer wallet: ${cf.client}`,
       `Why: ${why}`,
       detail ? `Detail: ${detail}` : "",
@@ -294,9 +296,9 @@ function refundedNow(cf, why, tx) {
   note(cf.id, {
     title: "Refunded",
     tone: "green",
-    detail: `${cf.budgetUsdc} USDC back to ${short(cf.client)}`,
+    detail: `${cf.budgetUsdc} ${CUR} back to ${short(cf.client)}`,
     link: txLink(tx) || walletLink(cf.client),
-    text: `Order #${cf.id} couldn't be finished because ${why}, so it was refunded. the escrow sent ${cf.budgetUsdc} USDC back to the wallet that paid (${short(cf.client)}).`,
+    text: `Order #${cf.id} couldn't be finished because ${why}, so it was refunded. the escrow sent ${cf.budgetUsdc} ${CUR} back to the wallet that paid (${short(cf.client)}).`,
   });
   return { code: "refunded-now", why, cf, tx };
 }
@@ -348,7 +350,7 @@ async function recoverReport(cf) {
 
 const rebuiltNote = () =>
   `> Stubly note: the original copy of this report was lost after the order settled, so the agent ran the same job again on ${new Date().toISOString().slice(0, 10)}. ` +
-  "Because it is a new run, this copy will not match the fingerprint recorded on Arc for the original.";
+  `Because it is a new run, this copy will not match the fingerprint recorded on ${ON} for the original.`;
 
 async function rebuildOrRefund(cf0) {
   const id = cf0.id;
@@ -437,14 +439,14 @@ async function refundByTransfer(cf) {
     note(id, {
       title: "Refunded",
       tone: "green",
-      detail: `${cf.budgetUsdc} USDC back to ${short(cf.client)}`,
+      detail: `${cf.budgetUsdc} ${CUR} back to ${short(cf.client)}`,
       link: txLink(r.hash),
-      text: `Order #${id}: the report couldn't be rebuilt, so ${cf.budgetUsdc} USDC was sent back to the wallet that paid (${short(cf.client)}).`,
+      text: `Order #${id}: the report couldn't be rebuilt, so ${cf.budgetUsdc} ${CUR} was sent back to the wallet that paid (${short(cf.client)}).`,
     });
     return { code: "refunded", tx: r.hash };
   } catch (e) {
     stats.lastError = `transfer #${id}: ${errText(e)}`;
-    if (e.code === "SHORT") return needsPerson(cf, "the refund wallet is short on USDC");
+    if (e.code === "SHORT") return needsPerson(cf, `the refund wallet is short on ${CUR}`);
     if (e.txHash) {
       today().transferUsdc += dollars;
       return { ...needsPerson(cf, `the refund was sent but is not confirmed yet (transaction ${e.txHash})`, errText(e)), tx: e.txHash };
@@ -500,9 +502,9 @@ function describe(o) {
   // Stubly's testnet orders stay readable after the move, and their numbers are what people remember.
   const archiveHint = CHAIN.testnet ? "" : ` If it's an older Arc testnet order, its page is ${orderLink(id, "testnet")}.`;
   const T = {
-    "lookup-failed": [`I couldn't read order #${id} from Arc just now. Try again in a minute.`, { title: "Try again", tone: "red", detail: "Arc didn't answer" }, true],
+    "lookup-failed": [`I couldn't read order #${id} from ${ON} just now. Try again in a minute.`, { title: "Try again", tone: "red", detail: `${ON} didn't answer` }, true],
     "not-found": [`There's no order #${id} on Stubly. Check the number at the top of your order page.${archiveHint}`, { title: "Not found", tone: "red", detail: `#${id}` }, true],
-    "not-ours": [`Order #${id} exists on Arc, but it wasn't placed with a Stubly agent, so I can't act on it.`, { title: "Not a Stubly order", tone: "ink", detail: `#${id}` }, true],
+    "not-ours": [`Order #${id} exists on ${ON}, but it wasn't placed with a Stubly agent, so I can't act on it.`, { title: "Not a Stubly order", tone: "ink", detail: `#${id}` }, true],
     "sub-order": [`Order #${id} is an internal step inside a Launch Kit order. Check the Launch Kit order itself instead.`, { title: "Internal step", tone: "ink", detail: `#${id}` }],
     unfunded: [`Order #${id} was never paid, so nothing was charged. You can fund it from its order page.`, { title: "Not paid", tone: "ink", detail: "Nothing was charged", link: page }],
     quoting: [`Order #${id} is waiting for its price, which normally takes under a minute. Nothing has been charged.`, { title: "Pricing", tone: "blue", link: page }],
@@ -513,18 +515,18 @@ function describe(o) {
     judging: [`${agent} delivered order #${id}, and I asked the judge to check it now.`, { title: "Judging", tone: "blue", detail: agent, link: page }],
     held: [`Order #${id} has already been restarted several times this hour. The worker keeps trying on its own, and the escrow refunds the wallet that paid if it can't be finished.`, { title: "Retrying", tone: "blue", detail: agent, link: page }],
     checking: [`${agent} delivered order #${id}. The judge checks it as soon as the report is readable.`, { title: "Delivered", tone: "blue", detail: "Waiting on the judge", link: page }],
-    refund: [`Order #${id} can't be finished because ${why}. Its refund through the escrow is on the way, and this chat shows it when it lands.`, { title: "Refund queued", tone: "blue", detail: `${usd} USDC`, link: page }],
+    refund: [`Order #${id} can't be finished because ${why}. Its refund through the escrow is on the way, and this chat shows it when it lands.`, { title: "Refund queued", tone: "blue", detail: `${usd} ${CUR}`, link: page }],
     done: [`Order #${id} is finished, and the report is on its order page.`, { title: "Completed", tone: "green", detail: "Report ready", link: page, linkText: "read the report" }],
     "done-unknown": [`Order #${id} is finished. I couldn't load the report just now, so try the order page again in a minute.`, { title: "Completed", tone: "green", link: page }],
-    recovering: [`Order #${id} finished, but its report went missing. I'm rebuilding it now, which takes a minute or two. If it can't be rebuilt, the ${usd} USDC goes back to the wallet that paid.`, { title: "Rebuilding", tone: "blue", detail: "Report went missing", link: page }],
+    recovering: [`Order #${id} finished, but its report went missing. I'm rebuilding it now, which takes a minute or two. If it can't be rebuilt, the ${usd} ${CUR} goes back to the wallet that paid.`, { title: "Rebuilding", tone: "blue", detail: "Report went missing", link: page }],
     "recovery-rebuilt": [`The report for order #${id} was rebuilt earlier today. If the order page doesn't show it yet, refresh it in a minute.`, { title: "Report rebuilt", tone: "green", link: page, linkText: "read the report" }],
     "recovery-present": [`The report for order #${id} turned out to be there after all. It's on the order page.`, { title: "Completed", tone: "green", detail: "Report ready", link: page, linkText: "read the report" }],
-    "recovery-refunded": [`The report for order #${id} couldn't be rebuilt, so its ${usd} USDC was already sent back to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} USDC to ${short(cf.client)}`, link: txLink(o.tx) || walletLink(cf.client), linkText: o.tx ? "view on Arc" : "view wallet" }],
+    "recovery-refunded": [`The report for order #${id} couldn't be rebuilt, so its ${usd} ${CUR} was already sent back to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} ${CUR} to ${short(cf.client)}`, link: txLink(o.tx) || walletLink(cf.client), linkText: o.tx ? "view on ${ON}" : "view wallet" }],
     "recovery-needs-person": [`Order #${id} needs a person: ${why}. Email support@stubly.org with the order number and it will be picked up there.`, { title: "Needs a person", tone: "red", detail: why }, true],
-    refunded: [`Order #${id} was already refunded. the escrow returned ${usd} USDC to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} USDC returned`, link: walletLink(cf.client), linkText: "view wallet" }],
-    expired: [`Order #${id} passed its deadline, and its ${usd} USDC was already taken back from the escrow.`, { title: "Expired", tone: "ink", detail: `${usd} USDC returned`, link: walletLink(cf.client), linkText: "view wallet" }],
-    "refunded-now": [`Order #${id} couldn't be finished because ${why}, so I refunded it. the escrow sent ${usd} USDC back to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} USDC to ${short(cf.client)}`, link: txLink(o.tx) || walletLink(cf.client), linkText: o.tx ? "view on Arc" : "view wallet" }],
-    "refund-failed": [`Order #${id} is due a refund because ${why}, but the transaction didn't go through just now. The worker retries it automatically.`, { title: "Refund retrying", tone: "red", detail: `${usd} USDC`, link: page }, true],
+    refunded: [`Order #${id} was already refunded. the escrow returned ${usd} ${CUR} to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} ${CUR} returned`, link: walletLink(cf.client), linkText: "view wallet" }],
+    expired: [`Order #${id} passed its deadline, and its ${usd} ${CUR} was already taken back from the escrow.`, { title: "Expired", tone: "ink", detail: `${usd} ${CUR} returned`, link: walletLink(cf.client), linkText: "view wallet" }],
+    "refunded-now": [`Order #${id} couldn't be finished because ${why}, so I refunded it. the escrow sent ${usd} ${CUR} back to the wallet that paid (${short(cf.client)}).`, { title: "Refunded", tone: "green", detail: `${usd} ${CUR} to ${short(cf.client)}`, link: txLink(o.tx) || walletLink(cf.client), linkText: o.tx ? "view on ${ON}" : "view wallet" }],
+    "refund-failed": [`Order #${id} is due a refund because ${why}, but the transaction didn't go through just now. The worker retries it automatically.`, { title: "Refund retrying", tone: "red", detail: `${usd} ${CUR}`, link: page }, true],
     "needs-person": [`Order #${id} needs a person: ${why}. Email support@stubly.org with the order number and it will be picked up there.`, { title: "Needs a person", tone: "red", detail: why }, true],
   };
   const [plain, step, person] = T[o.code] || T["lookup-failed"];
@@ -547,7 +549,7 @@ function describeOtherChain(o) {
   const page = orderLink(id, o.chain);
   if (o.chain === "testnet") {
     return {
-      text: `Order #${id} is on Arc testnet, which used test USDC with no real value. Testnet is closed to new orders and I can only act on Arc mainnet orders, but its page still shows what happened: ${page}. If it was paid and never delivered, its deadline has passed, so the wallet that paid can take the test USDC back with the "Take my money back" button there.`,
+      text: `Order #${id} is on Arc testnet, which used test USDC with no real value. Testnet is closed to new orders and I can only act on ${ON} orders, but its page still shows what happened: ${page}. If it was paid and never delivered, its deadline has passed, so the wallet that paid can take the test USDC back with the "Take my money back" button there.`,
       step: { title: "Testnet order", tone: "ink", detail: "Test USDC, read-only", link: page, linkText: "open order" },
       needsPerson: false,
       watch: false,
@@ -562,7 +564,7 @@ function describeOtherChain(o) {
 }
 
 const GENERIC =
-  "I can check an order on Arc, restart it if the agent stalled, and refund the wallet that paid if it can't be finished. " +
+  `I can check an order on ${ON}, restart it if the agent stalled, and refund the wallet that paid if it can't be finished. ` +
   "Send me the order number (it's at the top of your order page and starts with #). For anything else, email support@stubly.org.";
 
 /** Anything the model claims happened must have happened this turn, and any number it gives must come from the checks. */
@@ -587,8 +589,8 @@ function replyProblem(text, outcomes) {
   for (const id of orderIds(text)) {
     if (!checked.has(id)) return `mentions order ${id}, which was not checked`;
   }
-  for (const m of text.matchAll(/(\d+(?:\.\d+)?)\s*USDC/gi)) {
-    if (!said.includes(`${m[1]} USDC`)) return `mentions an amount (${m[0]}) the check did not`;
+  for (const m of text.matchAll(/(\d+(?:\.\d+)?)\s*USD[CG]/gi)) { // either name: a model can say the wrong one
+    if (!said.includes(`${m[1]} ${CUR}`)) return `mentions an amount (${m[0]}) the check did not`;
   }
   for (const m of text.matchAll(/0x[a-f0-9]{3,}/gi)) {
     if (!said.toLowerCase().includes(m[0].toLowerCase())) return "mentions an address the check did not";

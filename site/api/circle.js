@@ -127,7 +127,7 @@ function requireOn(P) {
   if (!P.enabled) {
     throw new Plain(P.C.TESTNET
       ? "PIN wallets aren't set up on this server yet."
-      : "PIN wallets aren't switched on for Arc mainnet yet. Use a browser wallet instead.");
+      : "PIN wallets don't work on Robinhood Chain. Use a browser wallet instead.");
   }
 }
 

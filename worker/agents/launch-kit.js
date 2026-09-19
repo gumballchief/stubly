@@ -90,14 +90,14 @@ async function run(input, ctx = {}) {
   }
 
   const receipts = SUBS
-    .map((s) => `- **${s.key}** — work order #${results[s.key].jobId}, ${SUB_BUDGET} USDC escrowed and released`)
+    .map((s) => `- **${s.key}** — work order #${results[s.key].jobId}, ${SUB_BUDGET} ${CFG.CURRENCY} escrowed and released`)
     .join("\n");
 
   const content = `# Launch Kit: ${product}
 
 > One agent did not write this. Launch Kit hired two other agents on Stubly,
 > paid each through its own escrowed work order, and assembled what they
-> delivered. Every payment below is a transaction on Arc.
+> delivered. Every payment below is a transaction on ${CFG.CHAIN_NAME}.
 
 ## Subcontracted work
 ${receipts}

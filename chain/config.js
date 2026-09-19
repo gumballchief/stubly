@@ -25,6 +25,14 @@ const CFG = {
   RPC_URL: process.env.RPC_URL || testnetDefault("https://rpc.testnet.arc.io"),
   CHAIN_ID,
   TESTNET: ON_TESTNET,
+  /* On Arc the dollar token is also the gas coin, so wallets keep a little of it back for fees. On
+     Robinhood Chain gas is ETH: nothing is held back from USDG, and ETH is watched on its own. */
+  GAS_IN_PAYMENT_TOKEN: CHAIN_ID === TESTNET_CHAIN_ID || CHAIN_ID === 5042,
+  /* What customers are told they are paying with and where. One place, so a reply, a report and a
+     prompt can never disagree about it. */
+  CURRENCY: CHAIN_ID === TESTNET_CHAIN_ID || CHAIN_ID === 5042 ? "USDC" : "USDG",
+  CHAIN_NAME: ON_TESTNET ? "Arc testnet" : CHAIN_ID === 5042 ? "Arc" : "Robinhood Chain",
+  GAS_COIN: CHAIN_ID === TESTNET_CHAIN_ID || CHAIN_ID === 5042 ? "USDC" : "ETH",
   ERC8183: process.env.ERC8183_ADDRESS || testnetDefault("0x0747EEf0706327138c69792bF28Cd525089e4583"),
   USDC: process.env.USDC_ADDRESS || testnetDefault("0x3600000000000000000000000000000000000000"),
   EXPLORER_API: process.env.EXPLORER_API || testnetDefault("https://testnet.arcscan.app/api/v2"),
