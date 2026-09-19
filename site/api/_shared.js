@@ -12,9 +12,9 @@ const { JsonRpcProvider, Contract } = require("ethers");
  * Two chains, one codebase.
  *
  * Testnet's values are literals because they are settled, public and permanent —
- * every job id we have ever published resolves against them. Mainnet's arrive
- * from the environment on 16 September 2026, when Circle publishes the addresses;
- * nothing here is guessed in advance. A chain with no RPC and no escrow address
+ * every job id we have ever published resolves against them. The mainnet slot is
+ * Robinhood Chain (4663, gas in ETH, buyers pay in USDG); its values arrive from
+ * the environment, nothing here is guessed in advance. A chain with no RPC and no escrow address
  * counts as "not configured" and can never be selected, so a half-filled mainnet
  * config degrades to testnet instead of serving wrong data.
  *
@@ -41,6 +41,10 @@ const CHAINS = {
     EXPLORER: "https://testnet.arcscan.app",
     EXPLORER_API: "https://testnet.arcscan.app/api",
     CIRCLE_CHAIN: "ARC-TESTNET",
+    /* What buyers pay in, and the gas coin a wallet is told about when it adds the chain.
+       On Arc the gas coin is USDC itself; on Robinhood Chain it is ETH. */
+    CURRENCY: "USDC",
+    NATIVE: { name: "USDC", symbol: "USDC", decimals: 18 },
     PROVIDER_WALLET: "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944",
     EVALUATOR_WALLET: "0x6F5A2E61DA4C779c6b4119F3BfEC8ec53Db488C7",
     PROVIDER_KEY: "provider",
@@ -53,23 +57,25 @@ const CHAINS = {
   },
   mainnet: {
     KEY: "mainnet",
-    NAME: "Arc",
+    NAME: "Robinhood Chain",
     TESTNET: false,
-    CHAIN_ID: Number(process.env.MAINNET_CHAIN_ID || 5042),
+    CHAIN_ID: Number(process.env.MAINNET_CHAIN_ID || 4663),
     RPC_URL: process.env.MAINNET_RPC_URL || "",
     /* No fallback to MAINNET_RPC_URL: that one may be a paid or keyed endpoint, and
        wallet_addEthereumChain would write it into every visitor's wallet for good.
        Until the public one is set, mainnet counts as not configured. */
     PUBLIC_RPC_URL: process.env.MAINNET_PUBLIC_RPC_URL || "",
-    LOG_RPC_URLS: ["https://rpc.mainnet.arc.io", "https://rpc.blockdaemon.mainnet.arc.io", "https://rpc.quicknode.mainnet.arc.io"],
+    LOG_RPC_URLS: ["https://rpc.mainnet.chain.robinhood.com"],
     ERC8183: process.env.MAINNET_ERC8183 || "",
     USDC: process.env.MAINNET_USDC || "",
     IDENTITY_REGISTRY: process.env.MAINNET_IDENTITY_REGISTRY || "",
     EXPLORER: process.env.MAINNET_EXPLORER || "",
     EXPLORER_API: process.env.MAINNET_EXPLORER_API || "",
-    /* Circle's Wallets API has no Arc mainnet blockchain name yet. Empty until Circle
-       publishes one, so nothing creates a PIN wallet on a guessed chain. */
+    /* Circle's Wallets API does not support Robinhood Chain. Empty, so nothing creates a
+       PIN wallet on a guessed chain and every PIN entry point stays hidden here. */
     CIRCLE_CHAIN: process.env.MAINNET_CIRCLE_CHAIN || "",
+    CURRENCY: "USDG",
+    NATIVE: { name: "Ether", symbol: "ETH", decimals: 18 },
     PROVIDER_WALLET: process.env.MAINNET_PROVIDER_WALLET || "",
     EVALUATOR_WALLET: process.env.MAINNET_EVALUATOR_WALLET || "",
     /* Separate keystores, never the testnet ones: a key that has lived on a

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Create a Circle user-controlled wallet on Arc with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.">
-<title>Stubly: create a USDC wallet on Arc with a 6-digit PIN</title>
+<meta name="description" content="Create a Circle user-controlled wallet on Arc testnet with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.">
+<title>Stubly: create a test USDC wallet on Arc testnet with a 6-digit PIN</title>
 <link rel="preload" href="/assets/fonts/archivo-black-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/public-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/ibm-plex-mono-400-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -12,18 +12,18 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Stubly">
 <meta property="og:url" content="https://stubly.org/wallet">
-<meta property="og:title" content="Stubly: create a USDC wallet on Arc with a 6-digit PIN">
-<meta property="og:description" content="Create a Circle user-controlled wallet on Arc with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.">
+<meta property="og:title" content="Stubly: create a test USDC wallet on Arc testnet with a 6-digit PIN">
+<meta property="og:description" content="Create a Circle user-controlled wallet on Arc testnet with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.">
 <meta property="og:image" content="https://stubly.org/assets/og.png">
-<meta property="og:image:alt" content="Stubly: hire AI agents paid through Circle's USDC escrow on Arc">
+<meta property="og:image:alt" content="Stubly: hire AI agents paid through USDG escrow on Robinhood Chain">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@Stublydotorg">
-<meta name="twitter:title" content="Stubly: create a USDC wallet on Arc with a 6-digit PIN">
-<meta name="twitter:description" content="Create a Circle user-controlled wallet on Arc with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.">
+<meta name="twitter:title" content="Stubly: create a test USDC wallet on Arc testnet with a 6-digit PIN">
+<meta name="twitter:description" content="Create a Circle user-controlled wallet on Arc testnet with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.">
 <meta name="twitter:image" content="https://stubly.org/assets/og.png">
-<meta name="twitter:image:alt" content="Stubly: hire AI agents paid through Circle's USDC escrow on Arc">
+<meta name="twitter:image:alt" content="Stubly: hire AI agents paid through USDG escrow on Robinhood Chain">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="stylesheet" href="/assets/styles.css">
 <style>
@@ -281,15 +281,15 @@ function paintChain(c) {
   const badge = document.querySelector(".wordmark small");
   if (badge) badge.textContent = name.toUpperCase();
   const desc = `Create a Circle user-controlled wallet on ${name} with a 6-digit PIN. No browser extension and no seed phrase. Add USDC, send it out, and hire AI agents on Stubly.`;
-  document.querySelectorAll('meta[name="description"], meta[property="og:description"], meta[name="twitter:description"]')
+  if (c.pinWallets) document.querySelectorAll('meta[name="description"], meta[property="og:description"], meta[name="twitter:description"]')
     .forEach((m) => m.setAttribute("content", desc));
   if (!c.pinWallets) {
     const btn = $("#btn-wallet");
     btn.disabled = true;
-    btn.textContent = `PIN wallets aren't on ${name} yet`;
+    btn.textContent = `PIN wallets don't work on ${name}`;
     log(c.chain.testnet
       ? "PIN wallets aren't set up on this server yet."
-      : "Circle hasn't switched on PIN wallets for Arc mainnet yet, so hire with a browser wallet like MetaMask for now. A PIN wallet you made on Arc Testnet is still here.");
+      : "Circle's PIN wallets don't support Robinhood Chain, so hire with a browser wallet like MetaMask. A PIN wallet you made on Arc Testnet is still here.");
     if (!c.chain.testnet) $("#testnet-link").hidden = false;
   }
 }

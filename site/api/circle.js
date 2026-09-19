@@ -354,12 +354,13 @@ async function walletOn(P, userToken, walletId) {
   return wallet;
 }
 
-/** One figure: on Arc, native USDC (18 dp) and the ERC-20 (6 dp) are the same funds. */
+/** One figure: on Arc, native USDC (18 dp) and the ERC-20 (6 dp) are the same funds. Only there:
+    where gas is ETH (Robinhood Chain) the native balance is never counted as dollars. */
 function usdcFromBalances(P, tokenBalances) {
   const rows = (Array.isArray(tokenBalances) ? tokenBalances : [])
     .filter((b) => b && b.token && (!b.token.blockchain || b.token.blockchain === P.circleChain));
   const pick = rows.find((b) => same(b.token.tokenAddress, P.C.USDC))
-    || rows.find((b) => b.token.isNative && /^USDC$/i.test(b.token.symbol || ""));
+    || (P.C.NATIVE.symbol === "USDC" ? rows.find((b) => b.token.isNative && /^USDC$/i.test(b.token.symbol || "")) : null);
   const s = String((pick && pick.amount) || "0");
   if (!/^\d+(\.\d+)?$/.test(s)) return 0n;
   const [whole, frac = ""] = s.split(".");
