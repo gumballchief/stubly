@@ -1,0 +1,603 @@
+{
+  "__chain": 4663,
+  "research-brief": {
+    "agentId": "326",
+    "uri": "https://stubly.org/agents/robinhood/research-brief.json",
+    "tx": "0x7cdf24195603eb785b2e792fa583306cc74238d41893b86e629a84c3f720d2cc",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "site-audit": {
+    "agentId": "327",
+    "uri": "https://stubly.org/agents/robinhood/site-audit.json",
+    "tx": "0x5893ebbeaa17cf11886f5f1c504f07fbac71d9a03a552d4ba6f5011fc280c92d",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "contract-check": {
+    "agentId": "328",
+    "uri": "https://stubly.org/agents/robinhood/contract-check.json",
+    "tx": "0xcbb99a5ca833ebe5a20a449af4178651d26eb012934618e2c4e155fabd081624",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "copy-pack": {
+    "agentId": "329",
+    "uri": "https://stubly.org/agents/robinhood/copy-pack.json",
+    "tx": "0xbefe8e919d2e0fbb04c176eb0318af26fcfb31e7799ee361a83d9d3a8370b4ba",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "thread-writer": {
+    "agentId": "330",
+    "uri": "https://stubly.org/agents/robinhood/thread-writer.json",
+    "tx": "0xec4c2780540ad09ec56be925c61a3aea4878a1f894bd323bad0796cf5549d907",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "data-extract": {
+    "agentId": "331",
+    "uri": "https://stubly.org/agents/robinhood/data-extract.json",
+    "tx": "0x42ac2492c4cb1ac6a1bc2567f988c38c73624e268c6f3346c1b57322e7df91f1",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "launch-kit": {
+    "agentId": "332",
+    "uri": "https://stubly.org/agents/robinhood/launch-kit.json",
+    "tx": "0xe87e911b72a57429c716c903f3f4be75bc7f3fe325eecbef94ced5e01fc76f84",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "wallet-report": {
+    "agentId": "333",
+    "uri": "https://stubly.org/agents/robinhood/wallet-report.json",
+    "tx": "0x620556f79bee2a268a1499496a7408956e63c5416a25c2bc674e03a467d34c25",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "token-report": {
+    "agentId": "334",
+    "uri": "https://stubly.org/agents/robinhood/token-report.json",
+    "tx": "0x10749977d1d2cd7c21ff58557f31540d3b1f4b5183eae52c35887f65d2ac8641",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tx-explain": {
+    "agentId": "335",
+    "uri": "https://stubly.org/agents/robinhood/tx-explain.json",
+    "tx": "0xdf999663f314cb9ca6d19067ec5c81b94b9170a93ad640c805017bd7fef912fa",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "chain-pulse": {
+    "agentId": "336",
+    "uri": "https://stubly.org/agents/robinhood/chain-pulse.json",
+    "tx": "0x4bd8e50812055d6fc896c82da474c435b5053e151f3c59efb87b2c856410ea7d",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "agent-lookup": {
+    "agentId": "337",
+    "uri": "https://stubly.org/agents/robinhood/agent-lookup.json",
+    "tx": "0x8b1bf891b83da3020c0054cf3025276b3c5b4bc4811fd4ab0a91991d853504a1",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "name-check": {
+    "agentId": "338",
+    "uri": "https://stubly.org/agents/robinhood/name-check.json",
+    "tx": "0xeace28440ed6009df7d38d631c560a9759afb1695776af3fb7c40e3c7c3fdda2",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "readme-writer": {
+    "agentId": "339",
+    "uri": "https://stubly.org/agents/robinhood/readme-writer.json",
+    "tx": "0xf9864f8fca762680c3dd212392e7a71ee5bf8bda65cfd73f88aaca63d952b34d",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "doc-digest": {
+    "agentId": "340",
+    "uri": "https://stubly.org/agents/robinhood/doc-digest.json",
+    "tx": "0xd81ba82c112af16257f46b0699b701eba38788f70cee5b8c6f4e65edef5c1f65",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "translate": {
+    "agentId": "341",
+    "uri": "https://stubly.org/agents/robinhood/translate.json",
+    "tx": "0x3d9a685a452840e2b2c00df2aa92525472654d0eca27eb8637f86c0468d75dbf",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "pitch-critic": {
+    "agentId": "342",
+    "uri": "https://stubly.org/agents/robinhood/pitch-critic.json",
+    "tx": "0xf7557c4776d1ebe0abe02d75057d682526acb486c2e508a1351a1b538cefbf47",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "headers-check": {
+    "agentId": "343",
+    "uri": "https://stubly.org/agents/robinhood/headers-check.json",
+    "tx": "0x8730adac491b3b3d35ceb5ff7351b295c9921151f190b981af6e603544e3c911",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "meta-tags": {
+    "agentId": "344",
+    "uri": "https://stubly.org/agents/robinhood/meta-tags.json",
+    "tx": "0x7f9b19d4410f10881ede8c40e7ec5eae32acc566beb63a385c717cc94d298b9e",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "cold-email": {
+    "agentId": "345",
+    "uri": "https://stubly.org/agents/robinhood/cold-email.json",
+    "tx": "0x42b711ef363988413b3e0e9c0d1f52261b6d9ac0302151c1f86f91a79d00bb23",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "regex-builder": {
+    "agentId": "346",
+    "uri": "https://stubly.org/agents/robinhood/regex-builder.json",
+    "tx": "0xea56abccd58205ffb9e26fa4ae4f026dca81bc8fd5404e1d088c049f9142a2d4",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "error-explain": {
+    "agentId": "347",
+    "uri": "https://stubly.org/agents/robinhood/error-explain.json",
+    "tx": "0xcbebadc58720352521198abd00dd2ca516605911bbf026859ab960dc079050a5",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "sql-explain": {
+    "agentId": "348",
+    "uri": "https://stubly.org/agents/robinhood/sql-explain.json",
+    "tx": "0x585190bff3564524e78bc2dcc98d3f233c744490fc2c1f32e82e81f5913c5587",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "test-plan": {
+    "agentId": "349",
+    "uri": "https://stubly.org/agents/robinhood/test-plan.json",
+    "tx": "0xa7f473bbeb550bc2249b4a42320dcfd44b97dde3c5acf476e038fa61641412eb",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "seo-keywords": {
+    "agentId": "350",
+    "uri": "https://stubly.org/agents/robinhood/seo-keywords.json",
+    "tx": "0xee2128fbdfbca2197940df84d0ea00239bfc950596ece6e5602988c7d59e8ce0",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "user-personas": {
+    "agentId": "351",
+    "uri": "https://stubly.org/agents/robinhood/user-personas.json",
+    "tx": "0x095a1839df2bbe65d9fb0550b7b3ea515044437dac891d251b0f31dcf2f46731",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "changelog-writer": {
+    "agentId": "352",
+    "uri": "https://stubly.org/agents/robinhood/changelog-writer.json",
+    "tx": "0x44a172fbdd0373e11cdadfc389732075e2f85424cf467bf7fdcf6023604669e4",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "blog-outline": {
+    "agentId": "353",
+    "uri": "https://stubly.org/agents/robinhood/blog-outline.json",
+    "tx": "0x280da298b73c628af023f644b92bc206827898a6359f18ca235194e913cec1bc",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "newsletter": {
+    "agentId": "354",
+    "uri": "https://stubly.org/agents/robinhood/newsletter.json",
+    "tx": "0x5a0ed3037f957bff25d3908ad4cc78fe51b8073e2bccb60346a67b067b39fa46",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "product-description": {
+    "agentId": "355",
+    "uri": "https://stubly.org/agents/robinhood/product-description.json",
+    "tx": "0xb2faafeb4b5392fa2d4073d964d3d641e29e482b029c866b485659277e5a7486",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "press-release": {
+    "agentId": "356",
+    "uri": "https://stubly.org/agents/robinhood/press-release.json",
+    "tx": "0x35da27014e174bd11894a43302929f89468690edd4b376cb2d6a75a3d4452fa1",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "ad-copy": {
+    "agentId": "357",
+    "uri": "https://stubly.org/agents/robinhood/ad-copy.json",
+    "tx": "0x37b51195d41d28cb84797886b4963486976479fd17960d06122757a2d8bb19d4",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tagline": {
+    "agentId": "358",
+    "uri": "https://stubly.org/agents/robinhood/tagline.json",
+    "tx": "0x3f0ffc840cd28eaafd166f3603e5b9892d6115a9e60859af92b566564f78712e",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "faq-writer": {
+    "agentId": "359",
+    "uri": "https://stubly.org/agents/robinhood/faq-writer.json",
+    "tx": "0xce2f350a9d797ecb6aed8f2b7312d6705a820bdd1e310cfc6c5b997fe4f21762",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "case-study": {
+    "agentId": "360",
+    "uri": "https://stubly.org/agents/robinhood/case-study.json",
+    "tx": "0x16950537ff1b8f65157028dac0429fc2d03accf761fabe337833b83adad61583",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "linkedin-post": {
+    "agentId": "361",
+    "uri": "https://stubly.org/agents/robinhood/linkedin-post.json",
+    "tx": "0xc1a45b87427d617abfdc6d69889623a3f1f62eca5c1815ce5a8d6275fe32cca0",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "youtube-description": {
+    "agentId": "362",
+    "uri": "https://stubly.org/agents/robinhood/youtube-description.json",
+    "tx": "0x030b0ce55efab54d6e0297bdc443239f9115e749a6ab5e1ce2d8d06e2ca9ffa7",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "show-notes": {
+    "agentId": "363",
+    "uri": "https://stubly.org/agents/robinhood/show-notes.json",
+    "tx": "0x3e05c1445aede353108b93b4c82b2bed75fcc06cd18c959ad0caf796aa201797",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "subject-lines": {
+    "agentId": "364",
+    "uri": "https://stubly.org/agents/robinhood/subject-lines.json",
+    "tx": "0x521f49c210278c552f3a9bf45802cad567a09818c61e98717e6bdc7b04383616",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "value-prop": {
+    "agentId": "365",
+    "uri": "https://stubly.org/agents/robinhood/value-prop.json",
+    "tx": "0x424976ef4182045b6319eb4672b4ef4dff180b41fabe36ce3d042268af6d7653",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "elevator-pitch": {
+    "agentId": "366",
+    "uri": "https://stubly.org/agents/robinhood/elevator-pitch.json",
+    "tx": "0x11ec6e4b7323a2340f4bd8448432b2eaca5b87fe84ac033557ec193214382a40",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "code-review-checklist": {
+    "agentId": "367",
+    "uri": "https://stubly.org/agents/robinhood/code-review-checklist.json",
+    "tx": "0xa20756a627b5ca087fe7e14f78b24faa4d7571f362eb0a8244d9f83b81198501",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "api-docs": {
+    "agentId": "368",
+    "uri": "https://stubly.org/agents/robinhood/api-docs.json",
+    "tx": "0x97f05955586543eafd65f09798880f1a7cfe485aa468ef5f2b4d04c0591dcc13",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "commit-message": {
+    "agentId": "369",
+    "uri": "https://stubly.org/agents/robinhood/commit-message.json",
+    "tx": "0xceebd5fc78482fc728af57ef79ab0c5b16be2110f14b742e15fdf98287c7918a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "pr-description": {
+    "agentId": "370",
+    "uri": "https://stubly.org/agents/robinhood/pr-description.json",
+    "tx": "0x152833c612ae128f067c2ff05bf7c59414ff37c2c69317cf8cb694f59219acc4",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "dockerfile": {
+    "agentId": "371",
+    "uri": "https://stubly.org/agents/robinhood/dockerfile.json",
+    "tx": "0x0892265e4bc248197f35577987bd7d3d12b98219b504600e576542305283c28e",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "ci-config": {
+    "agentId": "372",
+    "uri": "https://stubly.org/agents/robinhood/ci-config.json",
+    "tx": "0x078e031e39b5315d1f8a2ac9ad85610cea8a670fcd7b55eecaa38d08eca6770f",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "migration-plan": {
+    "agentId": "373",
+    "uri": "https://stubly.org/agents/robinhood/migration-plan.json",
+    "tx": "0x38d416a0fe2aeec195a2dd2fdf6daaa7eb52ba648ecffbe83b37608a627c8f9f",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "refactor-plan": {
+    "agentId": "374",
+    "uri": "https://stubly.org/agents/robinhood/refactor-plan.json",
+    "tx": "0x77c1c8df14ed8f06ed65bdc081fc72627a8cda5f109c9546b6757c66abeb7e1c",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "adr": {
+    "agentId": "375",
+    "uri": "https://stubly.org/agents/robinhood/adr.json",
+    "tx": "0xcb45915fa87750b4b36433c8233e6d0b34cd38731001a84dc26aa997acdf6514",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "bug-report": {
+    "agentId": "376",
+    "uri": "https://stubly.org/agents/robinhood/bug-report.json",
+    "tx": "0x9aff9995d4907234518f57c4344fe00e94abff6205bae793a5cdb3cf43e3e8f7",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tech-spec": {
+    "agentId": "377",
+    "uri": "https://stubly.org/agents/robinhood/tech-spec.json",
+    "tx": "0x02f26792abf9929232328c3121df239347df91f673805f973b555790369c5f1d",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "env-audit": {
+    "agentId": "378",
+    "uri": "https://stubly.org/agents/robinhood/env-audit.json",
+    "tx": "0xda9ff30fa0a5d707f3b3a8aa3fa092cbc12556109bd0d50ed113fa373e5c99db",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "gitignore": {
+    "agentId": "379",
+    "uri": "https://stubly.org/agents/robinhood/gitignore.json",
+    "tx": "0xa40f7e470e8097d3193f0561e643e634cb163fd43ca65fcaedcd35affa8819c0",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "csv-schema": {
+    "agentId": "380",
+    "uri": "https://stubly.org/agents/robinhood/csv-schema.json",
+    "tx": "0x28c8fe2e3c87fbd584e737d6e055c09861e5e5681b5fcfc11b82c073be15c76d",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "chart-suggestion": {
+    "agentId": "381",
+    "uri": "https://stubly.org/agents/robinhood/chart-suggestion.json",
+    "tx": "0xe6cf5d37be47729a5bf4c49623323fc2d3614d32892dc252a1869c238e2d7efe",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "metric-definitions": {
+    "agentId": "382",
+    "uri": "https://stubly.org/agents/robinhood/metric-definitions.json",
+    "tx": "0x940f0862df869f25a9e4da8dfdd0d57f7172c0db26334f7478cb1d2eafdb8736",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "ab-test": {
+    "agentId": "383",
+    "uri": "https://stubly.org/agents/robinhood/ab-test.json",
+    "tx": "0x1875acffd390fa29309ee0bd33f929f8eb27cce9ad586a3f3a02e4a6401701d4",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "survey-questions": {
+    "agentId": "384",
+    "uri": "https://stubly.org/agents/robinhood/survey-questions.json",
+    "tx": "0x512956f587e594c4e7c18f6e9908346a7c7bb7c4ef97b80be797a020b3c7181f",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "competitor-matrix": {
+    "agentId": "385",
+    "uri": "https://stubly.org/agents/robinhood/competitor-matrix.json",
+    "tx": "0x3f9adbcc112dac640e7b4c7621212722e11ff9610731fa79691a9b3cc2686d5c",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "swot": {
+    "agentId": "386",
+    "uri": "https://stubly.org/agents/robinhood/swot.json",
+    "tx": "0xac3529cd067845a7b3c7b7babe1bc934650f1966e23ceb68fe57c2cf489205a8",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "pricing-review": {
+    "agentId": "387",
+    "uri": "https://stubly.org/agents/robinhood/pricing-review.json",
+    "tx": "0xae61b4cba3ff7ce4ec78afe801ee12041c82f3cc71098c9530fac96bc0f69305",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "unit-economics": {
+    "agentId": "388",
+    "uri": "https://stubly.org/agents/robinhood/unit-economics.json",
+    "tx": "0x66ade1de2cf3381c0f51431e3d9179a96fa0905fc7f6e54277498320d3dc5273",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "job-description": {
+    "agentId": "389",
+    "uri": "https://stubly.org/agents/robinhood/job-description.json",
+    "tx": "0xa2040f286951710c55f5d0a04a5fa58ffb91b0ae681cc78481dc86a2a0d08077",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "interview-questions": {
+    "agentId": "390",
+    "uri": "https://stubly.org/agents/robinhood/interview-questions.json",
+    "tx": "0x364828930d1ebbe600532fdc8680c781e10dab6cda12fd48b7db6be89bd1cf5f",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "onboarding-checklist": {
+    "agentId": "391",
+    "uri": "https://stubly.org/agents/robinhood/onboarding-checklist.json",
+    "tx": "0x2ddd88fd1f817bb6d5551b3170ecab23ac71428ac7800ce02ca87659ffce4317",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "meeting-agenda": {
+    "agentId": "392",
+    "uri": "https://stubly.org/agents/robinhood/meeting-agenda.json",
+    "tx": "0x01b543eedfd1b03eb5fca44c4b2cb8004b121d55edbe90c0ee2882f445056b8f",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "postmortem": {
+    "agentId": "393",
+    "uri": "https://stubly.org/agents/robinhood/postmortem.json",
+    "tx": "0xc716675cc600c46a936ac5e68079c5ad37737951208e76f9d593ed4e42a0a7cf",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "runbook": {
+    "agentId": "394",
+    "uri": "https://stubly.org/agents/robinhood/runbook.json",
+    "tx": "0x5320bf70640fc80b88f6583ed48ba8b3b41985bbeece236eca39df765a5cb5a6",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "sop": {
+    "agentId": "395",
+    "uri": "https://stubly.org/agents/robinhood/sop.json",
+    "tx": "0x271aa8ee83342579361f41bde2f6493fc1af58f2c8c4f2998735d604d5328eab",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "vendor-comparison": {
+    "agentId": "396",
+    "uri": "https://stubly.org/agents/robinhood/vendor-comparison.json",
+    "tx": "0x598c8fb75e06e2d33c9ae737a5b92a8cbad388f224733a9a756de6d851cfbbec",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "eli5": {
+    "agentId": "397",
+    "uri": "https://stubly.org/agents/robinhood/eli5.json",
+    "tx": "0xf0830a9459ae82da26a568a0ae6047232dd1cb326d4d4b7eb678c3fa7aef05a9",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "glossary": {
+    "agentId": "398",
+    "uri": "https://stubly.org/agents/robinhood/glossary.json",
+    "tx": "0x678cf9049abe5ff315f764adf9e69288f4190542828e26f9f1341dd5d5b620a9",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "study-plan": {
+    "agentId": "399",
+    "uri": "https://stubly.org/agents/robinhood/study-plan.json",
+    "tx": "0xc803a1bba033455441ce1bd79beddbe5a001acd940d31f4438df9d6b16123775",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "quiz": {
+    "agentId": "400",
+    "uri": "https://stubly.org/agents/robinhood/quiz.json",
+    "tx": "0xe24a03c1e2df90687aa5fc896054b66ab67198e4ae50174dfd581da0894cc8fd",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "flashcards": {
+    "agentId": "401",
+    "uri": "https://stubly.org/agents/robinhood/flashcards.json",
+    "tx": "0x22d16beb19773967737d7ebe253f8cae76adc67c6ecbe34f871a9be4f1551691",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tone-rewrite": {
+    "agentId": "402",
+    "uri": "https://stubly.org/agents/robinhood/tone-rewrite.json",
+    "tx": "0x13bc1506a66cdc8d5ef38aec736f35054432bcfcd3b1364e6b6ad4134f4d4fa2",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "simplify": {
+    "agentId": "403",
+    "uri": "https://stubly.org/agents/robinhood/simplify.json",
+    "tx": "0xb23dabd38d091925f01015f9a5e313d26b631d24c2fcfa4bec04b0630d869593",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "grammar-fix": {
+    "agentId": "404",
+    "uri": "https://stubly.org/agents/robinhood/grammar-fix.json",
+    "tx": "0xce917c9b8eb7ef4253457fe79cf10176eb15fbf502e04c9423e9a337f571f84a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "user-journey": {
+    "agentId": "405",
+    "uri": "https://stubly.org/agents/robinhood/user-journey.json",
+    "tx": "0x9ef29c2b3c32221bd27d8d2ea312b4e3271f8043723ae703fa6b624941836a1a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "empty-states": {
+    "agentId": "406",
+    "uri": "https://stubly.org/agents/robinhood/empty-states.json",
+    "tx": "0xcae917f2d4a8889ac44c676df5bd1fb8e14f24a6d4edb515bcba0142a6ee6c0a",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "error-messages": {
+    "agentId": "407",
+    "uri": "https://stubly.org/agents/robinhood/error-messages.json",
+    "tx": "0x75f368c5c0f8b4a31c956cc3287c43a0f4b1d128185f774f386b9d293fa2c278",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "microcopy": {
+    "agentId": "408",
+    "uri": "https://stubly.org/agents/robinhood/microcopy.json",
+    "tx": "0x1793cb3fc3366a4d49af9565a7aea03015473ea578331f6c44535027ffc86d31",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "a11y-checklist": {
+    "agentId": "409",
+    "uri": "https://stubly.org/agents/robinhood/a11y-checklist.json",
+    "tx": "0x2329cc0a9934c15627cf998fa9f73452b35dd4f5f12b5bea85ca09f1a4b2b6a6",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "ia-review": {
+    "agentId": "410",
+    "uri": "https://stubly.org/agents/robinhood/ia-review.json",
+    "tx": "0xc0947bd6eb2224589071e9a6bb3d5de086b03d61efae2f6658173b9b624386d0",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "wireframe": {
+    "agentId": "411",
+    "uri": "https://stubly.org/agents/robinhood/wireframe.json",
+    "tx": "0xebe3d701a0a26df4fdba8c2a8b6c35bbb1f7c2cf32f43e45571a8ca9e2adde30",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "gas-estimate": {
+    "agentId": "412",
+    "uri": "https://stubly.org/agents/robinhood/gas-estimate.json",
+    "tx": "0x18f5a068c6f9cc38adc11c48eac0baebc5d6aa6b232b6d6d589909d5762e1bb9",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "contract-summary": {
+    "agentId": "413",
+    "uri": "https://stubly.org/agents/robinhood/contract-summary.json",
+    "tx": "0x8adf42576ee1bbe4d0bf8469c88d60a1abed21c1855e07b4991863d13fe77b6b",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "tokenomics-review": {
+    "agentId": "414",
+    "uri": "https://stubly.org/agents/robinhood/tokenomics-review.json",
+    "tx": "0xd4ec1ecaf8fa2e99205e4697f5bd044b4f7e49862329b492807747c590e79d05",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "whitepaper-digest": {
+    "agentId": "415",
+    "uri": "https://stubly.org/agents/robinhood/whitepaper-digest.json",
+    "tx": "0x77c986fb2167571ef45b42c09a1907e49818884a5c35a7038317eedcb6ea1788",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "okrs": {
+    "agentId": "416",
+    "uri": "https://stubly.org/agents/robinhood/okrs.json",
+    "tx": "0xa386eedfc92a99ba740d7ace77bc0b0306fcde155ca8688f5cc60da6d2610371",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "roadmap": {
+    "agentId": "417",
+    "uri": "https://stubly.org/agents/robinhood/roadmap.json",
+    "tx": "0x9c46962a204b22bf51db611c14e1854b71a90313bd7f3e85ae187efe20257e8e",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "risk-register": {
+    "agentId": "418",
+    "uri": "https://stubly.org/agents/robinhood/risk-register.json",
+    "tx": "0x98b9332ab4d9c5e7685973ff9db78d833b813d354fe24df81d01ba1f5378e797",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "retro": {
+    "agentId": "419",
+    "uri": "https://stubly.org/agents/robinhood/retro.json",
+    "tx": "0xae46b21fd27d1a13d1b64ecd78ed98e869d612a063c819a506f0cf323e742c9f",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "decision-brief": {
+    "agentId": "420",
+    "uri": "https://stubly.org/agents/robinhood/decision-brief.json",
+    "tx": "0x4ab9a0e0a0d425aaac1f0b20ff0580c2d4a13f834fdb62ca90e7d5d2281d37b7",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "negotiation-prep": {
+    "agentId": "421",
+    "uri": "https://stubly.org/agents/robinhood/negotiation-prep.json",
+    "tx": "0xc4140c8d225a3a1de43f5fbcbc795cb2354ce400dda1c49a9ba9127b156afc20",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "cold-dm": {
+    "agentId": "422",
+    "uri": "https://stubly.org/agents/robinhood/cold-dm.json",
+    "tx": "0x6a0c5f8317ef2d7265ec4aa6f1e399e0eeb2e71a6397038d3b2b56b3964a4d67",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "outreach-sequence": {
+    "agentId": "423",
+    "uri": "https://stubly.org/agents/robinhood/outreach-sequence.json",
+    "tx": "0x6cd516d1d10900a21d99209069ff61c2179bf47b7d7c02f747dfaaddb6c41761",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "deck-outline": {
+    "agentId": "424",
+    "uri": "https://stubly.org/agents/robinhood/deck-outline.json",
+    "tx": "0x9be5572b02ab27fc8a167659b61c5aeda56609a31e8d8316bac395117f48a511",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  },
+  "landing-critique": {
+    "agentId": "425",
+    "uri": "https://stubly.org/agents/robinhood/landing-critique.json",
+    "tx": "0xdd043deb3d7f882c6fc660e6d8a4682db65211e30c5c801e045ccc2a6598c392",
+    "owner": "0x7e9C9657A033661D5370aeF2a0082D8431aB8a03"
+  }
+}
