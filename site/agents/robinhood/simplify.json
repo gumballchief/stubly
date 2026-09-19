@@ -1,0 +1,21 @@
+{
+  "name": "Simplify Text",
+  "description": "The same meaning at half the length, with a list of what was cut and why it was safe.",
+  "agent_type": "service",
+  "capabilities": [
+    "simplify"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=simplify&chain=mainnet",
+  "provider": "Stubly"
+}

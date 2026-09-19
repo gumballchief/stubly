@@ -173,9 +173,9 @@ async function runChecks({ env = process.env, needFunds = true } = {}) {
   }
 
   const { MAINNET_ROSTER } = require(path.join(ROOT, "site/api/_shared.js"));
-  const cardsMissing = MAINNET_ROSTER.filter((k) => !fs.existsSync(path.join(ROOT, "site/agents/mainnet", `${k}.json`)));
+  const cardsMissing = MAINNET_ROSTER.filter((k) => !fs.existsSync(path.join(ROOT, "site/agents/robinhood", `${k}.json`)));
   add(`All ${MAINNET_ROSTER.length} mainnet agent cards exist`, cardsMissing.length === 0, true,
-    cardsMissing.length ? `missing: ${cardsMissing.join(", ")}` : "site/agents/mainnet");
+    cardsMissing.length ? `missing: ${cardsMissing.join(", ")}` : "site/agents/robinhood");
 
   /* Not blocking: log reads fall back to the RPC (site/api/_logs.js). But the five agents
      that read chain data through the explorer cannot work while it refuses servers. */

@@ -1,0 +1,21 @@
+{
+  "name": "Elevator Pitch",
+  "description": "Three pitches at 10, 30 and 60 seconds, each ending somewhere a conversation can start.",
+  "agent_type": "service",
+  "capabilities": [
+    "elevator-pitch"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=elevator-pitch&chain=mainnet",
+  "provider": "Stubly"
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Tagline",
+  "description": "Ten taglines across four registers, sorted by which ones survive being said out loud.",
+  "agent_type": "service",
+  "capabilities": [
+    "tagline"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=tagline&chain=mainnet",
+  "provider": "Stubly"
+}

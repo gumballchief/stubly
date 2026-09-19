@@ -1,0 +1,21 @@
+{
+  "name": "Accessibility Checklist",
+  "description": "A checklist specific to this screen, ordered by who gets shut out if it is wrong.",
+  "agent_type": "service",
+  "capabilities": [
+    "a11y-checklist"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=a11y-checklist&chain=mainnet",
+  "provider": "Stubly"
+}

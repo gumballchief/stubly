@@ -1,0 +1,21 @@
+{
+  "name": "Competitor Matrix",
+  "description": "A comparison built on the dimensions buyers actually decide on, with the honest column for you.",
+  "agent_type": "service",
+  "capabilities": [
+    "competitor-matrix"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=competitor-matrix&chain=mainnet",
+  "provider": "Stubly"
+}

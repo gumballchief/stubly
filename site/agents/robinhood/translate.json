@@ -1,0 +1,21 @@
+{
+  "name": "Translate",
+  "description": "Translation that keeps tone and formatting, with notes on whatever does not survive the crossing.",
+  "agent_type": "service",
+  "capabilities": [
+    "translate"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=translate&chain=mainnet",
+  "provider": "Stubly"
+}

@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Switch Stubly to Arc mainnet in one run, from your own terminal.
+ * Switch Stubly to Robinhood Chain in one run, from your own terminal.
  *
  *   npm run mainnet:flip                    do it (asks you to type FLIP first)
  *   npm run mainnet:flip -- --dry-run       show every step, change nothing
@@ -12,7 +12,7 @@
  *
  * It follows launch/MAINNET-FLIP.md in order and stops at the first thing that is not
  * right. Nothing starts until `npm run mainnet:check` passes: Circle's escrow and identity
- * registry on chain, USDC real, both wallets funded, every agent card present.
+ * registry on chain, USDG real, both wallets funded (USDG and ETH for gas), every agent card present.
  *
  * What it does after you type FLIP:
  *   1. asks the mainnet wallet password once (hidden) and proves it opens both wallets
@@ -166,7 +166,7 @@ function renderYamlForMainnet(text, v) {
     const re = new RegExp(`(- key: ${k}\\n\\s+value: )"[^"]*"`);
     return re.test(text) ? (text = text.replace(re, `$1"${val}"`)) : text;
   };
-  set("CHAIN_ID", "5042");
+  set("CHAIN_ID", String(v.CHAIN_ID));
   set("ERC8183_ADDRESS", v.ERC8183);
   set("USDC_ADDRESS", v.USDC);
   set("EXPLORER_API", `${v.EXPLORER}/api/v2`);
@@ -187,8 +187,8 @@ async function makeDefault() {
   run("npx", ["vercel", "deploy", "--prod", "--yes"]);
   if (!DRY) {
     const c = await getJson(`${SITE}/api/catalog`);
-    if (c.body?.chainId !== 5042) throw new Error(`stubly.org still opens chain ${c.body?.chainId}`);
-    say("   stubly.org now opens Arc mainnet by default");
+    if (c.body?.chainId !== V.CHAIN_ID) throw new Error(`stubly.org still opens chain ${c.body?.chainId}`);
+    say("   stubly.org now opens Robinhood Chain by default");
   }
 }
 
@@ -202,6 +202,7 @@ async function flip() {
 
   const rosterOff = explorerOpen ? [] : CHAIN_AGENTS;
   const plan = {
+    MAINNET_CHAIN_ID: String(V.CHAIN_ID),
     MAINNET_RPC_URL: V.RPC_URL,
     MAINNET_PUBLIC_RPC_URL: V.PUBLIC_RPC_URL,
     MAINNET_ERC8183: V.ERC8183,
@@ -216,7 +217,7 @@ async function flip() {
   };
 
   const { MAINNET_ROSTER: ROSTER } = require(path.join(ROOT, "site/api/_shared.js"));
-  say(`\nThis will: deploy the mainnet code, register ${ROSTER.length} agent identities on Arc mainnet, put the mainnet`);
+  say(`\nThis will: deploy the mainnet code, register ${ROSTER.length} agent identities on Robinhood Chain, put the mainnet`);
   say("settings on Vercel, close testnet to new orders, and move the worker to mainnet.");
   if (rosterOff.length) say(`The explorer refuses server requests right now, so these agents stay off the mainnet shop: ${rosterOff.join(", ")}.`);
   const go = DRY ? "FLIP" : await ask("\nType FLIP to go ahead: ");
@@ -228,7 +229,7 @@ async function flip() {
   step(3, "Ship the mainnet code with mainnet still switched off");
   run("git", ["checkout", BRANCH]);
   run("git", ["add", "-A"]);
-  run("git", ["commit", "-m", "Ready for Arc mainnet: chain-aware money path, full agent shop, profile, log fallback"], { allowFail: true });
+  run("git", ["commit", "-m", "Stubly moves to Robinhood Chain: USDG escrow, ETH gas, new agent cards"], { allowFail: true });
   run("git", ["checkout", "master"]);
   run("git", ["pull", "--ff-only", "origin", "master"]);
   run("git", ["merge", "--no-ff", BRANCH, "-m", "Merge mainnet-launch"]);
@@ -238,23 +239,23 @@ async function flip() {
     const { MAINNET_ROSTER } = require(path.join(ROOT, "site/api/_shared.js"));
     const missing = [];
     for (const k of MAINNET_ROSTER) {
-      const r = await fetch(`${SITE}/agents/mainnet/${k}.json`, { signal: AbortSignal.timeout(20_000) }).catch(() => null);
+      const r = await fetch(`${SITE}/agents/robinhood/${k}.json`, { signal: AbortSignal.timeout(20_000) }).catch(() => null);
       if (!r || !r.ok) missing.push(k);
     }
     if (missing.length) throw new Error(`these mainnet cards are not live on stubly.org yet: ${missing.join(", ")}`);
     say(`   all ${MAINNET_ROSTER.length} agent cards are live`);
   }
 
-  step(4, "Register the agents' identities on Arc mainnet");
+  step(4, "Register the agents' identities on Robinhood Chain");
   const chainEnv = {
-    CHAIN_ID: "5042", RPC_URL: V.RPC_URL, ERC8183_ADDRESS: V.ERC8183, USDC_ADDRESS: V.USDC,
+    CHAIN_ID: String(V.CHAIN_ID), RPC_URL: V.RPC_URL, ERC8183_ADDRESS: V.ERC8183, USDC_ADDRESS: V.USDC,
     IDENTITY_REGISTRY: V.IDENTITY_REGISTRY, EXPLORER: V.EXPLORER, EXPLORER_API: `${V.EXPLORER}/api/v2`,
     KEYSTORE_PASSWORD_MAINNET: password,
   };
   run("node", ["chain/registry.js"], { env: chainEnv });
   run("node", ["chain/registry.js", "--register"], { env: chainEnv });
-  run("git", ["add", "site/agents/ids.5042.json"]);
-  run("git", ["commit", "-m", "Arc mainnet agent identities"], { allowFail: true });
+  run("git", ["add", `site/agents/ids.${V.CHAIN_ID}.json`]);
+  run("git", ["commit", "-m", "Robinhood Chain agent identities"], { allowFail: true });
   run("git", ["push", "origin", "master"]);
 
   step(5, "Put the mainnet settings on Vercel and close testnet to new orders");
@@ -268,7 +269,7 @@ async function flip() {
   if (!DRY) {
     const cat = await getJson(`${SITE}/api/catalog?chain=mainnet`);
     const agents = Object.values(cat.body?.agents || {});
-    if (cat.body?.chainId !== 5042) throw new Error(`the site does not serve mainnet yet (chainId ${cat.body?.chainId})`);
+    if (cat.body?.chainId !== V.CHAIN_ID) throw new Error(`the site does not serve mainnet yet (chainId ${cat.body?.chainId})`);
     const noId = agents.filter((a) => !a.agentId).length;
     say(`   stubly.org serves mainnet: ${agents.length} agents, ${agents.length - noId} with identities`);
     if (noId) throw new Error(`${noId} mainnet agents have no identity yet`);
@@ -276,8 +277,8 @@ async function flip() {
 
   await moveWorker({ V, block, rosterOff, password });
 
-  say("\nStubly is on Arc mainnet. stubly.org still opens testnet by default until you prove one real order:");
-  say(`  1. Buy one: ${SITE}/hire?agent=research-brief&chain=mainnet (1 USDC, from your own wallet)`);
+  say("\nStubly is on Robinhood Chain. stubly.org still opens testnet by default until you prove one real order:");
+  say(`  1. Buy one: ${SITE}/hire?agent=research-brief&chain=mainnet (1 USDG, from your own wallet)`);
   say("  2. When it shows Completed, run: npm run mainnet:flip -- --make-default");
 }
 
@@ -304,7 +305,7 @@ async function moveWorker({ V, block, rosterOff, password, waitForOrders = false
     }
   }
   const workerVars = {
-    CHAIN_ID: "5042", RPC_URL: V.RPC_URL, ERC8183_ADDRESS: V.ERC8183, USDC_ADDRESS: V.USDC,
+    CHAIN_ID: String(V.CHAIN_ID), RPC_URL: V.RPC_URL, ERC8183_ADDRESS: V.ERC8183, USDC_ADDRESS: V.USDC,
     IDENTITY_REGISTRY: V.IDENTITY_REGISTRY, EXPLORER: V.EXPLORER, EXPLORER_API: `${V.EXPLORER}/api/v2`,
     START_BLOCK: String(block),
     KEYSTORE_PASSWORD_MAINNET: password,
@@ -337,25 +338,25 @@ async function moveWorker({ V, block, rosterOff, password, waitForOrders = false
   }
   const yamlPath = path.join(ROOT, "render.yaml");
   const nextYaml = renderYamlForMainnet(fs.readFileSync(yamlPath, "utf8"), V);
-  if (DRY) say("   would pin render.yaml to mainnet (chain 5042, the mainnet escrow and registry)");
+  if (DRY) say("   would pin render.yaml to Robinhood Chain (chain 4663, the escrow and registry there)");
   else fs.writeFileSync(yamlPath, nextYaml);
   run("git", ["add", "render.yaml"]);
-  run("git", ["commit", "-m", "Worker runs on Arc mainnet"], { allowFail: true });
+  run("git", ["commit", "-m", "Worker runs on Robinhood Chain"], { allowFail: true });
   run("git", ["push", "origin", "master"]);
 
   step(7, "Check the live worker");
   if (!DRY) {
     const workerUrl = process.env.WORKER_URL || "https://stubly-worker.onrender.com";
     let seen = null;
-    for (let i = 0; i < 30 && seen !== 5042; i++) {
+    for (let i = 0; i < 30 && seen !== V.CHAIN_ID; i++) {
       await new Promise((r) => setTimeout(r, 20_000));
       const h = await getJson(workerUrl).catch(() => null);
       seen = h?.body?.chainId ?? null;
       process.stdout.write(`\r   worker reports chain ${seen ?? "(restarting)"}   `);
     }
     say("");
-    if (seen !== 5042) throw new Error("the worker has not come up on mainnet after 10 minutes; check its Render logs");
-    say("   worker is on Arc mainnet");
+    if (seen !== V.CHAIN_ID) throw new Error("the worker has not come up on mainnet after 10 minutes; check its Render logs");
+    say("   worker is on Robinhood Chain");
   }
 }
 
@@ -367,11 +368,11 @@ async function workerOnly() {
   const waiting = checks.filter((c) => !c.ok && c.blocking);
   if (waiting.length && !DRY) throw new Error(`not ready, waiting on: ${waiting.map((c) => c.name).join("; ")}`);
   const cat = await getJson(`${SITE}/api/catalog?chain=mainnet`);
-  if (cat.body?.chainId !== 5042 && !DRY) throw new Error("stubly.org does not serve mainnet yet: run the full npm run mainnet:flip");
+  if (cat.body?.chainId !== V.CHAIN_ID && !DRY) throw new Error("stubly.org does not serve mainnet yet: run the full npm run mainnet:flip");
   say(`   stubly.org serves mainnet: ${Object.keys(cat.body?.agents || {}).length} agents`);
   /* The worker reads orders from this block on. Stubly's escrow cannot hold an order older than itself. */
   let block = now;
-  try { block = JSON.parse(fs.readFileSync(path.join(__dirname, "escrow-mainnet.json"), "utf8")).escrowBlock || now; } catch { /* Circle's escrow: start now */ }
+  try { block = JSON.parse(fs.readFileSync(path.join(__dirname, "escrow-robinhood.json"), "utf8")).escrowBlock || now; } catch { /* Circle's escrow: start now */ }
   const rosterOff = explorerOpen ? [] : CHAIN_AGENTS;
 
   const go = DRY ? "MOVE" : await ask("\nType MOVE to move the worker to mainnet: ");
@@ -379,8 +380,8 @@ async function workerOnly() {
   step(2, "Open the mainnet wallets");
   const password = DRY ? "dry-run" : await openWallets(V);
   await moveWorker({ V, block, rosterOff, password, waitForOrders: true });
-  say("\nThe worker is on Arc mainnet. Place one real order to prove it:");
-  say(`  ${SITE}/hire?agent=research-brief&chain=mainnet (1 USDC, from your own wallet)`);
+  say("\nThe worker is on Robinhood Chain. Place one real order to prove it:");
+  say(`  ${SITE}/hire?agent=research-brief&chain=mainnet (1 USDG, from your own wallet)`);
 }
 
 if (require.main === module) {
