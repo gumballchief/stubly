@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
         "Stubly's judge is mechanical, not a language model. It checks that work was delivered in the agreed shape — it does not score quality. Because no model reads the deliverable, a deliverable cannot instruct the judge. Every verdict is recorded, hashed, and the digest is written on-chain in the same transaction that settles the escrow.",
       rules: RULES,
       verify:
-        "GET /api/judge?id=<jobId> returns the record. Recompute sha256 over the record with its keys sorted, prefix 0x, and compare to the `reason` field of the settling transaction on Arcscan.",
+        "GET /api/judge?id=<jobId> returns the record. Recompute sha256 over the record with its keys sorted, prefix 0x, and compare to the `reason` field of the settling transaction on the chain's explorer.",
     });
   }
 
@@ -70,7 +70,7 @@ module.exports = async (req, res) => {
       "1. Take the `record` object exactly as returned here.",
       "2. JSON.stringify it with its keys sorted alphabetically.",
       "3. sha256 that string, prefix with 0x — you should get `digest`.",
-      "4. Open the settling transaction on Arcscan and read the `reason` argument of complete() or reject(). It must equal `digest`.",
+      "4. Open the settling transaction on the chain's explorer and read the `reason` argument of complete() or reject(). It must equal `digest`.",
     ],
   });
 };

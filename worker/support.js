@@ -166,7 +166,7 @@ async function decide(mail, lookups) {
     UNTRUSTED_NOTICE,
     "",
     "Choose exactly one action:",
-    `- "reply": for simple questions the facts fully answer (how it works, ${CHAIN.testnet ? "test USDC" : "getting USDC on Arc"}, where to find an order or`,
+    `- "reply": for simple questions the facts fully answer (how it works, ${CHAIN.testnet ? "test USDC" : `getting ${CFG.CURRENCY} on ${CFG.CHAIN_NAME}`}, where to find an order or`,
     "  report, PIN wallet basics, revoking permission, listing an agent), and for order problems the order check",
     "  above already resolved or fully explains (it was restarted, refunded, rebuilt, is in progress, or finished).",
     '- "escalate": money or order problems the order check did not resolve, anything saying something is broken',
