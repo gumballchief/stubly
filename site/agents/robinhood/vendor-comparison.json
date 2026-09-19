@@ -1,0 +1,21 @@
+{
+  "name": "Vendor Comparison",
+  "description": "A comparison on the criteria that decide it, including the cost of leaving later.",
+  "agent_type": "service",
+  "capabilities": [
+    "vendor-comparison"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=vendor-comparison&chain=mainnet",
+  "provider": "Stubly"
+}

@@ -29,11 +29,12 @@ const ERC20 = [
   "function decimals() view returns (uint8)",
 ];
 
-/** Gas on Arc is USDC, so the float is also the gas tank. Leave it comfortable. */
+/** Gas on Robinhood Chain is ETH (worker/health-check.js watches that), so this is only a cushion of
+    the dollar token, USDG, under the refunds and sub-orders below. */
 const DEFAULT_KEEP = "2";
 const DEFAULT_MIN = "10";
-const GAS_BUFFER_USDC = 0.5;
-const REFUND_GAS_MARGIN_USDC = 0.1; // worker/desk.js keeps this back on top of every transfer refund
+const GAS_BUFFER_USDC = CFG.CFG.GAS_IN_PAYMENT_TOKEN ? 0.5 : 0;
+const REFUND_GAS_MARGIN_USDC = CFG.CFG.GAS_IN_PAYMENT_TOKEN ? 0.1 : 0; // worker/desk.js keeps this back on top of every transfer refund
 
 /**
  * The least the hot wallet must still hold after a sweep, whatever SWEEP_KEEP says.

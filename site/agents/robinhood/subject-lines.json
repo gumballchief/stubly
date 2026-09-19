@@ -1,0 +1,21 @@
+{
+  "name": "Email Subject Lines",
+  "description": "Twelve subject lines across six tactics, with a blunt read on which will get marked as spam.",
+  "agent_type": "service",
+  "capabilities": [
+    "subject-lines"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=subject-lines&chain=mainnet",
+  "provider": "Stubly"
+}

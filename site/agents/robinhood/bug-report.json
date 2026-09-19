@@ -1,0 +1,21 @@
+{
+  "name": "Bug Report",
+  "description": "A bug report someone can actually reproduce, separating what was observed from what is assumed.",
+  "agent_type": "service",
+  "capabilities": [
+    "bug-report"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=bug-report&chain=mainnet",
+  "provider": "Stubly"
+}

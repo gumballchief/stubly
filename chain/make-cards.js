@@ -12,7 +12,7 @@
  * Cards are derived from the catalog, so they cannot drift from what is actually
  * for sale — the previous set was hand-written and had no such guarantee.
  *
- *   node chain/make-cards.js --chain 5042 --out agents/mainnet a b c
+ *   node chain/make-cards.js --chain 4663 --out agents/robinhood a b c
  *   node chain/make-cards.js --check          verify existing cards match the catalog
  */
 
@@ -23,7 +23,8 @@ const { MAINNET_ROSTER, sells } = require("../site/api/_shared");
 
 const CHAINS = {
   5042002: { slug: "arc-testnet", dir: "agents", param: "" },
-  5042: { slug: "arc", dir: "agents/mainnet", param: "mainnet" },
+  5042: { slug: "arc", dir: "agents/mainnet", param: "mainnet" }, // retired: Stubly moved to Robinhood Chain
+  4663: { slug: "robinhood-chain", dir: "agents/robinhood", param: "mainnet", currency: "USDG" },
 };
 
 /* Some cards say more than the catalog knows, and it is deliberate. launch-kit
@@ -62,7 +63,7 @@ function card(key, chainId) {
     agent_type: AGENT_TYPES[key] || "service",
     capabilities: [key, ...(EXTRA_CAPABILITIES[key] || [])],
     version: "1.0.0",
-    pricing: { amount: String(a.priceUsdc), currency: "USDC", per: "job" },
+    pricing: { amount: String(a.priceUsdc), currency: chain.currency || "USDC", per: "job" },
     settlement: { standard: "ERC-8183", chain: chain.slug, chainId },
     endpoint: "https://stubly.org/hire?agent=" + key + suffix,
     provider: "Stubly",

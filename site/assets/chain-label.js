@@ -3,7 +3,7 @@
 /**
  * Keep the page honest about which chain it is serving.
  *
- * Stubly serves Arc mainnet (real USDC) and keeps Arc testnet as a readable archive of
+ * Stubly serves Robinhood Chain (real USDG) and keeps Arc testnet as a readable archive of
  * past orders, from one deployment. The same page can be about either, so the chain the
  * page is actually showing decides the wording: ?chain in the address when there is one,
  * otherwise whatever the server's default is, as /api/catalog reports it.
@@ -37,7 +37,7 @@
       const key = c.testnet ? "testnet" : "mainnet";
 
       const badge = document.querySelector(".wordmark small");
-      if (badge) badge.textContent = String(c.name || "Arc").toUpperCase();
+      if (badge) badge.textContent = String(c.name || "Robinhood Chain").toUpperCase();
 
       document.querySelectorAll("[data-chain-only]").forEach((el) => {
         el.hidden = el.getAttribute("data-chain-only") !== key;
@@ -59,7 +59,7 @@
       /* Pages not yet marked up (wallet.html) still carry the old testnet footer. */
       if (!c.testnet) {
         document.querySelectorAll("footer .foot span:not([data-chain-only])").forEach((el) => {
-          if (/testnet only/i.test(el.textContent)) el.textContent = "Real USDC — held in escrow on Arc, never by us";
+          if (/testnet only/i.test(el.textContent)) el.textContent = "Real USDG, held in escrow on Robinhood Chain, never by us";
         });
       }
     })

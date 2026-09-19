@@ -1,9 +1,9 @@
 /* Stubly help desk: a chat panel that talks to the support agent on the worker.
-   The agent can look an order up on Arc, retry it, or refund it; this file only
+   The agent can look an order up on chain, retry it, or refund it; this file only
    shows what it says and did. Everything it returns is rendered as text, never as
    HTML, and links are only made clickable for our own site, the page chain's
-   explorer, and the one place that chain's facts send people for USDC (Circle's
-   faucet on testnet, arc.io on mainnet). */
+   explorer, and on the testnet the one place its facts send people for test USDC
+   (Circle's faucet). */
 (() => {
   "use strict";
   if (window.StublyDesk) return;
@@ -197,7 +197,7 @@
     } catch { return null; }
   };
   const isOurs = (u) => /(^|\.)stubly\.org$/i.test(u.hostname);
-  // Rebuilt whenever the allowed hosts change, so bare "arc.io" or an explorer host is found without https://.
+  // Rebuilt whenever the allowed hosts change, so a bare explorer host is found without https://.
   const urlPattern = () => new RegExp(
     "\\bsupport@stubly\\.org\\b|\\bhttps?:\\/\\/[^\\s<>\"']+|\\b(?:www\\.)?(?:" +
     [...LINK_HOSTS].filter((h) => !h.startsWith("www.")).map((h) => h.replace(/\./g, "\\.")).join("|") +
@@ -217,7 +217,7 @@
         node.append(a);
         continue;
       }
-      // Part of an email address or a longer host ("docs.arc.io" is not arc.io): leave it as text.
+      // Part of an email address or a longer host ("docs.example.com" is not example.com): leave it as text.
       const u = /[@\w.-]/.test(text[m.index - 1] || "") ? null : safeUrl(raw);
       if (!u) { node.append(raw); continue; }
       const a = el("a", null, raw);
@@ -274,7 +274,7 @@
   headRow.append(kicker, closeBtn);
   const title = el("h2", "sd-title", "Help desk");
   title.id = "sd-title";
-  head.append(headRow, title, el("p", "sd-sub", "Checks your order on Arc, retries what failed, and refunds the wallet that paid when an order can't be finished."));
+  head.append(headRow, title, el("p", "sd-sub", "Checks your order on chain, retries what failed, and refunds the wallet that paid when an order can't be finished."));
 
   const log = el("div", "sd-log");
   log.setAttribute("role", "log");
@@ -314,8 +314,8 @@
 
   /* ————— rendering ————— */
   const greeting = () => pageOrder
-    ? `Hi. You're on order #${pageOrder}. Tell me what went wrong and I'll check it on Arc, retry it if the agent failed, or send the USDC back to the wallet that paid if it can't be finished.`
-    : "Hi. Tell me what went wrong and give me your order number. I'll check it on Arc, retry it if the agent failed, or send the USDC back to the wallet that paid if it can't be finished. Questions about how Stubly works are fine too.";
+    ? `Hi. You're on order #${pageOrder}. Tell me what went wrong and I'll check it on chain, retry it if the agent failed, or send the money back to the wallet that paid if it can't be finished.`
+    : "Hi. Tell me what went wrong and give me your order number. I'll check it on chain, retry it if the agent failed, or send the money back to the wallet that paid if it can't be finished. Questions about how Stubly works are fine too.";
 
   function renderStep(s, animate) {
     const row = el("div", "sd-step");
@@ -325,7 +325,7 @@
     const u = s.link ? safeUrl(s.link) : null;
     if (u) {
       if (s.detail) d.append(" · ");
-      const a = el("a", null, s.linkText || (isOurs(u) ? "open order" : "view on Arc"));
+      const a = el("a", null, s.linkText || (isOurs(u) ? "open order" : "view on the explorer"));
       a.href = u.href;
       if (!isOurs(u)) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
       d.append(a);
@@ -370,7 +370,7 @@
       ...(pageOrder ? [`Check order #${pageOrder}`] : []),
       "My order is stuck",
       "I paid but got nothing",
-      ...(chain ? [chain.testnet ? "How do I get test USDC?" : "How do I get USDC on Arc?"] : []),
+      ...(chain ? [chain.testnet ? "How do I get test USDC?" : "What do I need to pay?"] : []),
       "How does the escrow work?",
     ].slice(0, 4);
     for (const q of asks) {
@@ -447,7 +447,7 @@
     const paint = () => {
       const s = Math.floor((Date.now() - t0) / 1000);
       const mmss = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-      working.textContent = `${s < 30 ? "Working on it" : "Still working. Retries and refunds wait for Arc to confirm"} · ${mmss}`;
+      working.textContent = `${s < 30 ? "Working on it" : "Still working. Retries and refunds wait for the chain to confirm"} · ${mmss}`;
       if (s % 3 === 0) scrollDown();
     };
     paint();
@@ -537,8 +537,8 @@
     const notes = {
       Submitted: [`Order #${id}: the agent delivered. The judge is checking the work now.`, "Delivered", "blue", "Waiting on the judge"],
       Completed: [`Order #${id} is finished and your report is ready.`, "Completed", "green", "Report ready", "read the report"],
-      Rejected: [`Order #${id} was closed, and the escrow returned the USDC to the wallet that paid.`, "Refunded", "green", "Returned by the escrow"],
-      Expired: [`Order #${id} passed its deadline, and the USDC went back to the wallet that paid.`, "Expired", "ink", "USDC returned"],
+      Rejected: [`Order #${id} was closed, and the escrow returned the money to the wallet that paid.`, "Refunded", "green", "Returned by the escrow"],
+      Expired: [`Order #${id} passed its deadline, and the money went back to the wallet that paid.`, "Expired", "ink", "Money returned"],
     }[st];
     if (!notes) return null;
     const [text, t, tone, detail, linkText] = notes;
@@ -649,7 +649,7 @@
         const host = new URL(String(cat.explorer || "")).hostname.toLowerCase();
         if (host && (chain.testnet || !/testnet/.test(host))) LINK_HOSTS.add(host);
       } catch { /* no explorer: its links stay plain text */ }
-      LINK_HOSTS.add(chain.testnet ? "faucet.circle.com" : "arc.io");
+      if (chain.testnet) LINK_HOSTS.add("faucet.circle.com");
       URL_RE = urlPattern();
       if (!panel.hidden) renderAll();
     })
