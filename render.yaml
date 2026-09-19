@@ -45,13 +45,13 @@ services:
       - key: POLL_MS
         value: "10000"
       - key: CHAIN_ID
-        value: "5042"
+        value: "4663"
       - key: ERC8183_ADDRESS
         value: "0x21285e5F3D79717bAA73F1Fccdc101DfE0be4B9D"
       - key: USDC_ADDRESS
-        value: "0x3600000000000000000000000000000000000000"
+        value: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"
       - key: EXPLORER_API
-        value: "https://explorer.arc.io/api/v2"
+        value: "https://robinhoodchain.blockscout.com/api/v2"
       - key: IDENTITY_REGISTRY
         value: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
       - key: EXPLORER
