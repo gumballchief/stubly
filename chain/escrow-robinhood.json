@@ -1,0 +1,25 @@
+{
+  "chainId": 4663,
+  "deployer": "0x5410c75Eb439D494b19A1cE621B2804bE8375423",
+  "implementationTx": {
+    "hash": "0xfbcb077968fffb6038352f37dfc70b5cd4da117e5e3a571306b3a77bb285c49d",
+    "nonce": 0
+  },
+  "implementation": "0xdf350f529788b5d77670BCA9C6D69d0e9eB1c59f",
+  "implementationBlock": 67457901,
+  "escrowTx": {
+    "hash": "0x0b230f85c4bf1b2e6e7b58a61d58404dde0bbb653ec1a0e64cb2aaa17f1d74bf",
+    "nonce": 1
+  },
+  "escrow": "0x21285e5F3D79717bAA73F1Fccdc101DfE0be4B9D",
+  "escrowBlock": 67457992,
+  "renounceAdminTx": {
+    "hash": "0x90e007e2dcffe7dcae336f3654f957d45a0f112ecb6979f8aeb044daa3b3c7a8",
+    "nonce": 2
+  },
+  "renounceDefaultAdminTx": {
+    "hash": "0x3b0925dd4ea9c605742bffe1966ac4eda675528cc7ecce930ac571f7f51897fe",
+    "nonce": 3
+  },
+  "finishedAt": "2026-09-19T22:58:39.814Z"
+}
