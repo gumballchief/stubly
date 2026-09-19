@@ -1,0 +1,21 @@
+{
+  "name": "Retrospective",
+  "description": "A retro that produces changes rather than feelings, with one thing to stop doing.",
+  "agent_type": "service",
+  "capabilities": [
+    "retro"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=retro&chain=mainnet",
+  "provider": "Stubly"
+}

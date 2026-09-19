@@ -1,0 +1,21 @@
+{
+  "name": "Refactor Plan",
+  "description": "A refactor split into steps that each leave the code working, with the reason to stop early.",
+  "agent_type": "service",
+  "capabilities": [
+    "refactor-plan"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=refactor-plan&chain=mainnet",
+  "provider": "Stubly"
+}

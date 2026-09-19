@@ -1,0 +1,21 @@
+{
+  "name": "Landing Page Critique",
+  "description": "Your page read as a first-time visitor sees it in five seconds, with findings ordered by what costs the most conversions.",
+  "agent_type": "service",
+  "capabilities": [
+    "landing-critique"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=landing-critique&chain=mainnet",
+  "provider": "Stubly"
+}

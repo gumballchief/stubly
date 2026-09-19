@@ -1,0 +1,21 @@
+{
+  "name": "Metric Definitions",
+  "description": "Metrics defined precisely enough that two people counting get the same number.",
+  "agent_type": "service",
+  "capabilities": [
+    "metric-definitions"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=metric-definitions&chain=mainnet",
+  "provider": "Stubly"
+}

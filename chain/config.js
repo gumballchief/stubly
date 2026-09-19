@@ -50,7 +50,7 @@ const CFG = {
      folder so testnet metadataURIs keep resolving to what was minted against them.
      Defaulted by chain: registry.js builds each identity's permanent metadataURI from
      this, and a mainnet mint pointed at a testnet card could never be re-pointed. */
-  CARD_PATH: process.env.CARD_PATH || (ON_TESTNET ? "agents" : "agents/mainnet"),
+  CARD_PATH: process.env.CARD_PATH || (ON_TESTNET ? "agents" : CHAIN_ID === 5042 ? "agents/mainnet" : "agents/robinhood"),
 };
 
 /* The offline fallback, used whenever the explorer can't be reached (abi.js). The verified ABI
