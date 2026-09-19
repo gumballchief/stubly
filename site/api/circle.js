@@ -127,7 +127,7 @@ function requireOn(P) {
   if (!P.enabled) {
     throw new Plain(P.C.TESTNET
       ? "PIN wallets aren't set up on this server yet."
-      : "PIN wallets aren't switched on for Arc mainnet yet. Use a browser wallet instead.");
+      : "PIN wallets don't work on Robinhood Chain. Use a browser wallet instead.");
   }
 }
 
@@ -354,12 +354,13 @@ async function walletOn(P, userToken, walletId) {
   return wallet;
 }
 
-/** One figure: on Arc, native USDC (18 dp) and the ERC-20 (6 dp) are the same funds. */
+/** One figure: on Arc, native USDC (18 dp) and the ERC-20 (6 dp) are the same funds. Only there:
+    where gas is ETH (Robinhood Chain) the native balance is never counted as dollars. */
 function usdcFromBalances(P, tokenBalances) {
   const rows = (Array.isArray(tokenBalances) ? tokenBalances : [])
     .filter((b) => b && b.token && (!b.token.blockchain || b.token.blockchain === P.circleChain));
   const pick = rows.find((b) => same(b.token.tokenAddress, P.C.USDC))
-    || rows.find((b) => b.token.isNative && /^USDC$/i.test(b.token.symbol || ""));
+    || (P.C.NATIVE.symbol === "USDC" ? rows.find((b) => b.token.isNative && /^USDC$/i.test(b.token.symbol || "")) : null);
   const s = String((pick && pick.amount) || "0");
   if (!/^\d+(\.\d+)?$/.test(s)) return 0n;
   const [whole, frac = ""] = s.split(".");

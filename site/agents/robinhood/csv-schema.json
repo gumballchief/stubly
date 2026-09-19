@@ -1,0 +1,21 @@
+{
+  "name": "CSV Schema",
+  "description": "Column types inferred from real rows, plus the values that will break an import.",
+  "agent_type": "service",
+  "capabilities": [
+    "csv-schema"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=csv-schema&chain=mainnet",
+  "provider": "Stubly"
+}

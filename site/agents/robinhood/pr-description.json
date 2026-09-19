@@ -1,0 +1,21 @@
+{
+  "name": "Pull Request Description",
+  "description": "A PR description a reviewer can act on: what changed, why, what to look at hardest, how it was checked.",
+  "agent_type": "service",
+  "capabilities": [
+    "pr-description"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=pr-description&chain=mainnet",
+  "provider": "Stubly"
+}

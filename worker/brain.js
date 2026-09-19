@@ -35,8 +35,8 @@ function chainFor({ chainId, explorer }) {
   } catch { /* unset or not a URL: no explorer links at all */ }
   const hosts = new Set(["stubly.org", "www.stubly.org"]);
   if (base) hosts.add(new URL(base).hostname.toLowerCase());
-  // The one outside place each chain's facts send people for USDC.
-  hosts.add(testnet ? "faucet.circle.com" : "arc.io");
+  // The one outside place each chain's facts send people for money.
+  hosts.add(testnet ? "faucet.circle.com" : "robinhood.com");
   return { key: testnet ? "testnet" : "mainnet", testnet, chainId: Number(chainId), explorer: base, hosts };
 }
 
@@ -47,24 +47,26 @@ const LINK_HOSTS = CHAIN.hosts;
 const orderUrl = (id, key = CHAIN.key) => `${PUBLIC_SITE}/job?id=${id}&chain=${key === "testnet" ? "testnet" : "mainnet"}`;
 
 function factsFor(chain) {
+  const money = chain.testnet ? "USDC" : CFG.CURRENCY;
+  const where = chain.testnet ? "Arc testnet" : CFG.CHAIN_NAME;
   const intro = `
-Stubly (stubly.org) is a marketplace where people hire AI agents for small jobs and pay in USDC.
-The payment sits in an ERC-8183 escrow contract on the Arc blockchain, running the same escrow code Circle runs;
-on mainnet it has no admin, so nobody can change it or move the money outside its rules. When the work
-passes an independent check the agent is paid; if it fails, the buyer is refunded by the contract.
-Stubly never holds the money.
+Stubly (stubly.org) is a marketplace where people hire AI agents for small jobs and pay in ${money}.
+The payment sits in an ERC-8183 escrow contract on ${where}. It is Stubly's own deployment of the open
+ERC-8183 reference code, and it has no admin, so nobody, Stubly included, can change it or move the money
+outside its rules. When the work passes an independent check the agent is paid; if it fails, the buyer is
+refunded by the contract. Stubly never holds the money.
 `.trim();
 
   const network = chain.testnet
     ? [
-      "- It currently runs on Arc TESTNET only. It uses free test USDC, not real money.",
+      "- This desk is running on Arc TESTNET, a sandbox. It uses free test USDC, not real money.",
       "- Free test USDC: faucet.circle.com",
     ]
     : [
-      "- It runs on Arc mainnet. Payments are real USDC.",
-      "- Getting USDC on Arc: bridge USDC from Ethereum, Base or Arbitrum with the official bridge linked from arc.io,",
-      "  or withdraw USDC to Arc from an exchange that supports Arc. Gas on Arc is also paid in USDC, so keep a little",
-      "  extra. There is no faucet for real USDC. Do not name any other bridge, exchange or website.",
+      `- It runs on ${where} (chain id ${chain.chainId}). Payments are real ${money}, a US dollar stablecoin issued by Paxos.`,
+      `- Getting ${money}: it is available inside Robinhood Wallet and on exchanges on ${where}. Network fees there are`,
+      `  paid in ${CFG.GAS_COIN}, not in ${money}, so a buyer needs a few cents of ${CFG.GAS_COIN} on ${where} as well.`,
+      "  For how to move money onto the chain, send people to robinhood.com. Do not name any other bridge, exchange or website.",
     ];
 
   const wallet = chain.testnet
@@ -73,19 +75,16 @@ Stubly never holds the money.
       "  Stubly never holds the keys. If someone loses both their PIN and their Account ID, nobody can recover it.",
     ]
     : [
-      "- Paying on Arc mainnet needs an EVM browser wallet such as MetaMask. The Stubly PIN wallet works on Arc",
-      "  testnet only for now, until Circle supports PIN wallets on Arc mainnet. Do not promise a date.",
+      `- Paying needs an EVM browser wallet such as MetaMask or Robinhood Wallet, with ${where} added. The hire page`,
+      "  offers to add the network. The Stubly PIN wallet does not work on this chain. Do not promise that it will.",
     ];
 
   const archive = chain.testnet
-    ? [
-      "- Arc mainnet opens to the public on September 16. Stubly plans to move once Circle's contracts are live",
-      "  there. Do not promise a date.",
-    ]
+    ? []
     : [
-      `- Stubly's earlier orders on Arc testnet (test USDC, no real value) stay readable on their order pages, for example`,
-      `  ${orderUrl("ORDER_NUMBER", "testnet")}. Testnet takes no new orders, and this help desk cannot act on testnet`,
-      "  orders. A paid testnet order that was never delivered can still be taken back from its order page.",
+      "- Stubly used to run on the Arc chain and moved to Robinhood Chain. Old Arc order pages are no longer served.",
+      "  Any Arc order that was paid and never finished can be refunded to its buyer by the Arc escrow itself.",
+      "  This help desk cannot look up or act on Arc orders: pass those to a person.",
     ];
 
   return [
@@ -98,16 +97,18 @@ Stubly never holds the money.
     '- Buyers can also take the money back themselves with the "Take my money back" button on the order page',
     "  once a funded order passes its deadline.",
     '- The help desk (the "Help desk" button on every page, and the support inbox) is an AI agent. Given an order',
-    "  number it checks the order on Arc, restarts it if the agent stalled, rebuilds a report that went missing,",
+    `  number it checks the order on ${where}, restarts it if the agent stalled, rebuilds a report that went missing,`,
     "  and refunds the wallet that paid when an order can't be finished. It cannot send money anywhere else,",
     "  change prices, or refund an order that finished and delivered its report.",
     `- Hiring several agents at once: ${PUBLIC_SITE}/crew. Each agent gets its own escrow.`,
     ...wallet,
-    '- Buyers can cancel the standing USDC spending permission with the "Revoke permission" button on the',
+    `- Buyers can cancel the standing ${money} spending permission with the "Revoke permission" button on the`,
     "  hire and crew pages once their wallet is connected.",
     `- Builders can list their own agent at ${PUBLIC_SITE}/list.`,
     ...archive,
-    "- Stubly has NO token. Any coin or token using the Stubly name is not affiliated with Stubly.",
+    "- Stubly has no token right now. An earlier $STUBLY on the Arc chain is retired and Stubly does not use it.",
+    "  A new one on Robinhood Chain is planned, with no date. Until stubly.org itself shows a token address, any coin",
+    "  using the Stubly name is not affiliated with Stubly. Never give a token address or tell anyone to buy anything.",
   ].join("\n");
 }
 

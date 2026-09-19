@@ -75,7 +75,7 @@ module.exports = async (req, res) => {
         ok: false,
         closed: true,
         chain: C.KEY,
-        reason: "Testnet orders are closed. Stubly now takes orders on Arc mainnet. Earlier testnet orders, their reports and judge records stay readable.",
+        reason: "Testnet orders are closed. Stubly now takes orders on Robinhood Chain. Earlier testnet orders, their reports and judge records stay readable.",
       });
     }
 

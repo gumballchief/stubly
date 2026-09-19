@@ -68,7 +68,8 @@
     try {
       const b = await balance(address);
       if (b === null) return;
-      amt.textContent = `${b.toFixed(2)} USDC`;
+      const c = await chain();
+      amt.textContent = `${b.toFixed(2)} ${c?.chain?.currency || "USDG"}`;
       amt.hidden = false;
     } catch { /* an unreachable node just means no number in the chip */ }
   }

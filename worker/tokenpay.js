@@ -63,7 +63,7 @@ const UNISWAP = {
 const DEADLINE_SEC = 600;          // the escrow deadline every Stubly order gets
 const FUND_CUTOFF_SEC = 240;       // closer than this to the deadline, the agent can't finish: give the tokens back
 const CLAIM_AFTER_SEC = 900;       // still locked this long past its deadline: take the escrow back ourselves
-const GAS_RESERVE_RAW = 300_000n;  // 0.3 USDC the pay wallet keeps for its own gas
+const GAS_RESERVE_RAW = CFG.GAS_IN_PAYMENT_TOKEN ? 300_000n : 0n; // where gas is the dollar token, 0.3 the pay wallet keeps for fees
 const TAG_UNIT = 1_000_000n;       // the last six digits of every token amount identify its order
 const MAX_BRIEF = 300;             // the hire page's field allows 300 characters
 const KEEP_DAYS = 30;              // finished orders stay in state this long, for limits and the status page
@@ -271,14 +271,14 @@ async function tokenMeta() {
   if (decimals < 12 || decimals > 36) {
     W.cfg = { enabled: false };
     W.reason = `the token has ${decimals} decimals; paying in it needs 12 to 36`;
-    throw payError(503, "Paying in the token is switched off right now. You can still pay in USDC.");
+    throw payError(503, `Paying in the token is switched off right now. You can still pay in ${CFG.CURRENCY}.`);
   }
   W.tokenMeta = { decimals, symbol };
   return W.tokenMeta;
 }
 
 function ready() {
-  if (!on()) throw payError(503, "Paying in the token is switched off right now. You can still pay in USDC.");
+  if (!on()) throw payError(503, `Paying in the token is switched off right now. You can still pay in ${CFG.CURRENCY}.`);
   return W;
 }
 
@@ -290,9 +290,9 @@ function spentToday(buyer) {
     .reduce((s, o) => s + BigInt(o.priceRaw), 0n);
 }
 function checkLimits(symbol, buyer, priceRaw) {
-  if (openOrders().length >= W.cfg.maxOpen) throw payError(429, `A lot of $${symbol} orders are in progress right now. Try again in a few minutes, or pay in USDC.`);
-  if (spentToday() + priceRaw > W.cfg.capDayRaw) throw payError(429, `Today's limit for orders paid in $${symbol} is used up. It resets at midnight UTC. You can still pay in USDC.`);
-  if (spentToday(buyer) + priceRaw > W.cfg.capBuyerRaw) throw payError(429, `You've reached today's limit for paying in $${symbol}. It resets at midnight UTC. You can still pay in USDC.`);
+  if (openOrders().length >= W.cfg.maxOpen) throw payError(429, `A lot of $${symbol} orders are in progress right now. Try again in a few minutes, or pay in ${CFG.CURRENCY}.`);
+  if (spentToday() + priceRaw > W.cfg.capDayRaw) throw payError(429, `Today's limit for orders paid in $${symbol} is used up. It resets at midnight UTC. You can still pay in ${CFG.CURRENCY}.`);
+  if (spentToday(buyer) + priceRaw > W.cfg.capBuyerRaw) throw payError(429, `You've reached today's limit for paying in $${symbol}. It resets at midnight UTC. You can still pay in ${CFG.CURRENCY}.`);
 }
 
 function freshTag() {
@@ -331,9 +331,9 @@ async function quote({ agent, text, buyer } = {}) {
   let needed;
   try { needed = await tokensForUsdc(w.cfg, w.prov, CFG.USDC, priceRaw); } catch (e) {
     lastError = `quote: ${errText(e)}`;
-    throw payError(503, `The $${symbol} price can't be read from the pool right now. Try again in a minute, or pay in USDC.`);
+    throw payError(503, `The $${symbol} price can't be read from the pool right now. Try again in a minute, or pay in ${CFG.CURRENCY}.`);
   }
-  if (needed <= 0n) throw payError(503, `The $${symbol} price can't be read from the pool right now. Try again in a minute, or pay in USDC.`);
+  if (needed <= 0n) throw payError(503, `The $${symbol} price can't be read from the pool right now. Try again in a minute, or pay in ${CFG.CURRENCY}.`);
   const discounted = (needed * (10_000n - w.cfg.discountBps) + 9_999n) / 10_000n;
   const amount = ((discounted + TAG_UNIT - 1n) / TAG_UNIT) * TAG_UNIT + freshTag();
 
@@ -409,7 +409,7 @@ async function place(w, q, signature, symbol, decimals) {
   if (balance < BigInt(q.amount)) throw payError(402, `This order costs ${fmtTokens(BigInt(q.amount), decimals)} $${symbol}, and this wallet holds ${fmtTokens(balance, decimals)}.`);
   if (float < BigInt(q.priceRaw) + GAS_RESERVE_RAW) {
     lastError = "pay wallet is out of USDC";
-    throw payError(503, `Paying in $${symbol} is paused right now. You can still pay in USDC.`);
+    throw payError(503, `Paying in $${symbol} is paused right now. You can still pay in ${CFG.CURRENCY}.`);
   }
 
   const fromBlock = await jobsLib.withRetry(() => w.prov.getBlockNumber());
@@ -432,7 +432,7 @@ function orderStatus(id) {
     created: ["Pricing your work order", false, false],
     priced: ["Collecting your tokens", false, false],
     recovered: ["Checking your payment", false, false],
-    paid: ["Paying the escrow in USDC", false, false],
+    paid: [`Paying the escrow in ${CFG.CURRENCY}`, false, false],
     funded: ["Paid. The agent is on it", true, false],
     "payout-due": ["Delivered", true, false],
     "paid-out": ["Delivered", true, false],
@@ -874,7 +874,7 @@ function handleHttp(req, res, http) {
     if (e.status) return http.send(res, e.status, { error: e.message, ...(e.retryAfter ? { retryAfter: e.retryAfter } : {}) });
     lastError = `${url.pathname}: ${errText(e)}`;
     console.log(`[tokenpay] ${lastError}`);
-    http.send(res, 500, { error: "Something went wrong on Stubly's side. No tokens moved. Try again, or pay in USDC." });
+    http.send(res, 500, { error: `Something went wrong on Stubly's side. No tokens moved. Try again, or pay in ${CFG.CURRENCY}.` });
   });
   return true;
 }

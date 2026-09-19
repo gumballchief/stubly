@@ -18,6 +18,7 @@ const IDS_BY_CHAIN = {};
 try { IDS_BY_CHAIN[5042002] = require("../agents/ids.json"); } catch { /* none on testnet */ }
 // Written by chain/registry.js once the mainnet identities are minted; until then every mainnet agentId is null.
 try { IDS_BY_CHAIN[5042] = require("../agents/ids.5042.json"); } catch { /* not registered yet */ }
+try { IDS_BY_CHAIN[4663] = require("../agents/ids.4663.json"); } catch { /* Robinhood Chain: not registered yet */ }
 
 function idsFor(chainId) {
   return IDS_BY_CHAIN[chainId] || {};
@@ -45,6 +46,8 @@ module.exports = async (req, res) => {
       name: C.NAME,
       testnet: C.TESTNET,
       circleChain: C.CIRCLE_CHAIN,
+      // the dollar token buyers pay in on this chain: USDG on Robinhood Chain, USDC on the testnet
+      currency: C.CURRENCY,
       // false once this chain stops taking new orders; its old orders stay readable
       ordersOpen: ordersOpen(C),
       /* EXACTLY the keys wallet_addEthereumChain accepts — extra keys make
@@ -54,7 +57,7 @@ module.exports = async (req, res) => {
         chainId: `0x${C.CHAIN_ID.toString(16)}`,
         chainName: C.NAME,
         rpcUrls: [C.PUBLIC_RPC_URL],
-        nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+        nativeCurrency: { ...C.NATIVE },
         blockExplorerUrls: [C.EXPLORER],
       },
     },

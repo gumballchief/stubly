@@ -8,18 +8,23 @@
    reject the whole request ("unsupported keys"), so never decorate this object.
 
    The values are filled in from /api/catalog so the page always follows whichever
-   chain the server is serving. What is written here is the testnet fallback for
-   the moment before that first response lands — and for if it never does. */
+   chain the server is serving. What is written here is the Robinhood Chain fallback
+   for the moment before that first response lands — and for if it never does.
+   Gas there is ETH; buyers pay in USDG, an ERC-20, never in the native coin. */
 const ARC = {
-  chainId: "0x4cef52", // 5042002
-  chainName: "Arc Testnet",
-  rpcUrls: ["https://rpc.testnet.arc.io"],
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  blockExplorerUrls: ["https://testnet.arcscan.app"],
+  chainId: "0x1237", // 4663
+  chainName: "Robinhood Chain",
+  rpcUrls: ["https://rpc.mainnet.chain.robinhood.com"],
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  blockExplorerUrls: ["https://robinhoodchain.blockscout.com"],
 };
 
-/** Circle Wallets names the network separately from the EVM chain id. */
-let CIRCLE_CHAIN = "ARC-TESTNET";
+/** Circle Wallets names the network separately from the EVM chain id. Empty where Circle
+    has no such network (Robinhood Chain), and then every PIN wallet button stays hidden. */
+let CIRCLE_CHAIN = "";
+
+/** What buyers pay in on this page's chain: USDG on Robinhood Chain, USDC on the testnet. */
+let CURRENCY = "USDG";
 
 
 /* Which chain this page is about. ?chain=testnet|mainnet in the address picks it;
@@ -51,7 +56,8 @@ function catalog() {
       if (cat && cat.chain) {
         if (cat.chain.key === "testnet" || cat.chain.key === "mainnet") CHAIN_KEY = cat.chain.key;
         if (cat.chain.addChain) Object.assign(ARC, cat.chain.addChain);
-        if (cat.chain.circleChain) CIRCLE_CHAIN = cat.chain.circleChain;
+        CIRCLE_CHAIN = cat.chain.circleChain || "";
+        if (cat.chain.currency) CURRENCY = cat.chain.currency;
       }
       return cat;
     }).catch((e) => { _catalog = null; throw e; });
@@ -71,7 +77,7 @@ function chainReady() {
 const MAIN_SHOP = { hire: "/hire?chain=mainnet", crew: "/crew?chain=mainnet" };
 function ordersClosed(cat, shop) {
   if (!cat || !cat.chain || cat.chain.ordersOpen !== false) return null;
-  return `This is Stubly's Arc testnet shop, which is closed to new orders. Nothing was signed and no money moved. Hire on Arc mainnet: <a href="${MAIN_SHOP[shop]}">${MAIN_SHOP[shop].split("?")[0]} on mainnet</a>. Past testnet orders stay readable on their order pages.`;
+  return `This is Stubly's testnet shop, which is closed to new orders. Nothing was signed and no money moved. Hire on Robinhood Chain: <a href="${MAIN_SHOP[shop]}">${MAIN_SHOP[shop].split("?")[0]} on Robinhood Chain</a>. Past testnet orders stay readable on their order pages.`;
 }
 /* The quote endpoint says so too, in case the catalog was read before the chain closed. */
 function quoteClosed(q) {
@@ -126,7 +132,7 @@ function wireRevoke(cat, get, log) {
     if (!account) { b.style.display = "none"; return; }
     const a = await readAllowance(cat, account);
     b.style.display = a > 0n ? "inline-block" : "none";
-    b.textContent = `Revoke ${(Number(a) / 1e6).toFixed(0)} USDC permission`;
+    b.textContent = `Revoke ${(Number(a) / 1e6).toFixed(0)} ${CURRENCY} permission`;
   };
   b.addEventListener("click", async () => {
     const { account, mode, walletEth, circleCtx } = get();
@@ -183,11 +189,19 @@ const tokenText = (raw, decimals) => {
   return `${Number(whole).toLocaleString("en-US")}${cut ? `.${cut}` : ""}`;
 };
 
-/* PIN wallets exist only on chains Circle supports; ask once before showing the button. */
+/* PIN wallets exist only on chains Circle supports, and Robinhood Chain is not one. The button
+   ships hidden and is shown only once both the catalog and the wallet service say this chain
+   has them, so a failed fetch leaves browser wallets only. */
 async function hidePinIfUnsupported() {
   const b = $("#btn-pin");
   if (!b) return;
-  try { const c = await postApi({ action: "config" }); if (c && c.pinWallets === false) b.hidden = true; } catch { /* leave it; a click still gets a clear refusal */ }
+  b.hidden = true;
+  try {
+    const cat = await catalog();
+    if (!cat.chain || !cat.chain.circleChain) return;
+    const c = await postApi({ action: "config" });
+    if (c && c.pinWallets) b.hidden = false;
+  } catch { /* stays hidden */ }
 }
 
 async function postApi(body) {
@@ -311,17 +325,17 @@ async function initHire() {
   function renderChoice() {
     choiceBox.innerHTML = Object.entries(agents).map(([key, a]) => `
       <label><span><input type="radio" name="agent" value="${key}" ${key === selected ? "checked" : ""}> ${a.title}</span>
-      <span class="pr">${a.priceUsdc} USDC · ${a.eta}</span></label>`).join("");
+      <span class="pr">${a.priceUsdc} ${CURRENCY} · ${a.eta}</span></label>`).join("");
     choiceBox.querySelectorAll("input").forEach((r) => r.addEventListener("change", () => { selected = r.value; sync(); }));
   }
   function sync() {
     const a = agents[selected];
     inputLabel.textContent = a.input.label;
     inputField.placeholder = a.input.placeholder;
-    priceLine.textContent = `${a.priceUsdc}.00 USDC — held in escrow until the judge signs off`;
+    priceLine.textContent = `${a.priceUsdc}.00 ${CURRENCY} — held in escrow until the judge signs off`;
     tIn.agent.textContent = a.title;
     tIn.input.textContent = inputField.value || "—";
-    tIn.price.textContent = `${a.priceUsdc}.00 USDC`;
+    tIn.price.textContent = `${a.priceUsdc}.00 ${CURRENCY}`;
   }
   inputField.addEventListener("input", sync);
   renderChoice(); sync();
@@ -356,7 +370,7 @@ async function initHire() {
         $("#ask-title").textContent = d.title;
         $("#ask-why").textContent = d.why ? `picked because: ${d.why}` : "";
         $("#ask-price").innerHTML =
-          `<b>${d.priceUsdc}.00 USDC</b> · ${d.eta} · ${d.label.toLowerCase()}: ${
+          `<b>${d.priceUsdc}.00 ${CURRENCY}</b> · ${d.eta} · ${d.label.toLowerCase()}: ${
             (d.input || "—").replace(/</g, "&lt;")}`;
         $("#ask-result").style.display = "block";
         askNote(d.input
@@ -397,7 +411,7 @@ async function initHire() {
       const w = await postApi({ action: "wallets", userToken: t.userToken });
       await chainReady();
       const wallet = (w.wallets || []).find((x) => x.blockchain === CIRCLE_CHAIN);
-      if (!wallet) throw new Error("no Arc wallet found for this account — create one at /wallet");
+      if (!wallet) throw new Error(`no ${ARC.chainName} wallet found for this account — create one at /wallet`);
       account = wallet.address; mode = "circle";
       circleCtx = { userToken: t.userToken, encryptionKey: t.encryptionKey, walletId: wallet.id, appId: t.appId };
       tIn.client.textContent = fmt(account);
@@ -456,7 +470,7 @@ async function initHire() {
       quoted = !!q.ok;
       shut = quoteClosed(q);
     } catch { /* fall through to the poll below */ }
-    if (shut) throw new Error(`${shut} Order #${jobId} was created but never paid, so no USDC moved.`);
+    if (shut) throw new Error(`${shut} Order #${jobId} was created but never paid, so no ${CURRENCY} moved.`);
 
     for (let i = 0; i < 30 && !quoted; i++) {
       await new Promise((r) => setTimeout(r, 4000));
@@ -472,7 +486,7 @@ async function initHire() {
        a wallet used elsewhere is still handled correctly. */
     const allowance = await readAllowance(cat, account);
     if (allowance < BigInt(amount)) {
-      log("one-time — approve USDC spending (PIN)…");
+      log(`one-time — approve ${CURRENCY} spending (PIN)…`);
       ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
         contractAddress: cat.usdc, abiFunctionSignature: "approve(address,uint256)",
         abiParameters: [cat.contract, STANDING_ALLOWANCE] });
@@ -510,7 +524,7 @@ async function initHire() {
       if (!pc.on || Number(pc.chainId) !== parseInt(ARC.chainId, 16)) return;
       const off = Math.round(Number(pc.discountBps || 0) / 100);
       payBtn.textContent = off ? `Pay with $${pc.symbol} · ${off}% off` : `Pay with $${pc.symbol}`;
-      payBtn.title = `Pay in $${pc.symbol}${off ? ` for ${off}% less than the USDC price` : ""}. Stubly pays the escrow in USDC for you` +
+      payBtn.title = `Pay in $${pc.symbol}${off ? ` for ${off}% less than the ${CURRENCY} price` : ""}. Stubly pays the escrow in ${CURRENCY} for you` +
         (pc.burns ? `, and the $${pc.symbol} you pay is burned once the job is delivered.` : ".");
       const soon = $("#pay-soon");
       if (soon) soon.remove(); // the "coming soon" placeholder gives way to the real thing
@@ -528,7 +542,7 @@ async function initHire() {
         const q = await payApi("/pay/quote", { agent: selected, text: val, buyer: account });
         const mins = Math.max(1, Math.floor((q.deadline - Date.now() / 1000) / 60));
         const pct = Math.round(Number(q.discountBps || 0) / 100);
-        log(`   ${q.amountText} $${q.symbol} for this ${q.priceUsdc} USDC order${pct ? ` (${pct}% off)` : ""}, held for ${mins} minutes`, "ok");
+        log(`   ${q.amountText} $${q.symbol} for this ${q.priceUsdc} ${CURRENCY} order${pct ? ` (${pct}% off)` : ""}, held for ${mins} minutes`, "ok");
 
         const signer = await new ethers.BrowserProvider(walletEth).getSigner();
         if (q.needsApproval) {
@@ -621,7 +635,7 @@ async function initHire() {
         quoted = !!q.ok;
         shut = quoteClosed(q);
       } catch { /* fall through to the poll below */ }
-      if (shut) throw new Error(`${shut} Order #${jobId} was created but never paid, so no USDC moved.`);
+      if (shut) throw new Error(`${shut} Order #${jobId} was created but never paid, so no ${CURRENCY} moved.`);
 
       for (let i = 0; i < 30 && !quoted; i++) {
         await new Promise((r) => setTimeout(r, 4000));
@@ -673,7 +687,7 @@ function renderBarcode(el, seed) {
 const STAMPS = { 1: ["FUNDED", "stamp-blue"], 2: ["DELIVERED", "stamp-blue"], 3: ["PAID OUT", "stamp-green"], 4: ["REFUNDED", "stamp-red"], 5: ["EXPIRED", "stamp-red"] };
 const STEPS = [
   [0, "Order created", "the work order exists on-chain"],
-  [1, "Escrow funded", "USDC locked in the contract"],
+  [1, "Escrow funded", "Money locked in the contract"],
   [2, "Work delivered", "deliverable fingerprint submitted"],
   [3, "Settled", "judge signed off — agent paid (or client refunded)"],
 ];
@@ -708,9 +722,9 @@ async function initJob() {
     }
     $("#t-agent").textContent = await agentTitle(j.agent);
     $("#t-input").textContent = j.input ? Object.values(j.input)[0] : "—";
-    $("#t-price").textContent = j.hasBudget ? `${Number(j.budgetUsdc).toFixed(2)} USDC` : "quote pending";
+    $("#t-price").textContent = j.hasBudget ? `${Number(j.budgetUsdc).toFixed(2)} ${CURRENCY}` : "quote pending";
     $("#t-client").textContent = j.pay ? `${fmt(j.pay.buyer)} · paid in $${j.pay.symbol}` : fmt(j.client);
-    if (j.pay && j.hasBudget) $("#t-price").textContent = `${Number(j.budgetUsdc).toFixed(2)} USDC · paid as ${tokenText(j.pay.amount, j.pay.decimals)} $${j.pay.symbol}`;
+    if (j.pay && j.hasBudget) $("#t-price").textContent = `${Number(j.budgetUsdc).toFixed(2)} ${CURRENCY} · paid as ${tokenText(j.pay.amount, j.pay.decimals)} $${j.pay.symbol}`;
     $("#t-provider").textContent = fmt(j.provider);
 
     const zone = $("#stamps");
@@ -797,11 +811,11 @@ async function initJob() {
         if (left > 0) {
           const h = Math.floor(left / 3600), m = Math.floor((left % 3600) / 60);
           $("#refund-copy").textContent =
-            `Your ${j.budgetUsdc} USDC is locked in escrow, not in anyone's wallet. If this order isn't delivered and judged within ${h > 0 ? `${h}h ${m}m` : `${m} minutes`}, you can take it back yourself.`;
+            `Your ${j.budgetUsdc} ${CURRENCY} is locked in escrow, not in anyone's wallet. If this order isn't delivered and judged within ${h > 0 ? `${h}h ${m}m` : `${m} minutes`}, you can take it back yourself.`;
           btn.style.display = "none";
         } else {
           $("#refund-copy").textContent =
-            `This order passed its deadline without settling. Your ${j.budgetUsdc} USDC is still in escrow and you can withdraw it now — no one else can.`;
+            `This order passed its deadline without settling. Your ${j.budgetUsdc} ${CURRENCY} is still in escrow and you can withdraw it now — no one else can.`;
           btn.style.display = "inline-flex";
         }
         if (!refundZone.dataset.wired) {
@@ -821,7 +835,7 @@ async function initJob() {
               note.textContent = "withdrawing from escrow…";
               const tx = await jobs.claimRefund(id);
               await tx.wait(1);
-              note.textContent = "refunded ✓ — the USDC is back in your wallet";
+              note.textContent = "refunded ✓ — the money is back in your wallet";
               refresh();
             } catch (e) {
               note.textContent = `✗ ${e.shortMessage || e.message}`;
@@ -841,7 +855,7 @@ async function initJob() {
 /* ————— page: index ————— */
 /* Desks group the shelf so seventeen agents read as a directory, not a wall. */
 const DESKS = [
-  { name: "Chain desk", note: "Reads Arc itself — free public chain data, no guesswork.",
+  { name: "Chain desk", note: "Reads the chain itself — free public chain data, no guesswork.",
     keys: ["wallet-report", "token-report", "tx-explain", "contract-check", "chain-pulse", "agent-lookup",
            "gas-estimate", "contract-summary", "tokenomics-review", "whitepaper-digest"] },
   { name: "Site desk", note: "Points an agent at a real URL and reports what it measured.",
@@ -886,7 +900,7 @@ function agentCard(key, a, cat) {
       <h3>${a.title}</h3>
       ${a.agentId ? `<a class="id-badge" href="${cat.explorer}/token/${cat.identityRegistry}/instance/${a.agentId}" target="_blank" rel="noopener" title="ERC-8004 on-chain identity">◆ verified agent #${a.agentId}</a>` : ""}
       <p>${a.blurb}</p>
-      <div class="agent-meta"><span><b>${a.priceUsdc} USDC</b> per job</span><span>${a.eta}</span></div>
+      <div class="agent-meta"><span><b>${a.priceUsdc} ${CURRENCY}</b> per job</span><span>${a.eta}</span></div>
       <a class="btn btn-primary" href="${onChain(`/hire?agent=${key}`)}">Hire ${a.title}</a>
     </div>`;
 }
@@ -897,10 +911,11 @@ async function initIndex() {
   const ca = band ? String(band.dataset.token || "") : "";
   if (band && /^0x[0-9a-fA-F]{40}$/.test(ca)) {
     chainReady().then(() => {
-      if (parseInt(ARC.chainId, 16) !== 5042) return;
+      if (CHAIN_KEY !== "mainnet") return;
       $("#token-ca").textContent = ca;
-      $("#token-buy").href = `https://argus.world/token/${ca}`;
-      $("#token-explorer").href = `https://explorer.arc.io/token/${ca}`;
+      /* Where to buy is not known until the token exists: data-buy on the section, when set, shows the button. */
+      if (String(band.dataset.buy || "").startsWith("https://")) { $("#token-buy").href = band.dataset.buy; $("#token-buy").hidden = false; }
+      $("#token-explorer").href = `${ARC.blockExplorerUrls[0]}/token/${ca}`;
       const copy = $("#token-copy");
       if (!copy.dataset.wired) {
         copy.dataset.wired = "1";
@@ -960,7 +975,7 @@ async function initAgents() {
   const all = cat.agents;
   const total = Object.keys(all).length;
   $("#count").textContent =
-    `${total} agents, each with an identity on Arc you can check before you pay. One USDC unless it says otherwise.`;
+    `${total} agents, each with an identity on ${ARC.chainName} you can check before you pay. One ${CURRENCY} unless it says otherwise.`;
 
   const listed = new Set(DESKS.flatMap((d) => d.keys));
   const strays = Object.keys(all).filter((k) => !listed.has(k));
@@ -1034,7 +1049,7 @@ async function initCrew() {
     return plan.reduce((n, s) => n + Number(s.priceUsdc), 0);
   }
   function renderTotal() {
-    $("#crew-total").textContent = `${total().toFixed(2)} USDC`;
+    $("#crew-total").textContent = `${total().toFixed(2)} ${CURRENCY}`;
   }
 
   function render() {
@@ -1048,7 +1063,7 @@ async function initCrew() {
                  placeholder="${esc(s.label || "job details")}" value="${esc(s.input || "")}">
           <div class="crew-state s-wait" data-state="${i}">${s.input ? "ready" : "needs a detail"}</div>
         </div>
-        <div class="crew-right">${s.priceUsdc} USDC<br><span style="color:var(--ink-soft)">${esc(s.eta || "")}</span>
+        <div class="crew-right">${s.priceUsdc} ${CURRENCY}<br><span style="color:var(--ink-soft)">${esc(s.eta || "")}</span>
           <br><button type="button" class="crew-drop" data-drop="${i}" title="Take this agent off the crew">remove</button>
         </div>
       </div>`).join("");
@@ -1067,7 +1082,7 @@ async function initCrew() {
         if (plan.length < 2) return log("✗ a crew needs at least one agent", "bad");
         const dropped = plan.splice(Number(b.dataset.drop), 1)[0];
         render();
-        note(`${plan.length} agent${plan.length > 1 ? "s" : ""} · ${total().toFixed(2)} USDC — ${dropped.title} removed.`);
+        note(`${plan.length} agent${plan.length > 1 ? "s" : ""} · ${total().toFixed(2)} ${CURRENCY} — ${dropped.title} removed.`);
       });
     });
     renderTotal();
@@ -1093,7 +1108,7 @@ async function initCrew() {
       if (!r.ok) { note(r.reason); $("#crew-box").style.display = "none"; return; }
       plan = r.steps;
       $("#crew-why").textContent = r.why || `${r.count} agent${r.count > 1 ? "s" : ""} for this one.`;
-      note(`${r.count} agent${r.count > 1 ? "s" : ""} · ${r.totalUsdc} USDC — change anything before you pay.`);
+      note(`${r.count} agent${r.count > 1 ? "s" : ""} · ${r.totalUsdc} ${CURRENCY} — change anything before you pay.`);
       logEl.innerHTML = "";
       render();
     } catch (e) {
@@ -1129,7 +1144,7 @@ async function initCrew() {
       const w = await postApi({ action: "wallets", userToken: t.userToken });
       await chainReady();
       const wallet = (w.wallets || []).find((x) => x.blockchain === CIRCLE_CHAIN);
-      if (!wallet) throw new Error("no Arc wallet found for this account — create one at /wallet");
+      if (!wallet) throw new Error(`no ${ARC.chainName} wallet found for this account — create one at /wallet`);
       account = wallet.address; mode = "circle";
       circleCtx = { userToken: t.userToken, encryptionKey: t.encryptionKey, walletId: wallet.id, appId: t.appId };
       $("#btn-pin").textContent = `PIN · ${fmt(account)}`;
@@ -1197,7 +1212,7 @@ async function initCrew() {
       quoted = !!q.ok;
       shut = quoteClosed(q);
     } catch { /* fall through to the poll */ }
-    if (shut) throw new Error(`${shut} Order #${jobId} was created but never paid, so no USDC moved.`);
+    if (shut) throw new Error(`${shut} Order #${jobId} was created but never paid, so no ${CURRENCY} moved.`);
     for (let n = 0; n < 20 && !quoted; n++) {
       await new Promise((r) => setTimeout(r, 3000));
       quoted = (await api(`/api/job?id=${jobId}`)).hasBudget;
@@ -1207,7 +1222,7 @@ async function initCrew() {
     /* One standing allowance covers the whole crew, so this is asked at most once. */
     const allowance = await readAllowance(cat, account);
     if (allowance < amount) {
-      setState(i, "approving USDC (once)…", "s-go");
+      setState(i, `approving ${CURRENCY} (once)…`, "s-go");
       if (mode === "circle") {
         const ch = await postApi({ action: "execute", userToken: circleCtx.userToken, walletId: circleCtx.walletId,
           contractAddress: cat.usdc, abiFunctionSignature: "approve(address,uint256)",
@@ -1315,7 +1330,7 @@ async function initCrew() {
     }
     $("#btn-hire").disabled = true;
     const meta = { id: crewId(), n: plan.length };
-    log(`hiring ${plan.length} agent${plan.length > 1 ? "s" : ""} — one order each, ${total().toFixed(2)} USDC total`);
+    log(`hiring ${plan.length} agent${plan.length > 1 ? "s" : ""} — one order each, ${total().toFixed(2)} ${CURRENCY} total`);
 
     let placed = 0;
     for (let i = 0; i < plan.length; i++) {

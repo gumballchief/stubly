@@ -1,26 +1,26 @@
 "use strict";
 
 /**
- * Deploy Stubly's ERC-8183 escrow on Arc mainnet, and give up every admin power over it.
+ * Deploy Stubly's ERC-8183 escrow on Robinhood Chain, and give up every admin power over it.
  *
  *   npm run escrow:deploy -- --dry-run    checks only: nothing is signed, no password asked
  *   npm run escrow:deploy                 deploys (you type DEPLOY, then the mainnet password)
  *
- * Why this exists: Circle has not deployed ERC-8183 on Arc mainnet. The escrow Circle runs on
+ * Why this exists: nobody has deployed a job escrow on Robinhood Chain. The escrow Circle runs on
  * Arc testnet is the ERC-8183 reference implementation (AgenticCommerce behind an ERC1967Proxy),
  * published with the standard under CC0. chain/escrow/*.json is that code, compiled from the source
  * Circle verified, with Circle's exact settings.
  *
  * What a run does, stopping at the first thing that is not exactly right:
  *  1. Proves the bytecode is Circle's: the contract our creation code would produce (an eth_call on
- *     mainnet) is byte for byte the contract Circle runs on testnet, with its one immutable (the
+ *     Robinhood Chain) is byte for byte the contract Circle runs on Arc testnet, with its one immutable (the
  *     contract's own address) masked. The proxy's code is checked the same way.
  *  2. Deploys the implementation, then the proxy, which initializes it in the same transaction
- *     (payment token USDC, both fees zero), so nobody can initialize it in between.
+ *     (payment token USDG, both fees zero), so nobody can initialize it in between.
  *  3. Renounces ADMIN_ROLE and DEFAULT_ADMIN_ROLE. After that nobody, Stubly included, can upgrade
  *     the escrow, set a fee or add a hook. Checked on-chain: the deployer holds no role, and the
  *     contract's own logs show no role was ever granted to anyone else.
- *  4. Writes chain/escrow-mainnet.json. npm run mainnet:check and mainnet:flip use it from then on.
+ *  4. Writes chain/escrow-robinhood.json. npm run mainnet:check and mainnet:flip use it from then on.
  *
  * Each transaction is signed first and recorded in that file before it is broadcast, so a run that
  * stops half way resumes where it stopped and never deploys twice. The deploy wallet is its own key
@@ -40,11 +40,15 @@ const PROXY = require("./escrow/ERC1967Proxy.json");
 
 const CIRCLE_TESTNET_ESCROW = "0x0747EEf0706327138c69792bF28Cd525089e4583";
 const CIRCLE_TESTNET_IMPL = IMPL.circleTestnetContract;
-const USDC = "0x3600000000000000000000000000000000000000";
+/* Robinhood Chain: gas is ETH, buyers pay in USDG (Paxos, 6 decimals). Constants, not secrets. */
+const CHAIN_ID = 4663;
+const RPC_URL = "https://rpc.mainnet.chain.robinhood.com";
+const EXPLORER = "https://robinhoodchain.blockscout.com";
+const USDG = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168";
 const IMPL_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
-const STATE_FILE = path.join(__dirname, "escrow-mainnet.json");
+const STATE_FILE = path.join(__dirname, "escrow-robinhood.json");
 const WAIT_MS = 180_000;
-const MIN_DEPLOYER_USDC = 0.5; // the whole run costs about 0.25 USDC in gas at today's price
+const MIN_DEPLOYER_ETH = 0.002; // the whole run costs well under that at today's gas price
 
 const ESCROW = new Interface([
   "function initialize(address paymentToken_, address treasury_, address admin_)",
@@ -100,8 +104,8 @@ async function feeOverrides(provider) {
  * test chain. `state` is saved after every change; a step already recorded is checked, never repeated.
  */
 async function deployEscrow({
-  provider, signer, deployerAddress, reference, usdc = USDC, statePath = STATE_FILE,
-  chainId = 5042, dryRun = false, stopAfter = null, log = console.log,
+  provider, signer, deployerAddress, reference, usdc = USDG, statePath = STATE_FILE,
+  chainId = CHAIN_ID, dryRun = false, stopAfter = null, log = console.log,
 }) {
   const live = Number(BigInt(await provider.send("eth_chainId", [])));
   if (live !== chainId) throw new Error(`connected to chain ${live}, expected ${chainId}. Nothing was sent`);
@@ -130,7 +134,7 @@ async function deployEscrow({
     ]);
     const price = fees.maxFeePerGas ?? fees.gasPrice;
     const total = (gas + 300_000n + 2n * 60_000n) * price;
-    return { dryRun: true, deployer: me, estimatedUsdc: Number(formatUnits(total, 18)), deployerUsdc: Number(formatUnits(balance, 18)), state };
+    return { dryRun: true, deployer: me, estimatedEth: Number(formatUnits(total, 18)), deployerEth: Number(formatUnits(balance, 18)), state };
   }
 
   let nextNonce = 0; // never below the last nonce this run used
@@ -198,7 +202,7 @@ async function deployEscrow({
   log(`✓ implementation ${state.implementation}: Circle's code, locked against direct use`);
   if (stopAfter === "implementation") return state;
 
-  /* 2b. The proxy, initialized in its own constructor: USDC, no fees, the deployer as the only admin for now. */
+  /* 2b. The proxy, initialized in its own constructor: USDG, no fees, the deployer as the only admin for now. */
   if (!state.escrow) {
     log("… deploying the escrow itself");
     const init = ESCROW.encodeFunctionData("initialize", [usdc, me, me]);
@@ -214,10 +218,10 @@ async function deployEscrow({
   const slot = await provider.getStorage(escrow, IMPL_SLOT);
   if (proxyCode.toLowerCase() !== reference.proxyRuntime.toLowerCase()) throw new Error(`the contract at ${escrow} is not Circle's proxy code. Stopped`);
   if (getAddress(dataSlice(slot, 12)) !== state.implementation) throw new Error(`the escrow at ${escrow} points at another implementation. Stopped`);
-  if (getAddress(await read("paymentToken")) !== getAddress(usdc)) throw new Error("the escrow's payment token is not USDC. Stopped");
+  if (getAddress(await read("paymentToken")) !== getAddress(usdc)) throw new Error("the escrow's payment token is not USDG. Stopped");
   if ((await read("platformFeeBP")) !== 0n || (await read("evaluatorFeeBP")) !== 0n) throw new Error("the escrow charges a fee. Stopped");
   if (await read("whitelistedHooks", [ZeroAddress]) !== true) throw new Error("the escrow does not accept orders without a hook. Stopped");
-  log(`✓ escrow ${escrow}: pays in USDC, no fees`);
+  log(`✓ escrow ${escrow}: pays in USDG, no fees`);
   if (stopAfter === "escrow") return state;
 
   /* 3. Give up every admin power. */
@@ -274,24 +278,16 @@ function ask(question) {
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes("--dry-run");
-  const rpcUrl = process.env.MAINNET_RPC_URL || "https://rpc.mainnet.arc.io";
-  const provider = new JsonRpcProvider(rpcUrl, 5042, { staticNetwork: true });
+  const provider = new JsonRpcProvider(process.env.ROBINHOOD_RPC_URL || RPC_URL, CHAIN_ID, { staticNetwork: true });
   const testnet = new JsonRpcProvider("https://rpc.testnet.arc.io", 5042002, { staticNetwork: true });
   const { fileFor, keystoreAddress, askHidden } = require("./make-mainnet-wallets");
 
-  console.log("\nStubly escrow on Arc mainnet" + (dryRun ? " (dry run: nothing is signed)" : "") + "\n");
+  console.log("\nStubly escrow on Robinhood Chain" + (dryRun ? " (dry run: nothing is signed)" : "") + "\n");
 
   const done = readState(STATE_FILE);
   if (done?.finishedAt) {
     console.log(`Already deployed on ${done.finishedAt}: ${done.escrow}. Nothing to do.`);
     console.log("Next: npm run mainnet:check");
-    return;
-  }
-
-  const circleOnMainnet = await provider.getCode(CIRCLE_TESTNET_ESCROW);
-  if (circleOnMainnet !== "0x" && !args.includes("--anyway")) {
-    console.log(`Circle's own escrow is now on mainnet at ${CIRCLE_TESTNET_ESCROW}. Use that instead: nothing to deploy.`);
-    console.log("Run npm run mainnet:check. (To deploy Stubly's anyway, add --anyway.)");
     return;
   }
 
@@ -305,22 +301,22 @@ async function main() {
 
   if (dryRun) {
     const r = await deployEscrow({ provider, deployerAddress: from, reference, dryRun: true });
-    console.log(`  cost: about ${r.estimatedUsdc.toFixed(2)} USDC of gas`);
-    if (deployer) console.log(`  deploy wallet ${deployer} holds ${r.deployerUsdc.toFixed(2)} USDC${r.deployerUsdc < MIN_DEPLOYER_USDC ? ` (send it at least ${MIN_DEPLOYER_USDC} USDC first)` : ""}`);
+    console.log(`  cost: about ${r.estimatedEth.toFixed(6)} ETH of gas`);
+    if (deployer) console.log(`  deploy wallet ${deployer} holds ${r.deployerEth.toFixed(5)} ETH${r.deployerEth < MIN_DEPLOYER_ETH ? ` (send it at least ${MIN_DEPLOYER_ETH} ETH on Robinhood Chain first)` : ""}`);
     console.log("\nDry run passed. To deploy for real: npm run escrow:deploy");
     return;
   }
 
   if (!process.stdin.isTTY) throw new Error("run this in its own terminal window; it needs to hide the password");
   const balance = Number(formatUnits(await provider.getBalance(deployer), 18));
-  if (balance < MIN_DEPLOYER_USDC && !readState(STATE_FILE)) {
-    throw new Error(`the deploy wallet ${deployer} holds ${balance.toFixed(2)} USDC. Send it ${MIN_DEPLOYER_USDC} USDC on Arc mainnet, then run this again`);
+  if (balance < MIN_DEPLOYER_ETH && !readState(STATE_FILE)) {
+    throw new Error(`the deploy wallet ${deployer} holds ${balance.toFixed(5)} ETH. Send it ${MIN_DEPLOYER_ETH} ETH on Robinhood Chain, then run this again`);
   }
 
   console.log([
-    `This deploys Stubly's escrow from ${deployer} (${balance.toFixed(2)} USDC), then gives up every admin power over it.`,
+    `This deploys Stubly's escrow from ${deployer} (${balance.toFixed(5)} ETH), then gives up every admin power over it.`,
     "After that nobody, Stubly included, can upgrade it, charge a fee or touch what it holds.",
-    "It costs about 0.25 USDC of gas.",
+    "It costs a few cents of ETH in gas.",
     "",
   ].join("\n"));
   if ((await ask("Type DEPLOY to go ahead: ")) !== "DEPLOY") { console.log("Stopped. Nothing was sent."); return; }
@@ -334,8 +330,8 @@ async function main() {
   console.log([
     "",
     `Done. Stubly's escrow: ${state.escrow}`,
-    `Explorer: https://explorer.arc.io/address/${state.escrow}`,
-    "Saved to chain/escrow-mainnet.json. The flip uses it automatically.",
+    `Explorer: ${EXPLORER}/address/${state.escrow}`,
+    "Saved to chain/escrow-robinhood.json. The flip uses it automatically.",
     "Next: npm run mainnet:check",
   ].join("\n"));
 }

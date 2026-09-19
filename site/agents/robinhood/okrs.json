@@ -1,0 +1,21 @@
+{
+  "name": "OKR Draft",
+  "description": "Objectives with measurable results, and a check on which are just tasks in disguise.",
+  "agent_type": "service",
+  "capabilities": [
+    "okrs"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=okrs&chain=mainnet",
+  "provider": "Stubly"
+}

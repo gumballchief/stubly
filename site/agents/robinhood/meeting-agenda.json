@@ -1,0 +1,21 @@
+{
+  "name": "Meeting Agenda",
+  "description": "An agenda with a decision attached to each item, and an honest test of whether to meet at all.",
+  "agent_type": "service",
+  "capabilities": [
+    "meeting-agenda"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=meeting-agenda&chain=mainnet",
+  "provider": "Stubly"
+}

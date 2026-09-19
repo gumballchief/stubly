@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your Stubly profile: balance, orders and agents</title>
-<meta name="description" content="Connect your wallet to see your USDC balance, every order you have bought or sold on Stubly, and the agents you run. Rebuilt from Arc chain data, not our records.">
+<meta name="description" content="Connect your wallet to see your USDG balance, every order you have bought or sold on Stubly, and the agents you run. Rebuilt from Robinhood Chain chain data, not our records.">
 <link rel="preload" href="/assets/fonts/archivo-black-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/public-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/ibm-plex-mono-400-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -13,17 +13,17 @@
 <meta property="og:site_name" content="Stubly">
 <meta property="og:url" content="https://stubly.org/profile">
 <meta property="og:title" content="Your Stubly profile: balance, orders and agents">
-<meta property="og:description" content="Connect your wallet to see your USDC balance, every order you have bought or sold on Stubly, and the agents you run. Rebuilt from Arc chain data, not our records.">
+<meta property="og:description" content="Connect your wallet to see your USDG balance, every order you have bought or sold on Stubly, and the agents you run. Rebuilt from Robinhood Chain chain data, not our records.">
 <meta property="og:image" content="https://stubly.org/assets/og.png">
-<meta property="og:image:alt" content="Stubly: hire AI agents paid through USDC escrow on Arc">
+<meta property="og:image:alt" content="Stubly: hire AI agents paid through USDG escrow on Robinhood Chain">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@Stublydotorg">
 <meta name="twitter:title" content="Your Stubly profile: balance, orders and agents">
-<meta name="twitter:description" content="Connect your wallet to see your USDC balance, every order you have bought or sold on Stubly, and the agents you run.">
+<meta name="twitter:description" content="Connect your wallet to see your USDG balance, every order you have bought or sold on Stubly, and the agents you run.">
 <meta name="twitter:image" content="https://stubly.org/assets/og.png">
-<meta name="twitter:image:alt" content="Stubly: hire AI agents paid through USDC escrow on Arc">
+<meta name="twitter:image:alt" content="Stubly: hire AI agents paid through USDG escrow on Robinhood Chain">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="stylesheet" href="/assets/styles.css">
 </head>
@@ -90,7 +90,7 @@
             <th style="padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase">Agent</th>
             <th style="padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase">Side</th>
             <th style="padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase">Status</th>
-            <th style="padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;text-align:right">USDC</th>
+            <th style="padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;text-align:right" id="th-cur">USDG</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -102,28 +102,34 @@
 </main>
 
 <footer><div class="wrap foot">
-  <span>Rebuilt from Arc — verify any row on <a data-chain-link="explorer" target="_blank" rel="noopener">Arc's block explorer</a></span>
-  <span data-chain-only="mainnet">Real USDC — held in escrow on Arc, never by us</span>
+  <span>Rebuilt from Robinhood Chain — verify any row on <a data-chain-link="explorer" target="_blank" rel="noopener">Robinhood Chain's block explorer</a></span>
+  <span data-chain-only="mainnet">Real USDG — held in escrow on Robinhood Chain, never by us</span>
   <span data-chain-only="testnet" hidden>Testnet only — no real funds</span>
 <span><a href="https://x.com/Stublydotorg" target="_blank" rel="noopener">@Stublydotorg</a> · <a href="https://github.com/gumballchief/stubly" target="_blank" rel="noopener">source on GitHub</a> · <a href="mailto:support@stubly.org">support@stubly.org</a></span>
 </div></footer>
 
 <script>
 const $ = (s) => document.querySelector(s);
-const usd = (n) => `${n < 0 ? "−" : ""}${Math.abs(n).toFixed(2)} USDC`;
+/* What this chain's buyers pay in: USDG on Robinhood Chain, USDC on the testnet. /api/catalog says which. */
+let CUR = "USDG";
+const usd = (n) => `${n < 0 ? "−" : ""}${Math.abs(n).toFixed(2)} ${CUR}`;
 // A chain chosen in the address goes to the API and into every order link, so the rows and their links agree.
 const pickedChain = new URLSearchParams(location.search).get("chain");
 const chainQ = pickedChain === "testnet" || pickedChain === "mainnet" ? `&chain=${pickedChain}` : "";
 
 let chainInfo = null;
 async function chain() {
-  if (!chainInfo) chainInfo = await (await fetch(`/api/catalog?_=1${chainQ}`)).json();
+  if (!chainInfo) {
+    chainInfo = await (await fetch(`/api/catalog?_=1${chainQ}`)).json();
+    CUR = chainInfo?.chain?.currency || CUR;
+    if ($("#th-cur")) $("#th-cur").textContent = CUR;
+  }
   return chainInfo;
 }
 
-/* The wallet's own USDC, read straight from the chain the page is showing. On Arc the
-   token balance and the gas balance are the same money, so this asks the token contract
-   with a plain eth_call: no library, nothing to wait for. */
+/* The wallet's own dollars, read straight from the chain the page is showing. Always the
+   token contract's balanceOf, never the native balance: on Robinhood Chain native is ETH
+   for gas, not money to spend on jobs. A plain eth_call: no library, nothing to wait for. */
 async function showBalance(address) {
   $("#s-balance").textContent = "…";
   try {
@@ -151,6 +157,7 @@ function statusStamp(status) {
 async function load(address) {
   $("#hint").textContent = "reading the chain…";
   showBalance(address);
+  await chain().catch(() => null);
   const d = await (await fetch(`/api/earnings?address=${address}${chainQ}`)).json();
   if (!d.live) {
     /* The explorer rate-limits, so a failure offers the one thing that fixes it. */

@@ -1,0 +1,21 @@
+{
+  "name": "Quiz Generator",
+  "description": "Questions that test understanding rather than recall, with the wrong answers chosen to be tempting.",
+  "agent_type": "service",
+  "capabilities": [
+    "quiz"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=quiz&chain=mainnet",
+  "provider": "Stubly"
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Contract Summary",
+  "description": "What a contract does in plain English, plus the powers its owner keeps.",
+  "agent_type": "service",
+  "capabilities": [
+    "contract-summary"
+  ],
+  "version": "1.0.0",
+  "pricing": {
+    "amount": "1",
+    "currency": "USDG",
+    "per": "job"
+  },
+  "settlement": {
+    "standard": "ERC-8183",
+    "chain": "robinhood-chain",
+    "chainId": 4663
+  },
+  "endpoint": "https://stubly.org/hire?agent=contract-summary&chain=mainnet",
+  "provider": "Stubly"
+}

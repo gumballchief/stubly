@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Is Stubly ready to switch to Arc mainnet? Read-only: it signs nothing, sets nothing,
+ * Is Stubly ready to switch to Robinhood Chain? Read-only: it signs nothing, sets nothing,
  * deploys nothing. Run it any time:
  *
  *   npm run mainnet:check
@@ -9,8 +9,9 @@
  * It asks the chain itself, not documentation, because the question that matters is
  * whether the contracts are really there and really the ones the code expects.
  * Addresses come from MAINNET_* env vars when set. Otherwise the escrow is Stubly's own
- * deployment (chain/escrow-mainnet.json, from npm run escrow:deploy) once it exists, else the
- * address Circle used on testnet; the identity registry is the ERC-8004 team's mainnet address.
+ * deployment (chain/escrow-robinhood.json, from npm run escrow:deploy) and nothing else: nobody else
+ * runs a job escrow on Robinhood Chain. The identity registry is the ERC-8004 team's mainnet address.
+ * Gas there is ETH, so wallets are checked for ETH as well as USDG.
  */
 
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
@@ -25,7 +26,7 @@ const ROOT = path.join(__dirname, "..");
 /* Stubly's own escrow, once npm run escrow:deploy has finished: Circle's ERC-8183 code with no admin. */
 function ownEscrow() {
   try {
-    const s = JSON.parse(fs.readFileSync(path.join(__dirname, "escrow-mainnet.json"), "utf8"));
+    const s = JSON.parse(fs.readFileSync(path.join(__dirname, "escrow-robinhood.json"), "utf8"));
     return s.finishedAt && /^0x[0-9a-fA-F]{40}$/.test(s.escrow || "") ? s : null;
   } catch { return null; }
 }
@@ -36,15 +37,17 @@ function mainnetValues(env = process.env) {
     catch { return ""; }
   };
   return {
-    CHAIN_ID: 5042,
-    RPC_URL: env.MAINNET_RPC_URL || "https://rpc.mainnet.arc.io",
-    PUBLIC_RPC_URL: env.MAINNET_PUBLIC_RPC_URL || "https://rpc.mainnet.arc.io",
-    EXPLORER: env.MAINNET_EXPLORER || "https://explorer.arc.io",
-    ERC8183: env.MAINNET_ERC8183 || ownEscrow()?.escrow || "0x0747EEf0706327138c69792bF28Cd525089e4583",
+    CHAIN_ID: 4663,
+    RPC_URL: env.MAINNET_RPC_URL || "https://rpc.mainnet.chain.robinhood.com",
+    PUBLIC_RPC_URL: env.MAINNET_PUBLIC_RPC_URL || "https://rpc.mainnet.chain.robinhood.com",
+    EXPLORER: env.MAINNET_EXPLORER || "https://robinhoodchain.blockscout.com",
+    ERC8183: env.MAINNET_ERC8183 || ownEscrow()?.escrow || "",
     /* The ERC-8004 team deploys to one address on every mainnet and another on every testnet. This is
-       the mainnet one, live on Arc with the same implementation and owner as the testnet registry. */
+       the mainnet one, live on Robinhood Chain with the same implementation and owner as the testnet registry. */
     IDENTITY_REGISTRY: env.MAINNET_IDENTITY_REGISTRY || "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
-    USDC: env.MAINNET_USDC || "0x3600000000000000000000000000000000000000",
+    /* The dollar token buyers pay in. On Robinhood Chain that is USDG (Paxos, 6 decimals); the key keeps
+       its old name because the whole codebase reads it as "the payment token". */
+    USDC: env.MAINNET_USDC || "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
     PROVIDER_WALLET: env.MAINNET_PROVIDER_WALLET || addrOf("provider_mainnet"),
     EVALUATOR_WALLET: env.MAINNET_EVALUATOR_WALLET || addrOf("evaluator_mainnet"),
   };
@@ -68,6 +71,11 @@ const usdcOf = async (V, who) => {
   return Number(BigInt(await rpc(V.RPC_URL, "eth_call", [{ to: V.USDC, data }, "latest"]))) / 1e6;
 };
 
+const ethOf = async (V, who) => Number(BigInt(await rpc(V.RPC_URL, "eth_getBalance", [who, "latest"]))) / 1e18;
+/* Registering 100 identities plus weeks of quotes and submits, at Robinhood Chain's gas price. */
+const PROVIDER_MIN_ETH = 0.003;
+const EVALUATOR_MIN_ETH = 0.001;
+
 async function explorerAnswers(url) {
   try {
     const r = await fetch(url, { signal: AbortSignal.timeout(15_000), headers: { "user-agent": "stubly-mainnet-check" } });
@@ -90,15 +98,15 @@ async function runChecks({ env = process.env, needFunds = true } = {}) {
   try {
     const id = parseInt(await rpc(V.RPC_URL, "eth_chainId", []), 16);
     block = parseInt(await rpc(V.RPC_URL, "eth_blockNumber", []), 16);
-    add("Arc mainnet RPC answers", id === 5042, true, `${V.RPC_URL} says chain ${id}, block ${block}`);
+    add("Robinhood Chain RPC answers", id === V.CHAIN_ID, true, `${V.RPC_URL} says chain ${id}, block ${block}`);
   } catch (e) {
-    add("Arc mainnet RPC answers", false, true, `${V.RPC_URL}: ${e.message}`);
+    add("Robinhood Chain RPC answers", false, true, `${V.RPC_URL}: ${e.message}`);
     return { values: V, block, checks: out };
   }
 
   const escrowCode = await rpc(V.RPC_URL, "eth_getCode", [V.ERC8183, "latest"]).catch(() => "0x");
   add("ERC-8183 escrow is deployed", hasCode(escrowCode), true,
-    hasCode(escrowCode) ? `code at ${V.ERC8183}` : `no contract at ${V.ERC8183} yet: run npm run escrow:deploy (or set MAINNET_ERC8183 if Circle deploys theirs)`);
+    hasCode(escrowCode) ? `code at ${V.ERC8183}` : `no escrow yet: run npm run escrow:deploy`);
 
   /* Stubly's own escrow is only safe to use with nobody able to change it. Its deployer must hold no role;
      npm run escrow:deploy also checked that no one else was ever granted one. */
@@ -147,24 +155,27 @@ async function runChecks({ env = process.env, needFunds = true } = {}) {
     ]);
     const decimals = Number(BigInt(dec));
     const symbol = new Interface(["function symbol() view returns (string)"]).decodeFunctionResult("symbol", sym)[0];
-    add("USDC is real and uses 6 decimals", decimals === 6 && symbol === "USDC", true, `${V.USDC}: ${symbol}, ${decimals} decimals`);
+    add("USDG is real and uses 6 decimals", decimals === 6 && symbol === "USDG", true, `${V.USDC}: ${symbol}, ${decimals} decimals`);
   } catch (e) {
-    add("USDC is real and uses 6 decimals", false, true, e.message);
+    add("USDG is real and uses 6 decimals", false, true, e.message);
   }
 
   add("Mainnet wallets exist", Boolean(V.PROVIDER_WALLET && V.EVALUATOR_WALLET), true,
     V.PROVIDER_WALLET && V.EVALUATOR_WALLET ? `provider ${V.PROVIDER_WALLET}, evaluator ${V.EVALUATOR_WALLET}` : "run npm run wallets:mainnet first");
 
   if (V.PROVIDER_WALLET && V.EVALUATOR_WALLET) {
-    const [p, e] = await Promise.all([usdcOf(V, V.PROVIDER_WALLET), usdcOf(V, V.EVALUATOR_WALLET)]).catch(() => [0, 0]);
-    add("Provider wallet has 4 USDC", p >= 4, needFunds, `holds ${p.toFixed(2)} USDC; send at least ${Math.max(0, 4 - p).toFixed(2)} more to ${V.PROVIDER_WALLET}`);
-    add("Evaluator wallet has 1 USDC", e >= 1, needFunds, `holds ${e.toFixed(2)} USDC; send at least ${Math.max(0, 1 - e).toFixed(2)} more to ${V.EVALUATOR_WALLET}`);
+    /* USDG is the float (sub-orders, refunds). Gas is ETH, and a wallet with no ETH cannot settle or refund anything. */
+    const p = await usdcOf(V, V.PROVIDER_WALLET).catch(() => 0);
+    const [pEth, eEth] = await Promise.all([ethOf(V, V.PROVIDER_WALLET), ethOf(V, V.EVALUATOR_WALLET)]).catch(() => [0, 0]);
+    add("Provider wallet has 4 USDG", p >= 4, needFunds, `holds ${p.toFixed(2)} USDG; send at least ${Math.max(0, 4 - p).toFixed(2)} more to ${V.PROVIDER_WALLET}`);
+    add(`Provider wallet has ${PROVIDER_MIN_ETH} ETH for gas`, pEth >= PROVIDER_MIN_ETH, needFunds, `holds ${pEth.toFixed(5)} ETH on Robinhood Chain (${V.PROVIDER_WALLET})`);
+    add(`Evaluator wallet has ${EVALUATOR_MIN_ETH} ETH for gas`, eEth >= EVALUATOR_MIN_ETH, needFunds, `holds ${eEth.toFixed(5)} ETH on Robinhood Chain (${V.EVALUATOR_WALLET})`);
   }
 
   const { MAINNET_ROSTER } = require(path.join(ROOT, "site/api/_shared.js"));
-  const cardsMissing = MAINNET_ROSTER.filter((k) => !fs.existsSync(path.join(ROOT, "site/agents/mainnet", `${k}.json`)));
+  const cardsMissing = MAINNET_ROSTER.filter((k) => !fs.existsSync(path.join(ROOT, "site/agents/robinhood", `${k}.json`)));
   add(`All ${MAINNET_ROSTER.length} mainnet agent cards exist`, cardsMissing.length === 0, true,
-    cardsMissing.length ? `missing: ${cardsMissing.join(", ")}` : "site/agents/mainnet");
+    cardsMissing.length ? `missing: ${cardsMissing.join(", ")}` : "site/agents/robinhood");
 
   /* Not blocking: log reads fall back to the RPC (site/api/_logs.js). But the five agents
      that read chain data through the explorer cannot work while it refuses servers. */
