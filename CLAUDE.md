@@ -1,25 +1,30 @@
-# agent-market — Agent-Hire Marketplace on Arc Testnet
+# agent-market — Stubly, the agent-hire marketplace (moving to Robinhood Chain)
 
-People pay USDC to hire AI agents for jobs. Money sits in escrow in **Circle's own
-ERC-8183 contract** on Arc testnet — job delivered → agent paid; rejected/expired →
-client refunded. We build the marketplace + orchestrator + house agents, NOT the
-escrow standard. Goal: live full suite → usage → Circle Developer Grant application
-(circle.questbook.app, $5K–$100K USDC, focus area "agentic economic activity").
+People pay a dollar stablecoin to hire AI agents for jobs. Money sits in an ERC-8183 escrow: job
+delivered → agent paid; rejected/expired → client refunded. We build the marketplace + orchestrator +
+house agents, NOT the escrow standard. The escrow is Stubly's own deployment of the CC0 reference
+code (byte-identical to the one Circle runs on Arc testnet) with every admin role renounced.
 
-Full plan: `~/.claude/plans/delightful-splashing-clarke.md`
+**2026-09-19: Stubly is MOVING from Arc to Robinhood Chain.** The owner considers Arc and the Arc
+$STUBLY dead. Work lives on branch `robinhood`; staged plan in `PLAN-ROBINHOOD.md` and
+`~/.claude/plans/immutable-soaring-pebble.md`. Robinhood Chain takes over the code's **mainnet slot**
+(everything reads MAINNET_* env). Arc testnet stays only as an unpromoted sandbox behind `?chain=testnet`.
+Never show the old Arc token address anywhere. A new $STUBLY on Robinhood Chain comes later.
 
 ## Hard facts
 
 | Thing | Value |
 |---|---|
-| Chain | Arc testnet, chain-id **5042002**, gas = USDC (18 decimals at RPC level) |
-| RPC | https://rpc.testnet.arc.io (alts: rpc.{blockdaemon,drpc,quicknode}.testnet.arc.io) |
-| ERC-8183 (jobs escrow, Circle-deployed) | `0x0747EEf0706327138c69792bF28Cd525089e4583` |
-| USDC (ERC-20 interface) | `0x3600000000000000000000000000000000000000` — read decimals() at runtime, do not assume |
-| Explorer | https://testnet.arcscan.app (Blockscout REST v2 at /api/v2) |
-| Faucet | https://faucet.circle.com (20 USDC / 2h per address) |
-| Mainnet (5042) escrow | Circle has NOT deployed ERC-8183 there. `npm run escrow:deploy` deploys the same code (byte-identical to Circle's testnet escrow, CC0 reference implementation) and renounces both admin roles; result in `chain/escrow-mainnet.json`, which mainnet:check and mainnet:flip read |
-| Mainnet ERC-8004 identity | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` (the 8004 team's mainnet address, same implementation and owner as testnet's `0x8004A818…`) |
+| Live chain | **Robinhood Chain**, chain-id **4663** (Arbitrum Orbit). Gas = **ETH**, not the dollar token |
+| RPC | https://rpc.mainnet.chain.robinhood.com (public, eth_getLogs from block 0 works) |
+| Dollar token | **USDG** `0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168`, 6 decimals (Paxos; can freeze/pause). Code keys are still named USDC |
+| Escrow | none existed; `npm run escrow:deploy` deploys ours and writes `chain/escrow-robinhood.json` |
+| ERC-8004 identity / reputation | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` / `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63` |
+| Permit2 | `0x000000000022D473030F116dDEE9F6B43aC78BA3` (has code) |
+| Explorer | https://robinhoodchain.blockscout.com — behind a Cloudflare bot check, servers get 403; read logs by RPC |
+| Per-chain words | `CFG.CURRENCY`, `CFG.CHAIN_NAME`, `CFG.GAS_COIN`, `CFG.GAS_IN_PAYMENT_TOKEN` in `chain/config.js`: never hardcode "USDC"/"Arc" in text a customer reads |
+| Sandbox | Arc testnet, chain-id 5042002, gas = USDC, Circle escrow `0x0747EEf0706327138c69792bF28Cd525089e4583`, USDC `0x3600…0000`, explorer testnet.arcscan.app, faucet.circle.com |
+| Retired | Arc mainnet 5042: our escrow `0x21285e5F3D79717bAA73F1Fccdc101DfE0be4B9D` (`chain/escrow-mainnet.json`), cards in `site/agents/mainnet`, data under `5042/` in Blob |
 
 ## ERC-8183 flow (from Circle's quickstart)
 
@@ -59,7 +64,10 @@ from console.circle.com → API & Client Keys → Standard/Testnet).
 ## Commands
 
 - `npm run wallets` — generate client/provider/evaluator testnet keystores (prints addresses to faucet-fund)
-- `npm run escrow:deploy -- --dry-run` — proves the stored escrow build is Circle's code and prices the mainnet deploy; without --dry-run it deploys from deployer_mainnet (typed password) and gives up admin
+- `npm run escrow:deploy -- --dry-run` — proves the stored escrow build is Circle's code and prices the Robinhood Chain deploy in ETH; without --dry-run it deploys from deployer_mainnet (typed password) and gives up admin
+- `npm run rehearse` — the whole money path (deploy, paid order, rejected order, abandoned order) on a private Hardhat fork of Robinhood Chain with the real USDG code; needs Hardhat from `../gold/protocol`
+- `npm run mainnet:check` — read-only readiness list for Robinhood Chain (escrow, USDG, wallets' USDG and ETH, cards)
+- `npm run mainnet:flip -- --dry-run` — shows every step of the move (Arc wind-down check, Vercel env, deploy, identities, worker)
 - `npm run e2e:dry` — connectivity check: chain-id, balances, contract code present
 - `npm run e2e` — full job lifecycle on testnet (create→budget→fund→submit→complete, then refund paths)
 - `npm run site` — local stand-in for Vercel on :8791 (static + `api/`); needed by the crew script
