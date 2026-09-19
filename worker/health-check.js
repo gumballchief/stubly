@@ -34,10 +34,10 @@ const CHAIN_KEY = CFG.TESTNET ? "testnet" : "mainnet";
 const STALE_PASS_SECONDS = 180;
 /* A single pass past this is wedged, not working. */
 const BUSY_LIMIT_SECONDS = 900;
-/* Gas on Arc is USDC. An evaluator out of gas silently stops every settlement and every
-   escrow refund; a provider under a dollar cannot quote, deliver or fund a sub-order. */
-const PROVIDER_MIN_USDC = Number(process.env.PROVIDER_MIN_USDC || 1);
-const EVALUATOR_MIN_USDC = Number(process.env.EVALUATOR_MIN_USDC || 0.2);
+/* Gas on Robinhood Chain is ETH. An evaluator out of gas silently stops every settlement and every
+   escrow refund; a provider out of gas cannot quote, deliver or fund a sub-order. */
+const PROVIDER_MIN_ETH = Number(process.env.PROVIDER_MIN_ETH || 0.0005);
+const EVALUATOR_MIN_ETH = Number(process.env.EVALUATOR_MIN_ETH || 0.0002);
 
 const problems = [];
 const note = (s) => console.log(s);
@@ -122,11 +122,11 @@ async function checkSite() {
 async function checkBalances(prov) {
   const live = Number(BigInt(await prov.send("eth_chainId", [])));
   if (live !== CFG.CHAIN_ID) return problems.push(`RPC_URL is chain ${live}, expected ${CFG.CHAIN_ID}`);
-  for (const [role, addr, min] of [["provider", PROVIDER_WALLET, PROVIDER_MIN_USDC], ["evaluator", EVALUATOR_WALLET, EVALUATOR_MIN_USDC]]) {
+  for (const [role, addr, min] of [["provider", PROVIDER_WALLET, PROVIDER_MIN_ETH], ["evaluator", EVALUATOR_WALLET, EVALUATOR_MIN_ETH]]) {
     if (!addr) continue;
-    const usdc = Number(formatUnits(await prov.getBalance(addr), 18)); // native balance: 18 decimals at the RPC
-    if (usdc < min) problems.push(`${role} wallet ${addr} holds ${usdc.toFixed(4)} USDC, under the ${min} USDC it needs for gas`);
-    else note(`${role.padEnd(9)} ${usdc.toFixed(4)} USDC`);
+    const eth = Number(formatUnits(await prov.getBalance(addr), 18)); // gas on Robinhood Chain is ETH
+    if (eth < min) problems.push(`${role} wallet ${addr} holds ${eth.toFixed(5)} ETH, under the ${min} ETH it needs for gas`);
+    else note(`${role.padEnd(9)} ${eth.toFixed(5)} ETH`);
   }
 }
 
