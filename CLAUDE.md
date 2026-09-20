@@ -104,10 +104,14 @@ rather than "unknown custom error", and named reverts are no longer retried thre
 
 **The sound rule, and it is the whole thing.** One real music track, and the picture is cut TO it.
 No click, typing or whoosh effects as the soundtrack — the older films (`mainnet-film.tsx`,
-`helpdesk-film.tsx`) use them and that is exactly what made them feel cheap. Pick the track first,
-find its tempo, then set every scene length in beats. I cannot hear audio, only measure it, so the
-owner approves the track by ear before anything is built around it. Never rip a track from a
-reference video; licensed or royalty-free only.
+`helpdesk-film.tsx`) use them and that is exactly what made them feel cheap. Pick the tempo first,
+then set every scene length in beats. Never rip a track from a reference video.
+
+`node gen-music.js` writes `public/stubly-track.wav`: an original 22s track synthesised to the
+film's own grid (A minor, 120 BPM, pad and riser in, drop at 3.0s under the logo, the sub lifting
+for an eighth before each cut, a 1.5s fade out). It is ours, so there is no licence to buy and no
+track to wait on. A bought track replaces it by matching its tempo in the film's SC table. I cannot
+hear audio — I can only write it to the grid — so the owner judges any track by ear.
 
 **The reference he approved** (2026-09-19): Claimr's 21.6s launch film — soft kinetic type, one idea
 per screen, 3-6 words, words entering with blur, one accent word that swaps, real brand logos, a
