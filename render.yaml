@@ -55,7 +55,7 @@ services:
       - key: IDENTITY_REGISTRY
         value: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
       - key: EXPLORER
-        value: "https://explorer.arc.io"
+        value: "https://robinhoodchain.blockscout.com"
       - key: GEMINI_MODEL
         value: "gemini-3.5-flash"
       - key: RPC_URL
