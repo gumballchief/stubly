@@ -96,3 +96,40 @@ buyer funds each order themselves.
 
 `chain/jobs.js` decodes ERC-8183's custom errors, so a revert now reads `WrongStatus()`
 rather than "unknown custom error", and named reverts are no longer retried three times.
+
+## Videos (promo/)
+
+`promo/` is a Remotion project, gitignored, and lives only on this machine. Films are code:
+`src/<name>-film.tsx`, registered as a `<Composition>` in `src/Root.tsx`.
+
+**The sound rule, and it is the whole thing.** One real music track, and the picture is cut TO it.
+No click, typing or whoosh effects as the soundtrack — the older films (`mainnet-film.tsx`,
+`helpdesk-film.tsx`) use them and that is exactly what made them feel cheap. Pick the track first,
+find its tempo, then set every scene length in beats. I cannot hear audio, only measure it, so the
+owner approves the track by ear before anything is built around it. Never rip a track from a
+reference video; licensed or royalty-free only.
+
+**The reference he approved** (2026-09-19): Claimr's 21.6s launch film — soft kinetic type, one idea
+per screen, 3-6 words, words entering with blur, one accent word that swaps, real brand logos, a
+count-up number, a stamp beat, logo reveal at both ends. Match its quality, never clone its layout
+or colors.
+
+**Shape:** 15-25s, 1920x1080, about 9 scenes. `robinhood-film.tsx` is the current template:
+120 BPM, 1 bar = 60 frames = 2s at 30fps, every scene boundary on a bar line, the logo landing on
+the drop (frame 90), a fast cross-dissolve at every cut, and no audio of its own so a track can be
+dropped in with `<Audio src={staticFile("track.mp3")} />` in `Root.tsx`.
+
+**Working method:** check framing with stills BEFORE a full render, it catches layout bugs in
+seconds instead of minutes.
+
+```
+npx remotion still src/index.ts <Id> out/x.png --frame=N     # one frame, ~10s
+npx remotion render src/index.ts <Id> out/<name>.mp4         # ~25s per 14s of 1080p
+```
+
+**Logos are never redrawn** (house rule): the Robinhood feather in `promo/public/` is Robinhood's
+own SVG from their CDN. Any film that puts our mark next to theirs uses an arrow, never an "x", and
+carries "not affiliated with Robinhood" — we have no partnership.
+
+**X upload is manual.** Video upload cannot be automated: X's composer never reads a file set by
+automation and the upload silently never starts. The owner attaches every video by hand.
