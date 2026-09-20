@@ -18,6 +18,11 @@
  * very first eth_getLogs while the same query answered instantly from anywhere else. So each piece
  * a node refuses is asked of the chain's next official node (LOG_RPC_URLS), and the walk keeps
  * using whichever node last answered.
+ *
+ * Robinhood Chain is the opposite case: its node answers a log query over any range in one call, but
+ * its blocks come about ten a second, so a 5,000-block walk from the escrow's first block is hundreds
+ * of calls within a day and trips "Too Many Requests" on its own. So the whole range is asked for in
+ * ONE call first. Only a node that refuses the range (Arc's does) gets the piece-by-piece walk.
  */
 
 const RPC_SPAN = 5000;
@@ -54,6 +59,20 @@ async function rpc(C, method, params, url = C.RPC_URL) {
   return j.result;
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const BUSY = /too many requests|rate limit|429/i;
+const TOO_WIDE = /range|too large|too many blocks|exceed|limit(ed)? to|max(imum)? .*block|10,?000|5,?000/i;
+
+/** A busy node is asked again after a short wait; any other refusal is final for this call. */
+async function patient(fn) {
+  for (let attempt = 0; ; attempt++) {
+    try { return await fn(); } catch (e) {
+      if (attempt >= 2 || !BUSY.test(e.message || "")) throw e;
+      await sleep(700 * (attempt + 1) ** 2);
+    }
+  }
+}
+
 /** The configured node first, then the chain's other official nodes, each once. */
 function logNodes(C) {
   return [...new Set([C.RPC_URL, ...(C.LOG_RPC_URLS || [])].filter(Boolean))];
@@ -82,6 +101,21 @@ async function rpcLogs(C, q) {
   const floor = Math.max(0, latest - RPC_SPAN * MAX_RPC_CHUNKS + 1);
   const start = Math.max(wanted, floor);
 
+  /* One call for everything, where the node allows it. */
+  const filter = (from, to) => [{
+    address: q.address,
+    fromBlock: "0x" + from.toString(16),
+    toBlock: "0x" + to.toString(16),
+    topics: q.topics.map((t) => t || null),
+  }];
+  try {
+    const logs = await patient(() => rpcAny(C, nodes, at, "eth_getLogs", filter(wanted, latest)));
+    logs.partial = false;
+    return logs;
+  } catch (e) {
+    if (!TOO_WIDE.test(e.message || "") || BUSY.test(e.message || "")) throw e;
+  }
+
   const ranges = [];
   for (let b = start; b <= latest; b += RPC_SPAN) ranges.push([b, Math.min(b + RPC_SPAN - 1, latest)]);
 
@@ -91,12 +125,7 @@ async function rpcLogs(C, q) {
     while (next < ranges.length) {
       const i = next++;
       const [from, to] = ranges[i];
-      pieces[i] = await rpcAny(C, nodes, at, "eth_getLogs", [{
-        address: q.address,
-        fromBlock: "0x" + from.toString(16),
-        toBlock: "0x" + to.toString(16),
-        topics: q.topics.map((t) => t || null),
-      }]);
+      pieces[i] = await patient(() => rpcAny(C, nodes, at, "eth_getLogs", filter(from, to)));
     }
   }));
 
