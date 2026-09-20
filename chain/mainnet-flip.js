@@ -186,6 +186,7 @@ function renderYamlForMainnet(text, v) {
   set("ERC8183_ADDRESS", v.ERC8183);
   set("USDC_ADDRESS", v.USDC);
   set("EXPLORER_API", `${v.EXPLORER}/api/v2`);
+  set("EXPLORER", v.EXPLORER);
   text = text.replace(/\s+- key: KEYSTORE_PASSWORD\n\s+sync: false/, "\n      - key: KEYSTORE_PASSWORD_MAINNET\n        sync: false");
   text = text.replace(/- key: PROVIDER_KEYSTORE_B64\n(\s+)sync: false/, "- key: PROVIDER_MAINNET_KEYSTORE_B64\n$1sync: false");
   text = text.replace(/- key: EVALUATOR_KEYSTORE_B64\n(\s+)sync: false/, "- key: EVALUATOR_MAINNET_KEYSTORE_B64\n$1sync: false");
