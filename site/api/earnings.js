@@ -26,7 +26,7 @@ async function logsFor(C, address, position, latest) {
   const topics = [IFACE.getEvent("JobCreated").topicHash, null, null, null];
   topics[position] = zeroPadValue(address, 32);
   /* From the start: _logs.js never reads before the escrow existed, and caps its own walk where a node
-     makes it walk. A fixed 400,000 blocks was a day on Arc and eleven hours on Robinhood Chain. */
+     makes it walk. A fixed 400,000 blocks is a day on Arc and less on faster chains. */
   return getLogs(C, { address: C.ERC8183, topics, fromBlock: 0 });
 }
 
