@@ -193,6 +193,10 @@ const JOB_STATUS = ["Open", "Funded", "Submitted", "Completed", "Rejected", "Exp
 const ABI = [
   "function getJob(uint256 jobId) view returns (tuple(uint256 id, address client, address provider, address evaluator, string description, uint256 budget, uint256 expiredAt, uint8 status, address hook))",
   "function jobHasBudget(uint256 jobId) view returns (bool)",
+  /* How many orders this escrow has ever numbered. With few of them, the marketplace's
+     figures are counted by asking the contract instead of scanning event logs, which
+     Arc's nodes prune after about three days. */
+  "function jobCounter() view returns (uint256)",
 ];
 
 // Single source of truth for the roster — shared with worker/catalog.js.

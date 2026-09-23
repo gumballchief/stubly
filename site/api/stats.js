@@ -70,9 +70,51 @@ async function mapWithLimit(items, limit, fn) {
   return out;
 }
 
+/* The escrow numbers its own orders, so where there are few of them the exact figures come from
+   asking it: jobCounter(), then each order's client, provider and status. That is cheaper than a
+   log scan and, unlike one, it cannot be cut short by a node that has pruned old blocks — Arc's
+   nodes keep about three days, and this contract is older than that. Above the cap the log scan
+   is still the cheaper read, and it stays the fallback whenever this path cannot finish. */
+const COUNT_DIRECT_MAX = 400;
+
+async function countFromEscrow(C) {
+  const jobs = jobsContract(C);
+  const total = Number(await jobs.jobCounter());
+  if (!Number.isFinite(total) || total > COUNT_DIRECT_MAX) return null;
+  const deadline = Date.now() + STATUS_BUDGET_MS;
+  const ours = String(C.PROVIDER_WALLET).toLowerCase();
+  const rows = await mapWithLimit(Array.from({ length: total }, (_, i) => BigInt(i + 1)), STATUS_CONCURRENCY, async (id) => {
+    if (Date.now() > deadline) throw new Error("order pass ran out of time");
+    const j = await jobs.getJob(id);
+    return { client: String(j.client).toLowerCase(), provider: String(j.provider).toLowerCase(), status: Number(j.status) };
+  });
+  const mine = rows.filter((r) => r.provider === ours);
+  return {
+    jobs: mine.length,
+    hirers: new Set(mine.map((r) => r.client)).size,
+    settled: mine.filter((r) => r.status === COMPLETED).length,
+  };
+}
+
 module.exports = async (req, res) => {
   try {
     const C = cfg(req);
+    const direct = await countFromEscrow(C).catch(() => null);
+    if (direct) {
+      let tokenDirect = null;
+      try { tokenDirect = await tokenStats(C); } catch { tokenDirect = null; }
+      return sendJson(res, 200, {
+        live: true,
+        settled: direct.settled,
+        token: tokenDirect,
+        jobs: direct.jobs,
+        hirers: direct.hirers,
+        agents: Object.keys(require("./_catalog.json")).length,
+        chain: C.KEY,
+        contract: C.ERC8183,
+        explorer: `${C.EXPLORER}/address/${C.ERC8183}`,
+      }, STATS_CACHE);
+    }
     const topic0 = IFACE.getEvent("JobCreated").topicHash;
     const providerTopic = zeroPadValue(C.PROVIDER_WALLET, 32);
     const logs = await getLogs(C, { address: C.ERC8183, topics: [topic0, null, null, providerTopic], fromBlock: 0, timeoutMs: 25_000 });
