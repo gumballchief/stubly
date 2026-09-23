@@ -13,7 +13,7 @@ const { JsonRpcProvider, Contract } = require("ethers");
  *
  * Testnet's values are literals because they are settled, public and permanent —
  * every job id we have ever published resolves against them. The mainnet slot is
- * Robinhood Chain (4663, gas in ETH, buyers pay in USDG); its values arrive from
+ * a second real chain (4663, gas in its own coin); its values arrive from
  * the environment, nothing here is guessed in advance. A chain with no RPC and no escrow address
  * counts as "not configured" and can never be selected, so a half-filled mainnet
  * config degrades to testnet instead of serving wrong data.
@@ -23,15 +23,19 @@ const { JsonRpcProvider, Contract } = require("ethers");
  * functions default to a dedicated host. In production RPC_URL overrides both.
  */
 /* Everything about the mainnet slot that is not an address follows its chain id, so moving
-   Stubly between real chains is a change of settings, not of code: Arc pays in USDC and burns
-   USDC as gas, Robinhood Chain pays in USDG and burns ETH. */
+   Stubly to another real chain is a change of settings, not of code. Arc is spelled out because
+   it is where Stubly runs: its dollar token is USDC and that same USDC pays the gas. Any other
+   chain names itself through MAINNET_NAME, MAINNET_CURRENCY and its gas coin, and a wrong or
+   missing name is visible rather than wrong-but-plausible. */
 const MAINNET_CHAIN_ID = Number(process.env.MAINNET_CHAIN_ID || 5042);
 const ON_ARC = MAINNET_CHAIN_ID === 5042;
 const MAINNET_TRAITS = ON_ARC
   ? { NAME: "Arc", CURRENCY: "USDC", NATIVE: { name: "USDC", symbol: "USDC", decimals: 18 },
       LOG_RPC_URLS: ["https://rpc.mainnet.arc.io", "https://rpc.blockdaemon.mainnet.arc.io", "https://rpc.quicknode.mainnet.arc.io"] }
-  : { NAME: "Robinhood Chain", CURRENCY: "USDG", NATIVE: { name: "Ether", symbol: "ETH", decimals: 18 },
-      LOG_RPC_URLS: ["https://rpc.mainnet.chain.robinhood.com"] };
+  : { NAME: process.env.MAINNET_NAME || `Chain ${MAINNET_CHAIN_ID}`,
+      CURRENCY: process.env.MAINNET_CURRENCY || "USD",
+      NATIVE: { name: process.env.MAINNET_GAS_NAME || "Ether", symbol: process.env.MAINNET_GAS_SYMBOL || "ETH", decimals: 18 },
+      LOG_RPC_URLS: [process.env.MAINNET_RPC_URL].filter(Boolean) };
 
 const CHAINS = {
   testnet: {
@@ -53,7 +57,7 @@ const CHAINS = {
     EXPLORER_API: "https://testnet.arcscan.app/api",
     CIRCLE_CHAIN: "ARC-TESTNET",
     /* What buyers pay in, and the gas coin a wallet is told about when it adds the chain.
-       On Arc the gas coin is USDC itself; on Robinhood Chain it is ETH. */
+       On Arc the gas coin is USDC itself; on chain 4663 it is ETH. */
     CURRENCY: "USDC",
     NATIVE: { name: "USDC", symbol: "USDC", decimals: 18 },
     PROVIDER_WALLET: "0x15b9F8a8658E10DaD42ec08CEf158Ca1392a8944",
@@ -82,7 +86,7 @@ const CHAINS = {
     IDENTITY_REGISTRY: process.env.MAINNET_IDENTITY_REGISTRY || "",
     EXPLORER: process.env.MAINNET_EXPLORER || "",
     EXPLORER_API: process.env.MAINNET_EXPLORER_API || "",
-    /* Circle's Wallets API does not support Robinhood Chain. Empty, so nothing creates a
+    /* Empty where Circle has no such network, so nothing creates a
        PIN wallet on a guessed chain and every PIN entry point stays hidden here. */
     CIRCLE_CHAIN: process.env.MAINNET_CIRCLE_CHAIN || "",
     CURRENCY: MAINNET_TRAITS.CURRENCY,

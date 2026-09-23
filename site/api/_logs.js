@@ -19,7 +19,7 @@
  * a node refuses is asked of the chain's next official node (LOG_RPC_URLS), and the walk keeps
  * using whichever node last answered.
  *
- * Robinhood Chain is the opposite case: its node answers a log query over any range in one call, but
+ * A chain whose node answers a log query over any range in one call is the opposite case, but
  * its blocks come about ten a second, so a 5,000-block walk from the escrow's first block is hundreds
  * of calls within a day and trips "Too Many Requests" on its own. So the whole range is asked for in
  * ONE call first. Only a node that refuses the range (Arc's does) gets the piece-by-piece walk.

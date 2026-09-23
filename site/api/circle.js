@@ -127,7 +127,7 @@ function requireOn(P) {
   if (!P.enabled) {
     throw new Plain(P.C.TESTNET
       ? "PIN wallets aren't set up on this server yet."
-      : "PIN wallets don't work on Robinhood Chain. Use a browser wallet instead.");
+      : "PIN wallets don't work on this chain. Use a browser wallet instead.");
   }
 }
 
@@ -355,7 +355,7 @@ async function walletOn(P, userToken, walletId) {
 }
 
 /** One figure: on Arc, native USDC (18 dp) and the ERC-20 (6 dp) are the same funds. Only there:
-    where gas is ETH (Robinhood Chain) the native balance is never counted as dollars. */
+    where gas is a separate coin the native balance is never counted as dollars. */
 function usdcFromBalances(P, tokenBalances) {
   const rows = (Array.isArray(tokenBalances) ? tokenBalances : [])
     .filter((b) => b && b.token && (!b.token.blockchain || b.token.blockchain === P.circleChain));

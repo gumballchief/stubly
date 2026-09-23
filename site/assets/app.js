@@ -23,7 +23,7 @@ const ARC = {
     has no such network, and then every PIN wallet button stays hidden. */
 let CIRCLE_CHAIN = "";
 
-/** What buyers pay in on this page's chain: USDC on Arc, USDG on Robinhood Chain. */
+/** What buyers pay in on this page's chain, as /api/catalog reports it. */
 let CURRENCY = "USDC";
 
 
@@ -906,31 +906,6 @@ function agentCard(key, a, cat) {
 }
 
 async function initIndex() {
-  /* $STUBLY: shown on mainnet once the page carries the official contract address. */
-  const band = $("#stubly-token");
-  const ca = band ? String(band.dataset.token || "") : "";
-  if (band && /^0x[0-9a-fA-F]{40}$/.test(ca)) {
-    chainReady().then(() => {
-      if (CHAIN_KEY !== "mainnet") return;
-      $("#token-ca").textContent = ca;
-      /* Where to buy is not known until the token exists: data-buy on the section, when set, shows the button. */
-      if (String(band.dataset.buy || "").startsWith("https://")) { $("#token-buy").href = band.dataset.buy; $("#token-buy").hidden = false; }
-      $("#token-explorer").href = `${ARC.blockExplorerUrls[0]}/token/${ca}`;
-      const copy = $("#token-copy");
-      if (!copy.dataset.wired) {
-        copy.dataset.wired = "1";
-        copy.addEventListener("click", async () => {
-          try { await navigator.clipboard.writeText(ca); } catch {
-            const r = document.createRange(); r.selectNodeContents($("#token-ca"));
-            const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-          }
-          copy.textContent = "Copied"; copy.classList.add("token-copied");
-          setTimeout(() => { copy.textContent = "Copy address"; copy.classList.remove("token-copied"); }, 1600);
-        });
-      }
-      band.hidden = false;
-    });
-  }
   try {
     const cat = await catalog();
     const total = Object.keys(cat.agents).length;
