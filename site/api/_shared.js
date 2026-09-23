@@ -22,6 +22,17 @@ const { JsonRpcProvider, Contract } = require("ethers");
  * plain public RPC returns malformed errors under Vercel's concurrency, so the
  * functions default to a dedicated host. In production RPC_URL overrides both.
  */
+/* Everything about the mainnet slot that is not an address follows its chain id, so moving
+   Stubly between real chains is a change of settings, not of code: Arc pays in USDC and burns
+   USDC as gas, Robinhood Chain pays in USDG and burns ETH. */
+const MAINNET_CHAIN_ID = Number(process.env.MAINNET_CHAIN_ID || 5042);
+const ON_ARC = MAINNET_CHAIN_ID === 5042;
+const MAINNET_TRAITS = ON_ARC
+  ? { NAME: "Arc", CURRENCY: "USDC", NATIVE: { name: "USDC", symbol: "USDC", decimals: 18 },
+      LOG_RPC_URLS: ["https://rpc.mainnet.arc.io", "https://rpc.blockdaemon.mainnet.arc.io", "https://rpc.quicknode.mainnet.arc.io"] }
+  : { NAME: "Robinhood Chain", CURRENCY: "USDG", NATIVE: { name: "Ether", symbol: "ETH", decimals: 18 },
+      LOG_RPC_URLS: ["https://rpc.mainnet.chain.robinhood.com"] };
+
 const CHAINS = {
   testnet: {
     KEY: "testnet",
@@ -57,15 +68,15 @@ const CHAINS = {
   },
   mainnet: {
     KEY: "mainnet",
-    NAME: "Robinhood Chain",
+    NAME: MAINNET_TRAITS.NAME,
     TESTNET: false,
-    CHAIN_ID: Number(process.env.MAINNET_CHAIN_ID || 4663),
+    CHAIN_ID: MAINNET_CHAIN_ID,
     RPC_URL: process.env.MAINNET_RPC_URL || "",
     /* No fallback to MAINNET_RPC_URL: that one may be a paid or keyed endpoint, and
        wallet_addEthereumChain would write it into every visitor's wallet for good.
        Until the public one is set, mainnet counts as not configured. */
     PUBLIC_RPC_URL: process.env.MAINNET_PUBLIC_RPC_URL || "",
-    LOG_RPC_URLS: ["https://rpc.mainnet.chain.robinhood.com"],
+    LOG_RPC_URLS: MAINNET_TRAITS.LOG_RPC_URLS,
     ERC8183: process.env.MAINNET_ERC8183 || "",
     USDC: process.env.MAINNET_USDC || "",
     IDENTITY_REGISTRY: process.env.MAINNET_IDENTITY_REGISTRY || "",
@@ -74,8 +85,8 @@ const CHAINS = {
     /* Circle's Wallets API does not support Robinhood Chain. Empty, so nothing creates a
        PIN wallet on a guessed chain and every PIN entry point stays hidden here. */
     CIRCLE_CHAIN: process.env.MAINNET_CIRCLE_CHAIN || "",
-    CURRENCY: "USDG",
-    NATIVE: { name: "Ether", symbol: "ETH", decimals: 18 },
+    CURRENCY: MAINNET_TRAITS.CURRENCY,
+    NATIVE: MAINNET_TRAITS.NATIVE,
     PROVIDER_WALLET: process.env.MAINNET_PROVIDER_WALLET || "",
     EVALUATOR_WALLET: process.env.MAINNET_EVALUATOR_WALLET || "",
     /* Separate keystores, never the testnet ones: a key that has lived on a

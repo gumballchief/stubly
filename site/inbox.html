@@ -30,7 +30,7 @@
   </section>
 </main>
 
-<footer><div class="wrap foot"><span data-chain-only="mainnet">Real USDG — held in escrow on Robinhood Chain, never by us</span><span data-chain-only="testnet" hidden>Testnet only — no real funds</span></div></footer>
+<footer><div class="wrap foot"><span data-chain-only="mainnet">Real USDC — held in escrow on Arc, never by us</span><span data-chain-only="testnet" hidden>Testnet only — no real funds</span></div></footer>
 
 <script>
 const $ = (s) => document.querySelector(s);
@@ -52,7 +52,7 @@ const badge = (f) => {
       <h3>${(s.name || "—").replace(/</g, "&lt;")}</h3>
       <p>${(s.does || "").replace(/</g, "&lt;")}</p>
       <div class="agent-meta" style="border-top:0;padding-top:0">
-        <span class="mono">${(s.price || "?")} USDG</span>
+        <span class="mono">${(s.price || "?")} USDC</span>
         <span>${badge(s.screen)}</span>
       </div>
       <div class="agent-meta">
