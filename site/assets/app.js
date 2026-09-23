@@ -8,23 +8,23 @@
    reject the whole request ("unsupported keys"), so never decorate this object.
 
    The values are filled in from /api/catalog so the page always follows whichever
-   chain the server is serving. What is written here is the Robinhood Chain fallback
+   chain the server is serving. What is written here is the Arc mainnet fallback
    for the moment before that first response lands — and for if it never does.
-   Gas there is ETH; buyers pay in USDG, an ERC-20, never in the native coin. */
+   Gas on Arc is USDC itself, and buyers pay in USDC as an ERC-20. */
 const ARC = {
-  chainId: "0x1237", // 4663
-  chainName: "Robinhood Chain",
-  rpcUrls: ["https://rpc.mainnet.chain.robinhood.com"],
-  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-  blockExplorerUrls: ["https://robinhoodchain.blockscout.com"],
+  chainId: "0x13b2", // 5042
+  chainName: "Arc",
+  rpcUrls: ["https://rpc.mainnet.arc.io"],
+  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+  blockExplorerUrls: ["https://explorer.arc.io"],
 };
 
 /** Circle Wallets names the network separately from the EVM chain id. Empty where Circle
-    has no such network (Robinhood Chain), and then every PIN wallet button stays hidden. */
+    has no such network, and then every PIN wallet button stays hidden. */
 let CIRCLE_CHAIN = "";
 
-/** What buyers pay in on this page's chain: USDG on Robinhood Chain, USDC on the testnet. */
-let CURRENCY = "USDG";
+/** What buyers pay in on this page's chain: USDC on Arc, USDG on Robinhood Chain. */
+let CURRENCY = "USDC";
 
 
 /* Which chain this page is about. ?chain=testnet|mainnet in the address picks it;
@@ -77,7 +77,7 @@ function chainReady() {
 const MAIN_SHOP = { hire: "/hire?chain=mainnet", crew: "/crew?chain=mainnet" };
 function ordersClosed(cat, shop) {
   if (!cat || !cat.chain || cat.chain.ordersOpen !== false) return null;
-  return `This is Stubly's testnet shop, which is closed to new orders. Nothing was signed and no money moved. Hire on Robinhood Chain: <a href="${MAIN_SHOP[shop]}">${MAIN_SHOP[shop].split("?")[0]} on Robinhood Chain</a>. Past testnet orders stay readable on their order pages.`;
+  return `This is Stubly's testnet shop, which is closed to new orders. Nothing was signed and no money moved. Hire on Arc: <a href="${MAIN_SHOP[shop]}">${MAIN_SHOP[shop].split("?")[0]} on Arc</a>. Past testnet orders stay readable on their order pages.`;
 }
 /* The quote endpoint says so too, in case the catalog was read before the chain closed. */
 function quoteClosed(q) {
@@ -189,7 +189,7 @@ const tokenText = (raw, decimals) => {
   return `${Number(whole).toLocaleString("en-US")}${cut ? `.${cut}` : ""}`;
 };
 
-/* PIN wallets exist only on chains Circle supports, and Robinhood Chain is not one. The button
+/* PIN wallets exist only on chains Circle supports. The button
    ships hidden and is shown only once both the catalog and the wallet service say this chain
    has them, so a failed fetch leaves browser wallets only. */
 async function hidePinIfUnsupported() {
